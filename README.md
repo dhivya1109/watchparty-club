@@ -1,32 +1,33 @@
-# React + TypeScript + Vite
+# 🍿 WatchParty Club
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A shared shelf for everything your friends love — movies, TV series, anime and books.
 
-Currently, two official plugins are available:
+- 🔍 **Search** four databases at once (TMDB, TVmaze, AniList, Open Library)
+- 📋 **Track** what everyone wants to watch, is watching, or finished — with progress and ⭐ 1–10 ratings
+- 🎡 **Tonight's pick** — scores titles for the people who are here and spins a wheel
+- 📊 **Stats** — favourite genres, hours watched, and a taste match % between friends
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+> 🧪 Test version: each person's club is saved in their own browser. Shared clubs are next.
 
-## React Compiler
+## Run it locally
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install [Node.js](https://nodejs.org) (v20 or newer).
+2. Copy `.env.example` to `.env.local` and add a free [TMDB API key](https://www.themoviedb.org/settings/api).
+3. Then:
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev     # start the app at http://localhost:5173
+npm test        # run the tests
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## How it's built
+
+| Part | Where |
+|---|---|
+| Screens (React + Tailwind) | `src/components/` |
+| Rules: club data, picker, stats (with tests) | `src/lib/` |
+| Search in the four databases | `src/api/search.ts` |
+| Server function that keeps the TMDB key secret | `api/movies.ts` |
+
+Built step by step with Claude Code — see [PLAN.md](PLAN.md).

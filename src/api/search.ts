@@ -5,9 +5,7 @@ import type { MediaType, SearchResult } from '../types'
  * its answer into our common SearchResult shape.
  */
 
-// ---------- Movies: TMDB (needs a free key in .env.local) ----------
-
-export const TMDB_KEY: string | undefined = import.meta.env.VITE_TMDB_API_KEY
+// ---------- Movies: TMDB, through our own server function (api/movies.ts keeps the key secret) ----------
 
 // TMDB search results only give genre ids, so we keep the (stable) id → name list here.
 const TMDB_GENRES: Record<number, string> = {
@@ -27,9 +25,7 @@ interface TmdbMovie {
 }
 
 export async function searchMovies(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
-  if (!TMDB_KEY) throw new Error('Movie search needs a TMDB key — see the setup steps.')
-  const url = `https://api.themoviedb.org/3/search/movie?include_adult=false&query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`
-  const data: { results: TmdbMovie[] } = await getJson(url, signal)
+  const data: { results: TmdbMovie[] } = await getJson(`/api/movies?query=${encodeURIComponent(query)}`, signal)
   return data.results.slice(0, 12).map((m) => ({
     id: `movie:${m.id}`,
     type: 'movie',
@@ -161,7 +157,11 @@ export const SEARCHERS: Record<MediaType, (q: string, s?: AbortSignal) => Promis
 
 async function getJson<T>(url: string, signal?: AbortSignal, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, signal })
-  if (!res.ok) throw new Error(`The database answered with an error (${res.status}). Try again in a moment.`)
+  if (!res.ok) {
+    // Our own server function explains what went wrong in an "error" field.
+    const body: { error?: string } = await res.json().catch(() => ({}))
+    throw new Error(body.error ?? `The database answered with an error (${res.status}). Try again in a moment.`)
+  }
   return res.json() as Promise<T>
 }
 

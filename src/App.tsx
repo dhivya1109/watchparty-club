@@ -57,6 +57,10 @@ function App() {
       {page === 'club' && <ClubPage onGoSearch={() => setPage('search')} />}
       {page === 'tonight' && <PickerPage onGoSearch={() => setPage('search')} />}
       {page === 'stats' && <StatsPage onGoSearch={() => setPage('search')} />}
+
+      <footer className="mx-auto max-w-6xl px-4 pb-8 pt-4 text-center text-xs text-slate-500">
+        🧪 Test version — your club is saved on this device only. Shared clubs are coming soon!
+      </footer>
     </div>
   )
 }

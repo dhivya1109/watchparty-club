@@ -1,8 +1,29 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { searchTmdbMovies } from './api/movies.ts'
+
+/** Runs our /api server functions inside the local dev server (Vercel runs them online). */
+function devApi(tmdbKey: string | undefined): Plugin {
+  return {
+    name: 'dev-api',
+    configureServer(server) {
+      server.middlewares.use('/api/movies', async (req, res) => {
+        const query = new URL(req.url ?? '', 'http://localhost').searchParams.get('query')
+        const response = await searchTmdbMovies(query, tmdbKey)
+        res.statusCode = response.status
+        res.setHeader('Content-Type', 'application/json')
+        res.end(await response.text())
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
+export default defineConfig(({ mode }) => {
+  // '' = load every variable from .env.local, not only the VITE_ ones that go to the browser.
+  const env = loadEnv(mode, process.cwd(), '')
+  return {
+    plugins: [react(), tailwindcss(), devApi(env.TMDB_API_KEY)],
+  }
 })
