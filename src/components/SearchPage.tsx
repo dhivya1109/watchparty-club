@@ -3,6 +3,7 @@ import { SEARCHERS } from '../api/search'
 import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
+import { useToast } from './Toast'
 import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
 import { Pill, Poster, TypeBadge } from './ui'
 
@@ -96,6 +97,11 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
         ))}
       </div>
 
+      <p className="mt-3 text-xs text-muted sm:text-sm">
+        💡 Tap <b className="text-soft">+ Add to My Club</b> on anything you’ve watched or want to watch — it goes to your
+        shelf in <b className="text-soft">🎟️ My Club</b>, where you track it, rate it and review it for your friends.
+      </p>
+
       {!searching ? (
         <div className="mt-10">
           <p className="text-center text-sm text-muted">Not sure where to start? Try one:</p>
@@ -128,6 +134,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
             state={sections[type]}
             limit={tab === 'all' ? 6 : 12}
             showHeading={tab === 'all'}
+            onOpenClub={() => onNavigate('club')}
           />
         ))
       )}
@@ -140,11 +147,13 @@ function ResultSection({
   state,
   limit,
   showHeading,
+  onOpenClub,
 }: {
   type: MediaType
   state?: SectionState
   limit: number
   showHeading: boolean
+  onOpenClub: () => void
 }) {
   const meta = MEDIA_TYPES.find((m) => m.type === type)!
   return (
@@ -177,7 +186,7 @@ function ResultSection({
       ) : (
         <CardGrid>
           {state.results.slice(0, limit).map((r) => (
-            <ResultCard key={r.id} result={r} />
+            <ResultCard key={r.id} result={r} onOpenClub={onOpenClub} />
           ))}
         </CardGrid>
       )}
@@ -189,9 +198,25 @@ function CardGrid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{children}</div>
 }
 
-function ResultCard({ result }: { result: SearchResult }) {
-  const { data, add } = useClub()
+function ResultCard({ result, onOpenClub }: { result: SearchResult; onOpenClub: () => void }) {
+  const { data, add, remove } = useClub()
+  const toast = useToast()
   const inClub = Boolean(data.titles[result.id])
+
+  const addToClub = () => {
+    add(result)
+    // Tell the user what happened and where it went — with a way to get there, or undo.
+    toast({
+      title: 'Added to My Club 🎟️',
+      text: `${result.title} is on your shelf — track, rate & review it there.`,
+      image: result.image,
+      emoji: MEDIA_TYPES.find((m) => m.type === result.type)!.emoji,
+      actions: [
+        { label: 'Undo', onClick: () => remove(result.id) },
+        { label: 'View →', onClick: onOpenClub, primary: true },
+      ],
+    })
+  }
   const details = [
     result.year,
     result.length ? `${result.length} ${LENGTH_UNIT[result.type]}` : undefined,
@@ -199,7 +224,7 @@ function ResultCard({ result }: { result: SearchResult }) {
 
   return (
     <article
-      className={`group animate-pop overflow-hidden rounded-2xl border border-line bg-surface transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${TYPE_STYLE[result.type].hover}`}
+      className={`group animate-pop flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${TYPE_STYLE[result.type].hover}`}
     >
       <div className="relative">
         <Poster src={result.image} type={result.type} className="aspect-[2/3] transition duration-500 group-hover:scale-[1.03]" />
@@ -208,21 +233,8 @@ function ResultCard({ result }: { result: SearchResult }) {
         {details.length > 0 && (
           <span className="absolute bottom-2 left-2 text-xs font-medium text-soft">{details.join(' · ')}</span>
         )}
-        <button
-          onClick={() => add(result)}
-          disabled={inClub}
-          aria-label={inClub ? 'Already in the club' : `Add ${result.title} to the club`}
-          title={inClub ? 'In your club' : 'Add to club'}
-          className={`absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold shadow-lg transition ${
-            inClub
-              ? 'cursor-default bg-book text-ink'
-              : 'bg-gold text-ink shadow-gold/30 hover:scale-110 active:scale-95'
-          }`}
-        >
-          {inClub ? '✓' : '+'}
-        </button>
       </div>
-      <div className="p-3">
+      <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-2 font-bold leading-tight">{result.title}</h3>
         {result.subtitle && <p className="mt-0.5 line-clamp-1 text-xs text-muted">{result.subtitle}</p>}
         <div className="mt-2 flex flex-wrap gap-1">
@@ -232,6 +244,17 @@ function ResultCard({ result }: { result: SearchResult }) {
             </span>
           ))}
         </div>
+        {/* Says exactly what it does — and once added, takes you there */}
+        <button
+          onClick={inClub ? onOpenClub : addToClub}
+          className={`mt-auto w-full rounded-xl py-2 text-xs font-bold transition active:scale-95 sm:text-sm ${
+            inClub
+              ? 'mt-3 border border-book/50 bg-book/10 text-book hover:bg-book/20'
+              : 'mt-3 bg-gold text-ink shadow-md shadow-gold/20 hover:brightness-110'
+          }`}
+        >
+          {inClub ? '✓ In My Club →' : '+ Add to My Club'}
+        </button>
       </div>
     </article>
   )
