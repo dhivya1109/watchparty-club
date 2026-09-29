@@ -1,8 +1,20 @@
-import { useState } from 'react'
-import { averageRating, getEntry, STATUSES, type ClubTitle, type Entry, type Status } from '../lib/club'
+import { useRef, useState } from 'react'
+import {
+  averageRating,
+  getEntry,
+  previewChange,
+  REVIEW_MAX_LENGTH,
+  STATUSES,
+  type ClubTitle,
+  type Entry,
+  type EntryChange,
+  type Member,
+  type Status,
+} from '../lib/club'
 import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
+import { Celebration, CELEBRATION_MS, type CelebrationKind } from './Celebration'
 import { EmptyState, Pill, Poster, TypeBadge } from './ui'
 
 type Sort = 'recent' | 'title' | 'rating'
@@ -109,6 +121,11 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
 
 function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
   const { data, me, update, remove } = useClub()
+  const [celebration, setCelebration] = useState<{ kind: CelebrationKind; id: number } | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const reactionCount = useRef(0)
+
   const groupAverage = averageRating(data, title.id)
   // What the other members think of this title
   const others = data.members
@@ -121,8 +138,42 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
   const unit = LENGTH_UNIT[title.type]
   const percent = title.length ? Math.round((progress / title.length) * 100) : 0
 
+  const celebrate = (kind: CelebrationKind) => {
+    const id = ++reactionCount.current
+    setCelebration({ kind, id })
+    setTimeout(() => setCelebration((c) => (c?.id === id ? null : c)), CELEBRATION_MS)
+  }
+
+  const openReview = () => {
+    setDraft(entry?.review ?? '')
+    setEditing(true)
+  }
+
+  /** Save a change, and play the reaction that fits what changed. */
+  const act = (change: EntryChange) => {
+    const next = previewChange(entry, change, title.length)
+    update(title.id, change)
+
+    let kind: CelebrationKind | null = null
+    if (next.status !== status && next.status !== 'want') kind = next.status
+    if (change.rating != null) kind = change.rating >= 8 ? 'loved' : change.rating <= 4 ? 'bad' : 'okay'
+    if (kind) celebrate(kind)
+
+    // Just finished it? Invite a review.
+    if (next.status === 'completed' && status !== 'completed' && !entry?.review) openReview()
+  }
+
+  const clubReviews = others.filter((o) => o.entry!.review)
+
   return (
-    <article className="ticket animate-pop flex gap-4 rounded-3xl border border-line bg-gradient-to-br from-surface to-raised/60 p-3 pl-4 transition hover:border-muted">
+    // The outer box shakes or glows; the inner "ticket" keeps its notched shape.
+    <div
+      className={`relative rounded-3xl ${
+        celebration?.kind === 'bad' ? 'animate-shake' : celebration?.kind === 'loved' ? 'animate-glow' : ''
+      }`}
+    >
+    <article className="ticket animate-pop flex h-full flex-col rounded-3xl border border-line bg-gradient-to-br from-surface to-raised/60 transition hover:border-muted">
+    <div className="flex gap-4 p-3 pl-4">
       <div className="relative w-24 shrink-0 sm:w-28">
         <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-2xl shadow-lg shadow-black/40" />
       </div>
@@ -155,7 +206,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
             {STATUSES.map((s) => (
               <button
                 key={s.value}
-                onClick={() => update(title.id, { status: s.value })}
+                onClick={() => act({ status: s.value })}
                 title={s.label}
                 aria-label={s.label}
                 aria-pressed={status === s.value}
@@ -175,13 +226,13 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         {hasProgress && (
           <div>
             <div className="flex items-center gap-2 text-sm">
-              <StepButton label="−" onClick={() => update(title.id, { progress: progress - 1 })} />
+              <StepButton label="−" onClick={() => act({ progress: progress - 1 })} />
               <span className="font-display font-bold tabular-nums">
                 {progress}
                 {title.length ? <span className="text-muted"> / {title.length}</span> : ''}
               </span>
               <span className="text-xs text-muted">{unit}</span>
-              <StepButton label="+" onClick={() => update(title.id, { progress: progress + 1 })} />
+              <StepButton label="+" onClick={() => act({ progress: progress + 1 })} />
               {title.length ? <span className="ml-auto text-xs font-semibold text-gold">{percent}%</span> : null}
             </div>
             {title.length ? (
@@ -195,7 +246,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           </div>
         )}
 
-        <RatingPicker value={entry?.rating ?? null} onChange={(rating) => update(title.id, { rating })} />
+        <RatingPicker value={entry?.rating ?? null} onChange={(rating) => act({ rating })} />
 
         {(others.length > 0 || groupAverage !== null) && (
           <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-dashed border-line pt-2.5 text-xs text-soft">
@@ -212,7 +263,119 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           </div>
         )}
       </div>
+    </div>
+
+      {/* ---------- Reviews ---------- */}
+      <div className="flex flex-col gap-3 border-t border-dashed border-line px-4 pb-4 pt-3">
+        {editing ? (
+          <ReviewEditor
+            prompt={status === 'completed' ? `How was ${title.title}?` : 'Your review'}
+            draft={draft}
+            onChange={setDraft}
+            onSave={() => {
+              update(title.id, { review: draft })
+              setEditing(false)
+            }}
+            onCancel={() => setEditing(false)}
+          />
+        ) : entry?.review ? (
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-medium text-soft">
+              <span>✍️ Your review</span>
+              <button onClick={openReview} className="font-semibold text-gold hover:underline">
+                Edit
+              </button>
+            </div>
+            <ReviewQuote text={entry.review} rating={entry.rating} member={me} />
+          </div>
+        ) : (
+          <button
+            onClick={openReview}
+            className="w-full rounded-2xl border border-dashed border-line py-2.5 text-sm font-medium text-soft transition hover:border-gold hover:text-gold"
+          >
+            ✍️ {status === 'completed' ? 'How was it? Write a review' : 'Write a review'}
+          </button>
+        )}
+
+        {clubReviews.length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-soft">💬 What the club says</p>
+            <div className="mt-1.5 flex flex-col gap-2">
+              {clubReviews.map(({ member, entry: e }) => (
+                <ReviewQuote key={member.id} text={e!.review!} rating={e!.rating} member={member} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </article>
+
+    {celebration && <Celebration key={celebration.id} kind={celebration.kind} />}
+    </div>
+  )
+}
+
+function ReviewEditor({
+  prompt,
+  draft,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  prompt: string
+  draft: string
+  onChange: (text: string) => void
+  onSave: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="animate-pop">
+      <label className="text-sm font-bold">
+        ✍️ {prompt}
+        <textarea
+          autoFocus
+          value={draft}
+          onChange={(e) => onChange(e.target.value)}
+          maxLength={REVIEW_MAX_LENGTH}
+          rows={3}
+          placeholder="What did you feel? Would you tell a friend to watch it? (No spoilers!)"
+          className="mt-2 w-full resize-none rounded-2xl border border-line bg-night/60 px-3.5 py-2.5 text-sm font-normal outline-none placeholder:text-muted focus:border-gold focus:ring-4 focus:ring-gold/10"
+        />
+      </label>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-[11px] tabular-nums text-muted">
+          {draft.length}/{REVIEW_MAX_LENGTH}
+        </span>
+        <button onClick={onCancel} className="ml-auto rounded-full px-3 py-1.5 text-sm text-soft hover:text-cream">
+          Cancel
+        </button>
+        <button
+          onClick={onSave}
+          className="rounded-full bg-gold px-4 py-1.5 text-sm font-bold text-night transition hover:brightness-110"
+        >
+          Save review
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ReviewQuote({ text, rating, member }: { text: string; rating: number | null; member: Member }) {
+  return (
+    <figure className="flex gap-2.5 rounded-2xl bg-night/40 p-3">
+      <Avatar member={member} size={26} />
+      <div className="min-w-0 flex-1">
+        <figcaption className="flex items-center gap-2 text-xs">
+          <span className="font-bold">{member.name}</span>
+          {rating !== null && (
+            <span className={`font-display font-bold ${rating >= 8 ? 'text-gold' : rating <= 4 ? 'text-coral' : 'text-soft'}`}>
+              ★ {rating}/10
+            </span>
+          )}
+        </figcaption>
+        <blockquote className="mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-soft">“{text}”</blockquote>
+      </div>
+    </figure>
   )
 }
 

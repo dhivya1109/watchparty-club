@@ -36,6 +36,8 @@ export interface Entry {
   status: Status
   progress: number
   rating: number | null
+  /** What this member felt about it, in their own words */
+  review: string | null
   updatedAt: string
 }
 
@@ -45,7 +47,9 @@ export interface ClubData {
   entries: Entry[]
 }
 
-export type EntryChange = Partial<Pick<Entry, 'status' | 'progress' | 'rating'>>
+export type EntryChange = Partial<Pick<Entry, 'status' | 'progress' | 'rating' | 'review'>>
+
+export const REVIEW_MAX_LENGTH = 500
 
 export const emptyClub: ClubData = { members: [], titles: {}, entries: [] }
 
@@ -132,9 +136,18 @@ export function applyChange(entry: Entry, change: EntryChange, length?: number):
 
   if (rating !== null) rating = Math.min(10, Math.max(1, Math.round(rating)))
 
-  return { ...entry, status, progress, rating }
+  // Reviews: trimmed, limited in length, and an empty review means "no review".
+  let review = entry.review ?? null
+  if (change.review !== undefined) review = change.review?.trim().slice(0, REVIEW_MAX_LENGTH) || null
+
+  return { ...entry, status, progress, rating, review }
+}
+
+/** What happens to an entry if `change` is applied — without saving it. Used to pick the right animation. */
+export function previewChange(entry: Entry | undefined, change: EntryChange, length?: number): Entry {
+  return applyChange(entry ?? newEntry('', '', ''), change, length)
 }
 
 function newEntry(memberId: string, titleId: string, now: string): Entry {
-  return { memberId, titleId, status: 'want', progress: 0, rating: null, updatedAt: now }
+  return { memberId, titleId, status: 'want', progress: 0, rating: null, review: null, updatedAt: now }
 }

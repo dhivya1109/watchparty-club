@@ -191,9 +191,9 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
                 cy={p.y}
                 r="3.2"
                 fill="#ffc53d"
+                // Every other bulb starts half a blink later, so the lights "chase".
                 style={{
-                  animation: `bulb ${spinning ? 0.25 : 1.4}s ease-in-out infinite`,
-                  animationDelay: i % 2 ? `${spinning ? 0.125 : 0.7}s` : '0s',
+                  animation: `bulb ${spinning ? 0.25 : 1.4}s ease-in-out ${i % 2 ? (spinning ? 0.125 : 0.7) : 0}s infinite`,
                 }}
               />
             )

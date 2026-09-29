@@ -16,7 +16,7 @@ describe('adding and removing titles', () => {
   it('adds a title with a "want" entry for the member', () => {
     const club = addTitle(emptyClub, frieren, 'me', NOW)
     expect(club.titles[frieren.id].addedBy).toBe('me')
-    expect(getEntry(club, 'me', frieren.id)).toMatchObject({ status: 'want', progress: 0, rating: null })
+    expect(getEntry(club, 'me', frieren.id)).toMatchObject({ status: 'want', progress: 0, rating: null, review: null })
   })
 
   it('does not add the same title twice', () => {
@@ -55,6 +55,17 @@ describe('status and progress rules', () => {
   it('going back from the last episode returns to "watching"', () => {
     const finished = updateEntry(club, 'me', frieren.id, { progress: 28 }, NOW)
     expect(update({ progress: 20 }, finished).status).toBe('watching')
+  })
+
+  it('saves a review, trimmed, and keeps it when other things change', () => {
+    const reviewed = updateEntry(club, 'me', frieren.id, { review: '  Made me cry twice.  ' }, NOW)
+    expect(getEntry(reviewed, 'me', frieren.id)!.review).toBe('Made me cry twice.')
+    expect(update({ progress: 5 }, reviewed).review).toBe('Made me cry twice.')
+  })
+
+  it('treats an empty review as no review, and limits the length', () => {
+    expect(update({ review: '   ' }).review).toBeNull()
+    expect(update({ review: 'x'.repeat(900) }).review).toHaveLength(500)
   })
 
   it('keeps ratings between 1 and 10, and allows clearing them', () => {

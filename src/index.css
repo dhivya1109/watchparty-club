@@ -104,9 +104,81 @@ h1, h2, h3 {
   animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* ---------- Reactions (see Celebration.tsx) ---------- */
+
+/* Confetti flying out from the middle */
+@keyframes burst {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.4); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(1); opacity: 0; }
+}
+
+/* Hearts, popcorn and Zs floating up */
+@keyframes float-up {
+  0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(var(--dx), -150px) scale(1.15) rotate(var(--rot)); opacity: 0; }
+}
+
+/* Tomatoes falling down */
+@keyframes fall {
+  0% { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(260px) rotate(var(--rot)); opacity: 0.9; }
+}
+
+/* The big COMPLETED stamp */
+@keyframes stamp {
+  0% { transform: translate(-50%, -50%) rotate(-14deg) scale(2.6); opacity: 0; }
+  12% { transform: translate(-50%, -50%) rotate(-14deg) scale(0.92); opacity: 1; }
+  18% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); }
+  80% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); opacity: 0; }
+}
+
+/* Projector light beam sweeping across */
+@keyframes sweep {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(320%) skewX(-18deg); }
+}
+
+/* The reaction label: pops in, stays, fades out */
+@keyframes label {
+  0% { transform: translate(-50%, 10px) scale(0.6); opacity: 0; }
+  12% { transform: translate(-50%, 0) scale(1.08); opacity: 1; }
+  20% { transform: translate(-50%, 0) scale(1); }
+  82% { opacity: 1; }
+  100% { transform: translate(-50%, -6px) scale(1); opacity: 0; }
+}
+
+/* Bad rating: the card shakes its head */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-7px) rotate(-0.6deg); }
+  30%, 60%, 90% { transform: translateX(7px) rotate(0.6deg); }
+}
+
+/* Good rating: a warm glow around the card */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(255 197 61 / 0); }
+  40% { box-shadow: 0 0 0 3px rgb(255 197 61 / 0.7), 0 0 40px 6px rgb(255 197 61 / 0.35); }
+}
+
+@utility animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+@utility animate-glow {
+  animation: glow 1.6s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
     transition: none !important;
+  }
+  /* Without motion, flying particles would just sit still — hide them, keep the label */
+  .particle {
+    display: none;
   }
 }

@@ -75,7 +75,9 @@ function loadClub(): ClubData {
     const data: Partial<ClubData> = saved ? JSON.parse(saved) : emptyClub
     // Data saved on Day 1 has no members: everything belonged to "me".
     const members = data.members?.length ? data.members : [FIRST_MEMBER]
-    return { members, titles: data.titles ?? {}, entries: data.entries ?? [] }
+    // Entries saved before reviews existed have no "review" field.
+    const entries = (data.entries ?? []).map((e) => ({ ...e, review: e.review ?? null }))
+    return { members, titles: data.titles ?? {}, entries }
   } catch {
     return { ...emptyClub, members: [FIRST_MEMBER] }
   }
