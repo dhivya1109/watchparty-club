@@ -14,11 +14,13 @@ rates what they finish, and gets a "What should we watch tonight?" suggestion.
 | **TypeScript** | JavaScript with types | Catches mistakes before you run the code |
 | **Tailwind CSS** | Styling with small ready-made classes | Fast, good-looking, works on phones |
 | **Vitest** | A testing tool | Checks our scoring maths is correct |
-| **iTunes Search API** | Apple's public movie catalogue | 🎬 Movie search — no key needed |
+| **TMDB API** | The standard movie database | 🎬 Movie search — free key in `.env.local` |
 | **TVmaze API** | Free TV show database | 📺 Series search — no key needed |
-| **Jikan API** | Free anime database (MyAnimeList data) | 🍥 Anime search — no key needed |
+| **AniList API** | Free anime database (GraphQL) | 🍥 Anime search — no key needed |
 | **Open Library API** | Free book database | 📚 Book search — no key needed |
-| *(optional later)* **TMDB API** | Bigger movie + TV database | Upgrade if we want more titles — free key needed |
+
+> We tested first: iTunes no longer returns movies, and Jikan was down (MyAnimeList not responding),
+> so we switched to TMDB and AniList.
 | **Supabase** | Online database | So friends share the same club (Day 2) |
 | **Git + GitHub + Vercel** | Version control + code hosting + website hosting | To save progress and put the app online (Day 2) |
 
@@ -70,10 +72,10 @@ Show the top 3 → spin the wheel to pick one.
 ## 5. Build steps
 
 ### Day 1 — core (works on your computer only)
-- [ ] 4. Create the React project and install libraries
-- [ ] 5. Search all four types — movies, series, anime, books — with type tabs
+- [x] 4. Create the React project and install libraries
+- [x] 5. Search all four types — movies, series, anime, books — with type tabs
 - [ ] 6. Club list, status tracking, ratings (saved in the browser for now)
-- [ ] 7. First Git commit
+- [x] 7. First Git commit
 
 ### Day 2 — social and smart
 - [ ] 8. Members + Tonight's pick 🎡
@@ -86,6 +88,6 @@ Show the top 3 → spin the wheel to pick one.
 
 ## 6. Decisions (change any of these!)
 - App name: **WatchParty Club**
-- Types: **movies, TV series, anime and books — all from Day 1** (no API keys needed)
+- Types: **movies, TV series, anime and books — all from Day 1** (only movies need a free key)
 - Ratings: **1–10**
 - Theme: **dark mode by default**, with a light-mode toggle
