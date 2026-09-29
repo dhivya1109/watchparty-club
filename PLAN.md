@@ -81,7 +81,7 @@ Show the top 3 → spin the wheel to pick one.
 - [x] 8. Members + Tonight's pick 🎡
 - [x] 9. Stats dashboard + tests + phone layout
 - [ ] 10. Shared online database (Supabase)
-- [ ] 11. Deploy online (GitHub + Vercel)
+- [x] 11. Deploy online (GitHub + Vercel) → https://watchparty-club.vercel.app
 - [ ] 12. Share with friends, collect feedback, improve
 
 ---
