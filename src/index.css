@@ -23,7 +23,12 @@
   /* Marquee gold: main actions, stars, highlights */
   --color-gold: #ffc53d;
   --color-gold-deep: #f29d12;
+  --color-marquee-1: #ffe08a; /* top of the gold text gradient */
+  /* Gold-coloured TEXT. Same as gold on dark themes; darker on light ones so it stays readable. */
+  --color-accent: #ffc53d;
   --color-coral: #ff6b57;
+  /* Text ON a bright button (gold, lime…) — dark in every theme */
+  --color-ink: #0c0a10;
 
   /* One colour per type (always shown next to its emoji + name) */
   --color-movie: #ff7a66;
@@ -32,13 +37,87 @@
   --color-book: #a3e635;
 }
 
+/*
+ * 🎨 Themes — each one only swaps token values. Every page follows automatically.
+ * The chosen theme is set as <html data-theme="…"> (see src/theme.ts).
+ */
+:root {
+  color-scheme: dark;
+  --spot-1: rgb(255 197 61 / 0.11);
+  --spot-2: rgb(244 114 182 / 0.10);
+  --grain: 0.05;
+}
+
+/* 🖤 Noir — plain black, silver-white accents, a touch of red */
+:root[data-theme="noir"] {
+  --color-night: #000000;
+  --color-surface: #0b0b0b;
+  --color-raised: #171717;
+  --color-line: #2a2a2a;
+  --color-cream: #f5f5f5;
+  --color-soft: #bdbdbd;
+  --color-muted: #7c7c7c;
+  --color-gold: #f2f2f2;
+  --color-gold-deep: #b8b8b8;
+  --color-marquee-1: #ffffff;
+  --color-accent: #f2f2f2;
+  --color-coral: #ff3b3b;
+  --spot-1: rgb(255 255 255 / 0.06);
+  --spot-2: rgb(255 59 59 / 0.06);
+  --grain: 0.07;
+}
+
+/* ☀️ Matinee — light mode, warm paper like a printed ticket */
+:root[data-theme="matinee"] {
+  color-scheme: light;
+  --color-night: #f5eee2;
+  --color-surface: #fffaf2;
+  --color-raised: #efe5d4;
+  --color-line: #dfd1ba;
+  --color-cream: #1d1519;
+  --color-soft: #4b3f49;
+  --color-muted: #75676f;
+  --color-gold: #f0a500;
+  --color-gold-deep: #c46d00;
+  --color-marquee-1: #d68b00;
+  --color-accent: #a35f00;
+  --color-coral: #d9412f;
+  --color-movie: #e0523e;
+  --color-series: #0a8fbd;
+  --color-anime: #d23c8c;
+  --color-book: #4f8c06;
+  --spot-1: rgb(240 165 0 / 0.16);
+  --spot-2: rgb(210 60 140 / 0.08);
+  --grain: 0.035;
+}
+
+/* 🌏 Festival — international filmy: deep plum, saffron and magenta */
+:root[data-theme="festival"] {
+  --color-night: #13061c;
+  --color-surface: #1e0b2b;
+  --color-raised: #2c123d;
+  --color-line: #431e58;
+  --color-cream: #fff5e8;
+  --color-soft: #e6cdea;
+  --color-muted: #a888b4;
+  --color-gold: #ffa41b;
+  --color-gold-deep: #ff5f00;
+  --color-marquee-1: #ffd66b;
+  --color-accent: #ffa41b;
+  --color-coral: #ff2e88;
+  --spot-1: rgb(255 164 27 / 0.16);
+  --spot-2: rgb(255 46 136 / 0.16);
+  --grain: 0.05;
+}
+
 body {
   @apply bg-night text-cream font-sans antialiased;
   /* Soft spotlights from the top of the "theatre" */
   background-image:
-    radial-gradient(ellipse 60% 40% at 10% -5%, rgb(255 197 61 / 0.11), transparent),
-    radial-gradient(ellipse 50% 35% at 95% 0%, rgb(244 114 182 / 0.10), transparent);
+    radial-gradient(ellipse 60% 40% at 10% -5%, var(--spot-1), transparent),
+    radial-gradient(ellipse 50% 35% at 95% 0%, var(--spot-2), transparent);
   background-attachment: fixed;
+  transition: background-color 0.4s, color 0.4s;
 }
 
 /* Faint film grain over everything — adds warmth, never blocks clicks */
@@ -48,7 +127,7 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 100;
-  opacity: 0.05;
+  opacity: var(--grain);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -59,7 +138,7 @@ h1, h2, h3 {
 /* A strip of marquee light bulbs that "chase" along */
 @utility marquee-lights {
   height: 6px;
-  background: radial-gradient(circle, var(--color-gold) 1.6px, rgb(255 197 61 / 0.25) 2.2px, transparent 2.8px) 0 50% / 14px 6px repeat-x;
+  background: radial-gradient(circle, var(--color-gold) 1.6px, color-mix(in srgb, var(--color-gold) 25%, transparent) 2.2px, transparent 2.8px) 0 50% / 14px 6px repeat-x;
   animation: chase 1.2s steps(2) infinite;
 }
 
@@ -76,7 +155,7 @@ h1, h2, h3 {
 
 /* Gold gradient text for the logo and big numbers */
 @utility text-marquee {
-  background: linear-gradient(180deg, #ffe08a, var(--color-gold) 45%, var(--color-gold-deep));
+  background: linear-gradient(180deg, var(--color-marquee-1), var(--color-accent) 45%, var(--color-gold-deep));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -102,6 +181,74 @@ h1, h2, h3 {
 
 @utility animate-pop {
   animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ---------- Mascots & home page (see components/home) ---------- */
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.6; }
+  50% { transform: scaleX(0.8); opacity: 0.35; }
+}
+
+@keyframes blink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-38deg); }
+}
+
+@keyframes reel-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes clap {
+  0%, 60%, 100% { transform: rotate(-26deg); }
+  72% { transform: rotate(0deg); }
+  80% { transform: rotate(-14deg); }
+  88% { transform: rotate(0deg); }
+}
+
+@keyframes kernel {
+  0% { transform: translate(0, 8px) scale(0.5); opacity: 0; }
+  12% { opacity: 1; }
+  45% { transform: translate(var(--kx), -38px) scale(1) rotate(90deg); }
+  100% { transform: translate(calc(var(--kx) * 1.7), 18px) rotate(200deg); opacity: 0; }
+}
+
+/* The projector beam flickers like old film */
+@keyframes flicker {
+  0%, 100% { opacity: 0.55; }
+  40% { opacity: 0.75; }
+  42% { opacity: 0.45; }
+  44% { opacity: 0.7; }
+  70% { opacity: 0.6; }
+}
+
+/* A film strip that scrolls forever */
+@keyframes ticker {
+  to { transform: translateX(-50%); }
+}
+
+@keyframes bubble {
+  0%, 12% { transform: scale(0.6) translateY(6px); opacity: 0; }
+  18%, 82% { transform: scale(1) translateY(0); opacity: 1; }
+  90%, 100% { transform: scale(0.9) translateY(-4px); opacity: 0; }
+}
+
+/* Film-strip edges: sprocket holes top and bottom */
+@utility film-strip {
+  background:
+    radial-gradient(circle at 50% 50%, var(--color-night) 3px, transparent 3.5px) 0 4px / 18px 10px repeat-x,
+    radial-gradient(circle at 50% 50%, var(--color-night) 3px, transparent 3.5px) 0 calc(100% - 4px) / 18px 10px repeat-x,
+    var(--color-ink);
 }
 
 /* ---------- Reactions (see Celebration.tsx) ---------- */
@@ -160,8 +307,12 @@ h1, h2, h3 {
 
 /* Good rating: a warm glow around the card */
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(255 197 61 / 0); }
-  40% { box-shadow: 0 0 0 3px rgb(255 197 61 / 0.7), 0 0 40px 6px rgb(255 197 61 / 0.35); }
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  40% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-gold) 70%, transparent),
+      0 0 40px 6px color-mix(in srgb, var(--color-gold) 35%, transparent);
+  }
 }
 
 @utility animate-shake {

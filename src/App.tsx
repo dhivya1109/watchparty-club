@@ -4,6 +4,7 @@ import { MembersMenu } from './components/MembersMenu'
 import { PickerPage } from './components/PickerPage'
 import { SearchPage } from './components/SearchPage'
 import { StatsPage } from './components/StatsPage'
+import { ThemeMenu } from './components/ThemeMenu'
 import { useClub } from './store/ClubContext'
 
 type Page = 'search' | 'club' | 'tonight' | 'stats'
@@ -22,7 +23,7 @@ function App() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-line/70 bg-night/75 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-3 px-4 py-3 sm:gap-x-6">
           <button onClick={() => setPage('search')} className="flex min-w-0 items-center gap-2.5 text-left">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg shadow-lg shadow-gold/20 sm:h-10 sm:w-10 sm:text-xl">
               🍿
@@ -35,7 +36,8 @@ function App() {
             </span>
           </button>
 
-          <div className="ml-auto sm:order-last sm:ml-0">
+          <div className="ml-auto flex items-center gap-2 sm:order-last sm:ml-0">
+            <ThemeMenu />
             <MembersMenu />
           </div>
 
@@ -47,7 +49,7 @@ function App() {
                 onClick={() => setPage(t.page)}
                 className={`flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-4 sm:py-1.5 sm:text-sm ${
                   page === t.page
-                    ? 'bg-gold text-night shadow-md shadow-gold/25'
+                    ? 'bg-gold text-ink shadow-md shadow-gold/25'
                     : 'text-soft hover:bg-raised hover:text-cream'
                 }`}
               >
@@ -63,7 +65,7 @@ function App() {
 
       {/* Search stays mounted (just hidden) so your search is still there when you come back. */}
       <div hidden={page !== 'search'}>
-        <SearchPage />
+        <SearchPage onNavigate={setPage} />
       </div>
       {page !== 'search' && (
         <main key={page} className="animate-pop">

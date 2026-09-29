@@ -18,10 +18,12 @@ export function MembersMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-sm transition hover:border-gold"
+        aria-label={`You are ${me.name} — manage club members`}
+        className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-2.5 text-sm transition hover:border-gold sm:pr-3"
       >
         <Avatar member={me} size={28} />
-        <span className="max-w-16 truncate font-medium sm:max-w-28">{me.name}</span>
+        {/* On phones only the avatar shows, so the header stays on one row */}
+        <span className="hidden max-w-28 truncate font-medium sm:inline">{me.name}</span>
         <span className="text-xs text-muted">▾</span>
       </button>
 
@@ -44,11 +46,11 @@ export function MembersMenu() {
                     className="min-w-0 flex-1 rounded-xl border border-line bg-raised px-2.5 py-1.5 text-sm outline-none focus:border-gold"
                   />
                   {m.id === me.id ? (
-                    <span className="w-14 text-center text-xs font-bold text-gold">You</span>
+                    <span className="w-14 text-center text-xs font-bold text-accent">You</span>
                   ) : (
                     <button
                       onClick={() => setMe(m.id)}
-                      className="w-14 rounded-full border border-line py-1 text-xs font-medium transition hover:border-gold hover:text-gold"
+                      className="w-14 rounded-full border border-line py-1 text-xs font-medium transition hover:border-gold hover:text-accent"
                     >
                       Be me
                     </button>
@@ -81,7 +83,7 @@ export function MembersMenu() {
                 placeholder="Friend’s name"
                 className="min-w-0 flex-1 rounded-xl border border-line bg-raised px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-gold"
               />
-              <button className="rounded-xl bg-gold px-4 text-sm font-bold text-night transition hover:brightness-110">
+              <button className="rounded-xl bg-gold px-4 text-sm font-bold text-ink transition hover:brightness-110">
                 + Add
               </button>
             </form>

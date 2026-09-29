@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SEARCHERS } from '../api/search'
+import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
@@ -21,9 +22,10 @@ const IDEAS: { type: MediaType; query: string }[] = [
   { type: 'book', query: 'Harry Potter' },
 ]
 
-export function SearchPage() {
+export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => void }) {
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
   const [sections, setSections] = useState<Partial<Record<MediaType, SectionState>>>({})
   const debouncedQuery = useDebounce(query.trim())
 
@@ -55,22 +57,20 @@ export function SearchPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-6">
       {!searching && (
-        <div className="animate-pop pt-10 pb-2 text-center sm:pt-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Now showing</p>
-          <h2 className="mx-auto mt-3 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-            What’s the club <span className="text-marquee">watching</span> next?
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-soft">
-            Search movies, series, anime and books — all at once — and add them to your shelf.
-          </p>
-        </div>
+        <CinemaHero
+          onNavigate={onNavigate}
+          onStart={() => {
+            inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            inputRef.current?.focus({ preventScroll: true })
+          }}
+        />
       )}
 
       <div className={searching ? 'pt-6' : 'pt-8'}>
         <div className="relative">
           <span className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-xl">🔍</span>
           <input
-            autoFocus
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search a movie, series, anime or book…"
@@ -115,6 +115,10 @@ export function SearchPage() {
               )
             })}
           </div>
+
+          <WorldCinemaStrip />
+          <NowShowing onNavigate={onNavigate} />
+          <HowItWorks />
         </div>
       ) : (
         activeTypes.map((type) => (
@@ -211,8 +215,8 @@ function ResultCard({ result }: { result: SearchResult }) {
           title={inClub ? 'In your club' : 'Add to club'}
           className={`absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold shadow-lg transition ${
             inClub
-              ? 'cursor-default bg-book text-night'
-              : 'bg-gold text-night shadow-gold/30 hover:scale-110 active:scale-95'
+              ? 'cursor-default bg-book text-ink'
+              : 'bg-gold text-ink shadow-gold/30 hover:scale-110 active:scale-95'
           }`}
         >
           {inClub ? '✓' : '+'}

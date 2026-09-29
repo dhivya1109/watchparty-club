@@ -57,7 +57,7 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Your shelf</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Your shelf</p>
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
           {me.name}’s tickets <span className="text-muted">· {items.length}</span>
         </h2>
@@ -233,7 +233,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
               </span>
               <span className="text-xs text-muted">{unit}</span>
               <StepButton label="+" onClick={() => act({ progress: progress + 1 })} />
-              {title.length ? <span className="ml-auto text-xs font-semibold text-gold">{percent}%</span> : null}
+              {title.length ? <span className="ml-auto text-xs font-semibold text-accent">{percent}%</span> : null}
             </div>
             {title.length ? (
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-night/60">
@@ -251,13 +251,13 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         {(others.length > 0 || groupAverage !== null) && (
           <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-dashed border-line pt-2.5 text-xs text-soft">
             {groupAverage !== null && (
-              <span className="rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-gold">Group ★ {groupAverage}</span>
+              <span className="rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-accent">Group ★ {groupAverage}</span>
             )}
             {others.map(({ member, entry: e }) => (
               <span key={member.id} className="flex items-center gap-1" title={member.name}>
                 <Avatar member={member} size={20} />
                 {STATUSES.find((s) => s.value === e!.status)!.emoji}
-                {e!.rating !== null && <span className="font-semibold text-gold">{e!.rating}</span>}
+                {e!.rating !== null && <span className="font-semibold text-accent">{e!.rating}</span>}
               </span>
             ))}
           </div>
@@ -282,7 +282,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           <div>
             <div className="flex items-center justify-between text-[11px] font-medium text-soft">
               <span>✍️ Your review</span>
-              <button onClick={openReview} className="font-semibold text-gold hover:underline">
+              <button onClick={openReview} className="font-semibold text-accent hover:underline">
                 Edit
               </button>
             </div>
@@ -291,7 +291,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         ) : (
           <button
             onClick={openReview}
-            className="w-full rounded-2xl border border-dashed border-line py-2.5 text-sm font-medium text-soft transition hover:border-gold hover:text-gold"
+            className="w-full rounded-2xl border border-dashed border-line py-2.5 text-sm font-medium text-soft transition hover:border-gold hover:text-accent"
           >
             ✍️ {status === 'completed' ? 'How was it? Write a review' : 'Write a review'}
           </button>
@@ -351,7 +351,7 @@ function ReviewEditor({
         </button>
         <button
           onClick={onSave}
-          className="rounded-full bg-gold px-4 py-1.5 text-sm font-bold text-night transition hover:brightness-110"
+          className="rounded-full bg-gold px-4 py-1.5 text-sm font-bold text-ink transition hover:brightness-110"
         >
           Save review
         </button>
@@ -368,7 +368,7 @@ function ReviewQuote({ text, rating, member }: { text: string; rating: number | 
         <figcaption className="flex items-center gap-2 text-xs">
           <span className="font-bold">{member.name}</span>
           {rating !== null && (
-            <span className={`font-display font-bold ${rating >= 8 ? 'text-gold' : rating <= 4 ? 'text-coral' : 'text-soft'}`}>
+            <span className={`font-display font-bold ${rating >= 8 ? 'text-accent' : rating <= 4 ? 'text-coral' : 'text-soft'}`}>
               ★ {rating}/10
             </span>
           )}
@@ -383,7 +383,7 @@ function StepButton({ label, onClick }: { label: string; onClick: () => void }) 
   return (
     <button
       onClick={onClick}
-      className="h-8 w-8 rounded-full border border-line bg-night/40 font-bold transition hover:border-gold hover:text-gold active:scale-90"
+      className="h-8 w-8 rounded-full border border-line bg-night/40 font-bold transition hover:border-gold hover:text-accent active:scale-90"
     >
       {label}
     </button>
@@ -398,7 +398,7 @@ function RatingPicker({ value, onChange }: { value: number | null; onChange: (v:
     <div>
       <div className="flex items-baseline justify-between text-[11px] font-medium text-soft">
         <span>Your rating</span>
-        <span className={`font-display text-sm font-bold tabular-nums ${value ? 'text-gold' : 'text-muted'}`}>
+        <span className={`font-display text-sm font-bold tabular-nums ${value ? 'text-accent' : 'text-muted'}`}>
           {value ? `${value}/10` : 'tap a star'}
         </span>
       </div>
@@ -410,7 +410,7 @@ function RatingPicker({ value, onChange }: { value: number | null; onChange: (v:
             onClick={() => onChange(value === n ? null : n)}
             aria-label={`Rate ${n} out of 10`}
             className={`py-1 text-xl leading-none transition hover:scale-125 ${
-              n <= shown ? 'text-gold drop-shadow-[0_0_6px_rgb(255_197_61/0.5)]' : 'text-line'
+              n <= shown ? 'text-accent drop-shadow-[0_0_6px_rgb(255_197_61/0.5)]' : 'text-line'
             }`}
           >
             ★

@@ -24,7 +24,7 @@ interface Reaction {
 const REACTIONS: Record<CelebrationKind, Reaction> = {
   watching: { label: '▶️ Now playing!', particles: ['🍿', '🍿', '🎞️'], motion: 'float', count: 10, beam: true, tone: 'border-series/60 text-series' },
   completed: { label: '🎉 Completed!', particles: ['■', '●', '▲', '★'], motion: 'burst', count: 26, stamp: true, tone: 'border-book/60 text-book' },
-  loved: { label: '🔥 Loved it!', particles: ['❤️', '⭐', '💖', '✨'], motion: 'float', count: 14, tone: 'border-gold/70 text-gold' },
+  loved: { label: '🔥 Loved it!', particles: ['❤️', '⭐', '💖', '✨'], motion: 'float', count: 14, tone: 'border-gold/70 text-accent' },
   okay: { label: '🙂 Not bad', particles: ['✨'], motion: 'float', count: 6, tone: 'border-soft/50 text-soft' },
   bad: { label: '🍅 Rotten!', particles: ['🍅', '🍅', '💧'], motion: 'fall', count: 12, tone: 'border-coral/60 text-coral' },
   dropped: { label: '💤 Dropped', particles: ['💤', 'z', 'Z'], motion: 'float', count: 7, tone: 'border-muted/60 text-muted' },

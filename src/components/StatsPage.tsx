@@ -41,7 +41,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Box office</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Box office</p>
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">The club in numbers</h2>
       </div>
 
@@ -148,7 +148,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
                     <td className="py-2.5 text-right">{p.completed}</td>
                     <td className="py-2.5 text-right">{Math.round(p.watchMinutes / 60)}</td>
                     <td className="py-2.5 text-right">{p.pagesRead}</td>
-                    <td className="py-2.5 text-right font-semibold text-gold">{p.averageGiven ?? '—'}</td>
+                    <td className="py-2.5 text-right font-semibold text-accent">{p.averageGiven ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -196,7 +196,7 @@ function HighlightCard({
         <div className="flex aspect-[2/3] w-16 shrink-0 items-center justify-center rounded-xl bg-raised text-3xl">{emoji}</div>
       )}
       <div className="min-w-0">
-        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold">
+        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
           {emoji} {heading}
         </div>
         {item ? (

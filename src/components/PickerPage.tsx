@@ -45,7 +45,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Movie night</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Movie night</p>
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">What are we watching tonight?</h2>
       </div>
 
@@ -180,7 +180,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
         <div className="absolute inset-6 rounded-full bg-gold/20 blur-3xl" />
         <svg viewBox="0 0 320 320" className="relative w-full drop-shadow-2xl">
           {/* Rim */}
-          <circle cx={CENTER} cy={CENTER} r={RADIUS + 14} fill="#221b2b" stroke="#322839" strokeWidth="2" />
+          <circle cx={CENTER} cy={CENTER} r={RADIUS + 14} className="fill-raised stroke-line" strokeWidth="2" />
           {/* Marquee bulbs around the rim — they blink faster while spinning */}
           {Array.from({ length: BULBS }, (_, i) => {
             const p = point((i * 360) / BULBS, RADIUS + 7)
@@ -190,7 +190,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
                 cx={p.x}
                 cy={p.y}
                 r="3.2"
-                fill="#ffc53d"
+                className="fill-gold"
                 // Every other bulb starts half a blink later, so the lights "chase".
                 style={{
                   animation: `bulb ${spinning ? 0.25 : 1.4}s ease-in-out ${i % 2 ? (spinning ? 0.125 : 0.7) : 0}s infinite`,
@@ -211,15 +211,14 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
                 {slices.length === 1 ? (
                   <circle cx={CENTER} cy={CENTER} r={RADIUS} fill={p.color} />
                 ) : (
-                  <path d={p.d} fill={p.color} stroke="#0c0a10" strokeWidth="3" />
+                  <path d={p.d} fill={p.color} className="stroke-night" strokeWidth="3" />
                 )}
                 <text
                   x={p.label.x}
                   y={p.label.y}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fill="#0c0a10"
-                  className="font-display text-2xl font-extrabold"
+                  className="fill-ink font-display text-2xl font-extrabold"
                 >
                   {i + 1}
                 </text>
@@ -228,12 +227,12 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
           </g>
 
           {/* Centre cap */}
-          <circle cx={CENTER} cy={CENTER} r="24" fill="#0c0a10" stroke="#ffc53d" strokeWidth="3" />
+          <circle cx={CENTER} cy={CENTER} r="24" className="fill-night stroke-gold" strokeWidth="3" />
           <text x={CENTER} y={CENTER} textAnchor="middle" dominantBaseline="central" className="text-lg">
             🍿
           </text>
           {/* Pointer */}
-          <polygon points="146,2 174,2 160,34" fill="#ffc53d" stroke="#0c0a10" strokeWidth="3" strokeLinejoin="round" />
+          <polygon points="146,2 174,2 160,34" className="fill-gold stroke-night" strokeWidth="3" strokeLinejoin="round" />
         </svg>
       </div>
 
@@ -247,7 +246,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
           <div className="flex items-center gap-4 pt-2">
             <Poster src={winner.title.image} type={winner.title.type} className="aspect-[2/3] w-20 shrink-0 rounded-xl shadow-xl" />
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold">Tonight’s feature presentation</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent">Tonight’s feature presentation</p>
               <p className="mt-1 font-display text-2xl font-extrabold leading-tight sm:text-3xl">🎉 {winner.title.title}</p>
               <TypeBadge type={winner.title.type} className="mt-2" />
             </div>
@@ -259,7 +258,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
         {suggestions.map((s, i) => (
           <li key={s.title.id} className="flex items-center gap-2.5 border-b border-line/60 py-2 last:border-0">
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-display text-xs font-extrabold text-night"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-display text-xs font-extrabold text-ink"
               style={{ backgroundColor: SLICE_COLORS[i % SLICE_COLORS.length] }}
             >
               {i + 1}
