@@ -78,7 +78,7 @@ Show the top 3 → spin the wheel to pick one.
 - [x] 7. First Git commit
 
 ### Day 2 — social and smart
-- [ ] 8. Members + Tonight's pick 🎡
+- [x] 8. Members + Tonight's pick 🎡
 - [ ] 9. Stats dashboard + tests
 - [ ] 10. Shared online database (Supabase)
 - [ ] 11. Deploy online (GitHub + Vercel)

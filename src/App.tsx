@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { ClubPage } from './components/ClubPage'
+import { MembersMenu } from './components/MembersMenu'
+import { PickerPage } from './components/PickerPage'
 import { SearchPage } from './components/SearchPage'
 import { useClub } from './store/ClubContext'
 
-type Page = 'search' | 'club'
+type Page = 'search' | 'club' | 'tonight'
 
 function App() {
   const [page, setPage] = useState<Page>('search')
@@ -12,6 +14,7 @@ function App() {
   const tabs: { page: Page; label: string }[] = [
     { page: 'search', label: '🔍 Search' },
     { page: 'club', label: `📋 My Club${clubCount ? ` (${clubCount})` : ''}` },
+    { page: 'tonight', label: '🎡 Tonight' },
   ]
 
   return (
@@ -24,12 +27,15 @@ function App() {
             </h1>
             <p className="text-sm text-slate-400">A shared shelf for everything your friends love.</p>
           </div>
-          <nav className="flex gap-1 sm:ml-auto">
+          <div className="sm:order-last">
+            <MembersMenu />
+          </div>
+          <nav className="flex gap-1 overflow-x-auto sm:ml-auto">
             {tabs.map((t) => (
               <button
                 key={t.page}
                 onClick={() => setPage(t.page)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                className={`shrink-0 rounded-lg px-3 sm:px-4 py-2 text-sm font-medium transition ${
                   page === t.page ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -45,6 +51,7 @@ function App() {
         <SearchPage />
       </div>
       {page === 'club' && <ClubPage onGoSearch={() => setPage('search')} />}
+      {page === 'tonight' && <PickerPage onGoSearch={() => setPage('search')} />}
     </div>
   )
 }

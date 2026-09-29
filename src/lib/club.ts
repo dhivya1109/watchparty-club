@@ -15,6 +15,14 @@ export const STATUSES: { value: Status; label: string; emoji: string }[] = [
   { value: 'dropped', label: 'Dropped', emoji: '💤' },
 ]
 
+export interface Member {
+  id: string
+  name: string
+  color: string
+}
+
+export const MEMBER_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6', '#f97316']
+
 /** A title that someone added to the club. */
 export interface ClubTitle extends SearchResult {
   addedAt: string
@@ -32,13 +40,36 @@ export interface Entry {
 }
 
 export interface ClubData {
+  members: Member[]
   titles: Record<string, ClubTitle>
   entries: Entry[]
 }
 
 export type EntryChange = Partial<Pick<Entry, 'status' | 'progress' | 'rating'>>
 
-export const emptyClub: ClubData = { titles: {}, entries: [] }
+export const emptyClub: ClubData = { members: [], titles: {}, entries: [] }
+
+// ---------- Members ----------
+
+export function addMember(data: ClubData, name: string, id: string): ClubData {
+  const color = MEMBER_COLORS[data.members.length % MEMBER_COLORS.length]
+  return { ...data, members: [...data.members, { id, name: name.trim(), color }] }
+}
+
+export function renameMember(data: ClubData, id: string, name: string): ClubData {
+  return { ...data, members: data.members.map((m) => (m.id === id ? { ...m, name: name.trim() } : m)) }
+}
+
+/** Removes a member and everything they rated or tracked. */
+export function removeMember(data: ClubData, id: string): ClubData {
+  return {
+    ...data,
+    members: data.members.filter((m) => m.id !== id),
+    entries: data.entries.filter((e) => e.memberId !== id),
+  }
+}
+
+// ---------- Titles and entries ----------
 
 export function addTitle(
   data: ClubData,
@@ -48,6 +79,7 @@ export function addTitle(
 ): ClubData {
   if (data.titles[result.id]) return data
   return {
+    ...data,
     titles: { ...data.titles, [result.id]: { ...result, addedAt: now, addedBy: memberId } },
     entries: [...data.entries, newEntry(memberId, result.id, now)],
   }
@@ -56,11 +88,18 @@ export function addTitle(
 export function removeTitle(data: ClubData, titleId: string): ClubData {
   const titles = { ...data.titles }
   delete titles[titleId]
-  return { titles, entries: data.entries.filter((e) => e.titleId !== titleId) }
+  return { ...data, titles, entries: data.entries.filter((e) => e.titleId !== titleId) }
 }
 
 export function getEntry(data: ClubData, memberId: string, titleId: string): Entry | undefined {
   return data.entries.find((e) => e.memberId === memberId && e.titleId === titleId)
+}
+
+/** The group's average rating for a title, or null if nobody rated it. */
+export function averageRating(data: ClubData, titleId: string): number | null {
+  const ratings = data.entries.filter((e) => e.titleId === titleId && e.rating !== null).map((e) => e.rating!)
+  if (ratings.length === 0) return null
+  return Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
 }
 
 export function updateEntry(

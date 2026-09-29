@@ -1,19 +1,20 @@
 import { useState } from 'react'
-import { getEntry, STATUSES, type ClubTitle, type Entry, type Status } from '../lib/club'
-import { ME, useClub } from '../store/ClubContext'
+import { averageRating, getEntry, STATUSES, type ClubTitle, type Entry, type Status } from '../lib/club'
+import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType } from '../types'
+import { Avatar } from './Avatar'
 
 type Sort = 'recent' | 'title' | 'rating'
 
 export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
-  const { data } = useClub()
+  const { data, me } = useClub()
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all')
   const [sort, setSort] = useState<Sort>('recent')
 
   const items = Object.values(data.titles).map((title) => ({
     title,
-    entry: getEntry(data, ME, title.id),
+    entry: getEntry(data, me.id, title.id),
   }))
 
   if (items.length === 0) {
@@ -31,14 +32,15 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
 
   const shown = items
     .filter((i) => typeFilter === 'all' || i.title.type === typeFilter)
-    .filter((i) => statusFilter === 'all' || i.entry?.status === statusFilter)
+    .filter((i) => statusFilter === 'all' || (i.entry?.status ?? 'want') === statusFilter)
     .sort((a, b) => {
       if (sort === 'title') return a.title.title.localeCompare(b.title.title)
       if (sort === 'rating') return (b.entry?.rating ?? 0) - (a.entry?.rating ?? 0)
       return b.title.addedAt.localeCompare(a.title.addedAt)
     })
 
-  const countByStatus = (s: Status) => items.filter((i) => i.entry?.status === s).length
+  // A title a friend added has no entry for you yet — that counts as "Want to".
+  const countByStatus = (s: Status) => items.filter((i) => (i.entry?.status ?? 'want') === s).length
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
@@ -98,7 +100,13 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
 }
 
 function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
-  const { update, remove } = useClub()
+  const { data, me, update, remove } = useClub()
+  const groupAverage = averageRating(data, title.id)
+  // What the other members think of this title
+  const others = data.members
+    .filter((m) => m.id !== me.id)
+    .map((member) => ({ member, entry: getEntry(data, member.id, title.id) }))
+    .filter((o) => o.entry)
   const meta = MEDIA_TYPES.find((m) => m.type === title.type)!
   const status = entry?.status ?? 'want'
   const progress = entry?.progress ?? 0
@@ -165,6 +173,19 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         )}
 
         <RatingPicker value={entry?.rating ?? null} onChange={(rating) => update(title.id, { rating })} />
+
+        {(others.length > 0 || groupAverage !== null) && (
+          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-800 pt-2 text-xs text-slate-400">
+            {groupAverage !== null && <span className="font-medium text-amber-300">Group ⭐ {groupAverage}</span>}
+            {others.map(({ member, entry: e }) => (
+              <span key={member.id} className="flex items-center gap-1">
+                <Avatar member={member} size={18} />
+                {STATUSES.find((s) => s.value === e!.status)!.emoji}
+                {e!.rating !== null && <span className="text-amber-300">{e!.rating}</span>}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </article>
   )
