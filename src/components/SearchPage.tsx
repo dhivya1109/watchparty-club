@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SEARCHERS } from '../api/search'
 import { useDebounce } from '../hooks/useDebounce'
+import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType, type SearchResult } from '../types'
 
 type Tab = MediaType | 'all'
@@ -26,10 +27,11 @@ export function SearchPage() {
     }
     // If the user types again, cancel the searches that are still running.
     const controller = new AbortController()
-    setSections(Object.fromEntries(activeTypes.map((t) => [t, { status: 'loading', results: [] }])))
+    const types: MediaType[] = tab === 'all' ? MEDIA_TYPES.map((m) => m.type) : [tab]
+    setSections(Object.fromEntries(types.map((t) => [t, { status: 'loading', results: [] }])))
 
     // All databases are asked at the same time; each section fills in when its answer arrives.
-    for (const type of activeTypes) {
+    for (const type of types) {
       SEARCHERS[type](debouncedQuery, controller.signal)
         .then((results) => setSections((s) => ({ ...s, [type]: { status: 'done', results } })))
         .catch((err: Error) => {
@@ -124,6 +126,8 @@ function ResultSection({
 }
 
 function ResultCard({ result }: { result: SearchResult }) {
+  const { data, add } = useClub()
+  const inClub = Boolean(data.titles[result.id])
   const meta = MEDIA_TYPES.find((m) => m.type === result.type)!
   const details = [
     result.year,
@@ -150,6 +154,17 @@ function ResultCard({ result }: { result: SearchResult }) {
             </span>
           ))}
         </div>
+        <button
+          onClick={() => add(result)}
+          disabled={inClub}
+          className={`mt-3 w-full rounded-lg py-1.5 text-sm font-medium transition ${
+            inClub
+              ? 'bg-emerald-950 text-emerald-300 border border-emerald-800 cursor-default'
+              : 'bg-violet-600 hover:bg-violet-500 text-white'
+          }`}
+        >
+          {inClub ? '✓ In club' : '+ Add'}
+        </button>
       </div>
     </article>
   )

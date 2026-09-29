@@ -74,7 +74,7 @@ Show the top 3 → spin the wheel to pick one.
 ### Day 1 — core (works on your computer only)
 - [x] 4. Create the React project and install libraries
 - [x] 5. Search all four types — movies, series, anime, books — with type tabs
-- [ ] 6. Club list, status tracking, ratings (saved in the browser for now)
+- [x] 6. Club list, status tracking, ratings (saved in the browser for now)
 - [x] 7. First Git commit
 
 ### Day 2 — social and smart
