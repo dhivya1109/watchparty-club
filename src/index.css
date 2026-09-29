@@ -1,5 +1,112 @@
 @import "tailwindcss";
 
+/*
+ * 🎭 Design tokens — the whole look of the app lives here.
+ * Screens use these names (bg-surface, text-soft, bg-gold, text-anime…),
+ * so changing a value here restyles every page at once.
+ */
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Velvet night: backgrounds, from darkest to lightest */
+  --color-night: #0c0a10;
+  --color-surface: #16121c;
+  --color-raised: #221b2b;
+  --color-line: #322839;
+
+  /* Text */
+  --color-cream: #fbf6ee;
+  --color-soft: #c7bdd3;
+  --color-muted: #8b809a;
+
+  /* Marquee gold: main actions, stars, highlights */
+  --color-gold: #ffc53d;
+  --color-gold-deep: #f29d12;
+  --color-coral: #ff6b57;
+
+  /* One colour per type (always shown next to its emoji + name) */
+  --color-movie: #ff7a66;
+  --color-series: #4cc9f0;
+  --color-anime: #f472b6;
+  --color-book: #a3e635;
+}
+
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-night text-cream font-sans antialiased;
+  /* Soft spotlights from the top of the "theatre" */
+  background-image:
+    radial-gradient(ellipse 60% 40% at 10% -5%, rgb(255 197 61 / 0.11), transparent),
+    radial-gradient(ellipse 50% 35% at 95% 0%, rgb(244 114 182 / 0.10), transparent);
+  background-attachment: fixed;
+}
+
+/* Faint film grain over everything — adds warmth, never blocks clicks */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+h1, h2, h3 {
+  @apply font-display;
+}
+
+/* A strip of marquee light bulbs that "chase" along */
+@utility marquee-lights {
+  height: 6px;
+  background: radial-gradient(circle, var(--color-gold) 1.6px, rgb(255 197 61 / 0.25) 2.2px, transparent 2.8px) 0 50% / 14px 6px repeat-x;
+  animation: chase 1.2s steps(2) infinite;
+}
+
+@keyframes chase {
+  to { background-position: 14px 50%; }
+}
+
+/* Cinema-ticket shape: two half-circle notches on the sides */
+@utility ticket {
+  mask:
+    radial-gradient(circle 9px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 9px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Gold gradient text for the logo and big numbers */
+@utility text-marquee {
+  background: linear-gradient(180deg, #ffe08a, var(--color-gold) 45%, var(--color-gold-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Rows you can swipe sideways, without a visible scrollbar */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Wheel light bulbs */
+@keyframes bulb {
+  50% { opacity: 0.2; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@utility animate-pop {
+  animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

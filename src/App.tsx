@@ -13,52 +13,67 @@ function App() {
   const clubCount = Object.keys(useClub().data.titles).length
 
   const tabs: { page: Page; emoji: string; label: string }[] = [
-    { page: 'search', emoji: '🔍', label: 'Search' },
-    { page: 'club', emoji: '📋', label: `My Club${clubCount ? ` (${clubCount})` : ''}` },
+    { page: 'search', emoji: '🔍', label: 'Discover' },
+    { page: 'club', emoji: '🎟️', label: `My Club${clubCount ? ` · ${clubCount}` : ''}` },
     { page: 'tonight', emoji: '🎡', label: 'Tonight' },
     { page: 'stats', emoji: '📊', label: 'Stats' },
   ]
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-10">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold">
-              🍿 WatchParty <span className="text-violet-400">Club</span>
-            </h1>
-            <p className="hidden sm:block text-sm text-slate-400">A shared shelf for everything your friends love.</p>
-          </div>
-          <div className="ml-auto sm:ml-0 sm:order-last">
+      <header className="sticky top-0 z-20 border-b border-line/70 bg-night/75 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+          <button onClick={() => setPage('search')} className="flex min-w-0 items-center gap-2.5 text-left">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg shadow-lg shadow-gold/20 sm:h-10 sm:w-10 sm:text-xl">
+              🍿
+            </span>
+            <span className="min-w-0">
+              <span className="block whitespace-nowrap font-display text-lg font-extrabold leading-none tracking-tight sm:text-2xl">
+                WatchParty <span className="text-marquee">Club</span>
+              </span>
+              <span className="hidden text-xs text-muted sm:block">A shared shelf for everything your friends love</span>
+            </span>
+          </button>
+
+          <div className="ml-auto sm:order-last sm:ml-0">
             <MembersMenu />
           </div>
-          {/* Phones: 4 equal buttons, icon above label. Bigger screens: a row of tabs. */}
-          <nav className="grid w-full grid-cols-4 gap-1 sm:flex sm:w-auto sm:ml-auto">
+
+          {/* Phones: 4 equal buttons, icon above label. Bigger screens: one pill-shaped bar. */}
+          <nav className="grid w-full grid-cols-4 gap-1 rounded-2xl border border-line bg-surface/80 p-1 sm:ml-auto sm:flex sm:w-auto sm:rounded-full">
             {tabs.map((t) => (
               <button
                 key={t.page}
                 onClick={() => setPage(t.page)}
-                className={`flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 rounded-lg px-1 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition ${
-                  page === t.page ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'
+                className={`flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-4 sm:py-1.5 sm:text-sm ${
+                  page === t.page
+                    ? 'bg-gold text-night shadow-md shadow-gold/25'
+                    : 'text-soft hover:bg-raised hover:text-cream'
                 }`}
               >
-                <span className="text-base sm:text-sm leading-none">{t.emoji}</span>
+                <span className="text-base leading-none sm:text-sm">{t.emoji}</span>
                 <span className="whitespace-nowrap">{t.label}</span>
               </button>
             ))}
           </nav>
         </div>
+        {/* Marquee light bulbs along the bottom of the header */}
+        <div className="marquee-lights opacity-70" />
       </header>
 
       {/* Search stays mounted (just hidden) so your search is still there when you come back. */}
       <div hidden={page !== 'search'}>
         <SearchPage />
       </div>
-      {page === 'club' && <ClubPage onGoSearch={() => setPage('search')} />}
-      {page === 'tonight' && <PickerPage onGoSearch={() => setPage('search')} />}
-      {page === 'stats' && <StatsPage onGoSearch={() => setPage('search')} />}
+      {page !== 'search' && (
+        <main key={page} className="animate-pop">
+          {page === 'club' && <ClubPage onGoSearch={() => setPage('search')} />}
+          {page === 'tonight' && <PickerPage onGoSearch={() => setPage('search')} />}
+          {page === 'stats' && <StatsPage onGoSearch={() => setPage('search')} />}
+        </main>
+      )}
 
-      <footer className="mx-auto max-w-6xl px-4 pb-8 pt-4 text-center text-xs text-slate-500">
+      <footer className="mx-auto max-w-6xl px-4 pb-10 pt-6 text-center text-xs text-muted">
         🧪 Test version — your club is saved on this device only. Shared clubs are coming soon!
       </footer>
     </div>

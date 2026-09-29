@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { SEARCHERS } from '../api/search'
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
-import { LENGTH_UNIT, MEDIA_TYPES, type MediaType, type SearchResult } from '../types'
+import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
+import { Pill, Poster, TypeBadge } from './ui'
 
 type Tab = MediaType | 'all'
 
@@ -12,6 +13,14 @@ interface SectionState {
   error?: string
 }
 
+/** Quick-start ideas shown before the user types anything. */
+const IDEAS: { type: MediaType; query: string }[] = [
+  { type: 'movie', query: 'Interstellar' },
+  { type: 'series', query: 'Breaking Bad' },
+  { type: 'anime', query: 'Frieren' },
+  { type: 'book', query: 'Harry Potter' },
+]
+
 export function SearchPage() {
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
@@ -19,6 +28,7 @@ export function SearchPage() {
   const debouncedQuery = useDebounce(query.trim())
 
   const activeTypes: MediaType[] = tab === 'all' ? MEDIA_TYPES.map((m) => m.type) : [tab]
+  const searching = debouncedQuery.length >= 2
 
   useEffect(() => {
     if (debouncedQuery.length < 2) {
@@ -43,35 +53,69 @@ export function SearchPage() {
   }, [debouncedQuery, tab])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <input
-        autoFocus
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search a movie, series, anime or book…"
-        className="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 text-lg outline-none focus:border-violet-500"
-      />
+    <div className="mx-auto max-w-6xl px-4 pb-6">
+      {!searching && (
+        <div className="animate-pop pt-10 pb-2 text-center sm:pt-14">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Now showing</p>
+          <h2 className="mx-auto mt-3 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
+            What’s the club <span className="text-marquee">watching</span> next?
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-soft">
+            Search movies, series, anime and books — all at once — and add them to your shelf.
+          </p>
+        </div>
+      )}
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className={searching ? 'pt-6' : 'pt-8'}>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-xl">🔍</span>
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search a movie, series, anime or book…"
+            className="w-full rounded-full border border-line bg-surface/95 py-4 pl-14 pr-12 text-lg shadow-2xl shadow-black/40 outline-none backdrop-blur transition placeholder:text-muted focus:border-gold focus:ring-4 focus:ring-gold/15"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full px-2 text-muted hover:text-cream"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
         {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
-          <button
-            key={m.type}
-            onClick={() => setTab(m.type)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm border transition ${
-              tab === m.type
-                ? 'bg-violet-600 border-violet-500 text-white'
-                : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
-            }`}
-          >
+          <Pill key={m.type} active={tab === m.type} onClick={() => setTab(m.type)}>
             {m.emoji} {m.label}
-          </button>
+          </Pill>
         ))}
       </div>
 
-      {debouncedQuery.length < 2 ? (
-        <p className="mt-16 text-center text-slate-500">
-          Try “Interstellar”, “Breaking Bad”, “Frieren” or “Harry Potter”.
-        </p>
+      {!searching ? (
+        <div className="mt-10">
+          <p className="text-center text-sm text-muted">Not sure where to start? Try one:</p>
+          <div className="mx-auto mt-4 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
+            {IDEAS.map((idea) => {
+              const meta = MEDIA_TYPES.find((m) => m.type === idea.type)!
+              return (
+                <button
+                  key={idea.query}
+                  onClick={() => setQuery(idea.query)}
+                  className={`group rounded-2xl border border-line bg-surface p-4 text-left transition hover:-translate-y-1 hover:shadow-xl ${TYPE_STYLE[idea.type].hover}`}
+                >
+                  <div className="text-3xl transition group-hover:scale-110">{meta.emoji}</div>
+                  <div className={`mt-3 text-xs font-semibold ${TYPE_STYLE[idea.type].text}`}>{meta.label}</div>
+                  <div className="font-display font-bold">{idea.query}</div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
       ) : (
         activeTypes.map((type) => (
           <ResultSection
@@ -100,71 +144,90 @@ function ResultSection({
 }) {
   const meta = MEDIA_TYPES.find((m) => m.type === type)!
   return (
-    <section className="mt-8">
+    <section className="mt-10">
       {showHeading && (
-        <h2 className="mb-3 text-lg font-semibold">
+        <h2 className="mb-4 flex items-center gap-2.5 text-xl font-bold">
+          <span className={`h-2.5 w-2.5 rounded-full ${TYPE_STYLE[type].dot}`} />
           {meta.emoji} {meta.label}
+          {state?.status === 'done' && state.results.length > 0 && (
+            <span className="text-sm font-medium text-muted">{Math.min(limit, state.results.length)} found</span>
+          )}
         </h2>
       )}
       {!state || state.status === 'loading' ? (
-        <p className="text-slate-500 animate-pulse">Searching…</p>
+        <CardGrid>
+          {Array.from({ length: Math.min(limit, 6) }, (_, i) => (
+            <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-line bg-surface">
+              <div className="aspect-[2/3] bg-raised" />
+              <div className="space-y-2 p-3">
+                <div className="h-3 w-4/5 rounded bg-raised" />
+                <div className="h-3 w-1/2 rounded bg-raised" />
+              </div>
+            </div>
+          ))}
+        </CardGrid>
       ) : state.status === 'error' ? (
-        <p className="rounded-lg bg-red-950/50 border border-red-900 px-4 py-3 text-red-300 text-sm">
-          ⚠️ {state.error}
-        </p>
+        <p className="rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral">⚠️ {state.error}</p>
       ) : state.results.length === 0 ? (
-        <p className="text-slate-500">No results.</p>
+        <p className="text-muted">Nothing found here.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <CardGrid>
           {state.results.slice(0, limit).map((r) => (
             <ResultCard key={r.id} result={r} />
           ))}
-        </div>
+        </CardGrid>
       )}
     </section>
   )
 }
 
+function CardGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{children}</div>
+}
+
 function ResultCard({ result }: { result: SearchResult }) {
   const { data, add } = useClub()
   const inClub = Boolean(data.titles[result.id])
-  const meta = MEDIA_TYPES.find((m) => m.type === result.type)!
   const details = [
     result.year,
     result.length ? `${result.length} ${LENGTH_UNIT[result.type]}` : undefined,
   ].filter(Boolean)
 
   return (
-    <article className="group overflow-hidden rounded-xl bg-slate-900 border border-slate-800 hover:border-violet-500 transition">
-      <div className="aspect-[2/3] bg-slate-800">
-        {result.image ? (
-          <img src={result.image} alt="" loading="lazy" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center text-5xl">{meta.emoji}</div>
+    <article
+      className={`group animate-pop overflow-hidden rounded-2xl border border-line bg-surface transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${TYPE_STYLE[result.type].hover}`}
+    >
+      <div className="relative">
+        <Poster src={result.image} type={result.type} className="aspect-[2/3] transition duration-500 group-hover:scale-[1.03]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-night via-night/10 to-transparent" />
+        <TypeBadge type={result.type} className="absolute left-2 top-2 backdrop-blur-md" />
+        {details.length > 0 && (
+          <span className="absolute bottom-2 left-2 text-xs font-medium text-soft">{details.join(' · ')}</span>
         )}
+        <button
+          onClick={() => add(result)}
+          disabled={inClub}
+          aria-label={inClub ? 'Already in the club' : `Add ${result.title} to the club`}
+          title={inClub ? 'In your club' : 'Add to club'}
+          className={`absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold shadow-lg transition ${
+            inClub
+              ? 'cursor-default bg-book text-night'
+              : 'bg-gold text-night shadow-gold/30 hover:scale-110 active:scale-95'
+          }`}
+        >
+          {inClub ? '✓' : '+'}
+        </button>
       </div>
       <div className="p-3">
-        <h3 className="font-medium leading-tight line-clamp-2">{result.title}</h3>
-        {result.subtitle && <p className="mt-0.5 text-xs text-slate-400 line-clamp-1">{result.subtitle}</p>}
-        {details.length > 0 && <p className="mt-1 text-xs text-slate-500">{details.join(' · ')}</p>}
+        <h3 className="line-clamp-2 font-bold leading-tight">{result.title}</h3>
+        {result.subtitle && <p className="mt-0.5 line-clamp-1 text-xs text-muted">{result.subtitle}</p>}
         <div className="mt-2 flex flex-wrap gap-1">
           {result.genres.slice(0, 2).map((g) => (
-            <span key={g} className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300">
+            <span key={g} className="rounded-full bg-raised px-2 py-0.5 text-[10px] text-soft">
               {g}
             </span>
           ))}
         </div>
-        <button
-          onClick={() => add(result)}
-          disabled={inClub}
-          className={`mt-3 w-full rounded-lg py-1.5 text-sm font-medium transition ${
-            inClub
-              ? 'bg-emerald-950 text-emerald-300 border border-emerald-800 cursor-default'
-              : 'bg-violet-600 hover:bg-violet-500 text-white'
-          }`}
-        >
-          {inClub ? '✓ In club' : '+ Add'}
-        </button>
       </div>
     </article>
   )
