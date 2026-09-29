@@ -79,7 +79,7 @@ Show the top 3 → spin the wheel to pick one.
 
 ### Day 2 — social and smart
 - [x] 8. Members + Tonight's pick 🎡
-- [ ] 9. Stats dashboard + tests
+- [x] 9. Stats dashboard + tests + phone layout
 - [ ] 10. Shared online database (Supabase)
 - [ ] 11. Deploy online (GitHub + Vercel)
 - [ ] 12. Share with friends, collect feedback, improve
