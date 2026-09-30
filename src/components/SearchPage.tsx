@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { SEARCHERS } from '../api/search'
+import { flyToClub } from '../effects/flyToClub'
+import { AddedTray, ClubExplainer } from './AddToClub'
 import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
-import { useToast } from './Toast'
 import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
 import { Pill, Poster, TypeBadge } from './ui'
 
@@ -27,6 +28,8 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  /** Titles added during this visit — shown in the "Recently added" tray */
+  const [addedIds, setAddedIds] = useState<string[]>([])
   const [sections, setSections] = useState<Partial<Record<MediaType, SectionState>>>({})
   const debouncedQuery = useDebounce(query.trim())
 
@@ -97,10 +100,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
         ))}
       </div>
 
-      <p className="mt-3 text-xs text-muted sm:text-sm">
-        💡 Tap <b className="text-soft">+ Add to My Club</b> on anything you’ve watched or want to watch — it goes to your
-        shelf in <b className="text-soft">🎟️ My Club</b>, where you track it, rate it and review it for your friends.
-      </p>
+      <ClubExplainer />
 
       {!searching ? (
         <div className="mt-10">
@@ -135,9 +135,12 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
             limit={tab === 'all' ? 6 : 12}
             showHeading={tab === 'all'}
             onOpenClub={() => onNavigate('club')}
+            onAdded={(id) => setAddedIds((ids) => [...ids.filter((x) => x !== id), id])}
           />
         ))
       )}
+
+      <AddedTray ids={addedIds} onOpenClub={() => onNavigate('club')} onClear={() => setAddedIds([])} />
     </div>
   )
 }
@@ -148,12 +151,14 @@ function ResultSection({
   limit,
   showHeading,
   onOpenClub,
+  onAdded,
 }: {
   type: MediaType
   state?: SectionState
   limit: number
   showHeading: boolean
   onOpenClub: () => void
+  onAdded: (id: string) => void
 }) {
   const meta = MEDIA_TYPES.find((m) => m.type === type)!
   return (
@@ -186,7 +191,7 @@ function ResultSection({
       ) : (
         <CardGrid>
           {state.results.slice(0, limit).map((r) => (
-            <ResultCard key={r.id} result={r} onOpenClub={onOpenClub} />
+            <ResultCard key={r.id} result={r} onOpenClub={onOpenClub} onAdded={onAdded} />
           ))}
         </CardGrid>
       )}
@@ -198,24 +203,26 @@ function CardGrid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{children}</div>
 }
 
-function ResultCard({ result, onOpenClub }: { result: SearchResult; onOpenClub: () => void }) {
-  const { data, add, remove } = useClub()
-  const toast = useToast()
+function ResultCard({
+  result,
+  onOpenClub,
+  onAdded,
+}: {
+  result: SearchResult
+  onOpenClub: () => void
+  onAdded: (id: string) => void
+}) {
+  const { data, add } = useClub()
   const inClub = Boolean(data.titles[result.id])
+  const posterRef = useRef<HTMLDivElement>(null)
+  const [sparkle, setSparkle] = useState(0)
 
   const addToClub = () => {
     add(result)
-    // Tell the user what happened and where it went — with a way to get there, or undo.
-    toast({
-      title: 'Added to My Club 🎟️',
-      text: `${result.title} is on your shelf — track, rate & review it there.`,
-      image: result.image,
-      emoji: MEDIA_TYPES.find((m) => m.type === result.type)!.emoji,
-      actions: [
-        { label: 'Undo', onClick: () => remove(result.id) },
-        { label: 'View →', onClick: onOpenClub, primary: true },
-      ],
-    })
+    onAdded(result.id)
+    setSparkle((s) => s + 1) // replays the sparkle burst on the button
+    // The poster flies up into the 🎟️ My Club tab, so you can see where it went.
+    if (posterRef.current) flyToClub(posterRef.current, result.image, MEDIA_TYPES.find((m) => m.type === result.type)!.emoji)
   }
   const details = [
     result.year,
@@ -224,14 +231,22 @@ function ResultCard({ result, onOpenClub }: { result: SearchResult; onOpenClub: 
 
   return (
     <article
-      className={`group animate-pop flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${TYPE_STYLE[result.type].hover}`}
+      className={`group animate-pop flex flex-col overflow-hidden rounded-2xl border bg-surface transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
+        inClub ? 'border-book/60' : `border-line ${TYPE_STYLE[result.type].hover}`
+      }`}
     >
-      <div className="relative">
+      <div ref={posterRef} className="relative overflow-hidden">
         <Poster src={result.image} type={result.type} className="aspect-[2/3] transition duration-500 group-hover:scale-[1.03]" />
         <div className="absolute inset-0 bg-gradient-to-t from-night via-night/10 to-transparent" />
         <TypeBadge type={result.type} className="absolute left-2 top-2 backdrop-blur-md" />
         {details.length > 0 && (
           <span className="absolute bottom-2 left-2 text-xs font-medium text-soft">{details.join(' · ')}</span>
+        )}
+        {/* A ribbon that stays on the poster once it's in your club */}
+        {inClub && (
+          <div className="animate-pop absolute -right-9 top-5 rotate-45 bg-book px-9 py-1 text-[10px] font-extrabold tracking-wider text-ink shadow-lg">
+            IN MY CLUB
+          </div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-3">
@@ -244,17 +259,61 @@ function ResultCard({ result, onOpenClub }: { result: SearchResult; onOpenClub: 
             </span>
           ))}
         </div>
-        {/* Says exactly what it does — and once added, takes you there */}
-        <button
-          onClick={inClub ? onOpenClub : addToClub}
-          className={`mt-auto w-full rounded-xl py-2 text-xs font-bold transition active:scale-95 sm:text-sm ${
-            inClub
-              ? 'mt-3 border border-book/50 bg-book/10 text-book hover:bg-book/20'
-              : 'mt-3 bg-gold text-ink shadow-md shadow-gold/20 hover:brightness-110'
-          }`}
-        >
-          {inClub ? '✓ In My Club →' : '+ Add to My Club'}
-        </button>
+        {/* A big, obvious button that says what it does — and once added, takes you there */}
+        <div className="relative mt-auto pt-3">
+          {inClub ? (
+            <button
+              onClick={onOpenClub}
+              className="flex w-full flex-col items-center rounded-xl border-2 border-book/70 bg-book/15 px-1 py-1.5 text-book transition hover:bg-book/25 active:scale-95"
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="animate-pop flex h-5 w-5 items-center justify-center rounded-full bg-book text-xs font-black text-ink">✓</span>
+                <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">In My Club</span>
+              </span>
+              <span className="text-[10px] font-semibold opacity-80">Open my shelf →</span>
+            </button>
+          ) : (
+            <button
+              onClick={addToClub}
+              aria-label={`Add ${result.title} to My Club`}
+              className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-ink shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink/15 text-base font-black leading-none transition duration-300 group-hover/add:rotate-90">
+                  +
+                </span>
+                <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">Add to My Club</span>
+              </span>
+              <span className="text-[10px] font-semibold opacity-75">Track · rate · review</span>
+              {/* A soft light sweeps across now and then, inviting a tap */}
+              <span className="animate-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-white/35" />
+            </button>
+          )}
+          {/* Sparkles burst out of the button when you add */}
+          {sparkle > 0 && (
+            <span key={sparkle} className="pointer-events-none absolute inset-x-0 bottom-4 top-3" aria-hidden="true">
+              {Array.from({ length: 10 }, (_, i) => {
+                const angle = (i * 36 * Math.PI) / 180
+                return (
+                  <span
+                    key={i}
+                    className="particle absolute text-sm"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      animation: `burst 0.7s cubic-bezier(0.1, 0.7, 0.3, 1) ${(i % 3) * 0.04}s both`,
+                      ['--dx' as string]: `${Math.cos(angle) * 60}px`,
+                      ['--dy' as string]: `${Math.sin(angle) * 34}px`,
+                      ['--rot' as string]: `${i * 40}deg`,
+                    }}
+                  >
+                    {['✨', '⭐', '🎟️'][i % 3]}
+                  </span>
+                )
+              })}
+            </span>
+          )}
+        </div>
       </div>
     </article>
   )
