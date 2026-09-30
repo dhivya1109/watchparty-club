@@ -9,20 +9,59 @@ import { ProfileForm } from './ProfileForm'
  * Your account is created quietly in the background — no email or password.
  */
 export function WelcomeDialog() {
-  const { setupProfile, pendingInvite } = useClub()
-  const [step, setStep] = useState<'hello' | 'profile' | 'signin'>('hello')
+  const { setupProfile, pendingInvite, invitePreview } = useClub()
+  // Invited friends skip the tour: straight to "you're invited", then sign in, then into the club.
+  const [step, setStep] = useState<'invite' | 'hello' | 'profile' | 'signin'>(pendingInvite ? 'invite' : 'hello')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
       <div className="animate-pop max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[2rem] border border-line bg-surface p-6 shadow-2xl">
-        {pendingInvite && (
-          <p className="mb-4 rounded-2xl border border-gold/50 bg-gold/10 px-4 py-3 text-sm font-semibold">
-            🎟️ You’ve been invited to a club! Set up your profile and you’ll join straight away.
+        {pendingInvite && step !== 'invite' && (
+          <p className="mb-4 rounded-2xl border border-gold/50 bg-gold/10 px-4 py-2.5 text-sm font-semibold">
+            🎟️ Joining {invitePreview?.clubName ?? 'your friend’s club'} next
           </p>
         )}
-        {step === 'hello' ? (
+        {step === 'invite' ? (
+          <div className="text-center">
+            <div className="mx-auto h-24 w-20">
+              <Poppy />
+            </div>
+            <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-accent">🎟️ You’re invited</p>
+            <h2 id="welcome-title" className="mt-2 text-[clamp(1.5rem,7vw,2rem)] font-extrabold leading-tight">
+              {invitePreview ? (
+                <>
+                  {invitePreview.hostName ?? 'A friend'} invited you to <span className="text-marquee">{invitePreview.clubName}</span>
+                </>
+              ) : (
+                <>
+                  Join your friend’s <span className="text-marquee">club</span>
+                </>
+              )}
+            </h2>
+            <p className="mt-2 text-sm text-soft">
+              {invitePreview
+                ? `${invitePreview.memberCount} ${invitePreview.memberCount === 1 ? 'member' : 'members'} · a shared shelf of movies, series, anime & books`
+                : 'A shared shelf of movies, series, anime & books — with ratings and reviews.'}
+            </p>
+            <div className="mt-6 flex flex-col gap-2.5">
+              <button
+                onClick={() => setStep('profile')}
+                className="rounded-full bg-gradient-to-b from-gold to-gold-deep py-3 font-display text-lg font-bold text-ink shadow-lg shadow-gold/25 transition hover:brightness-110"
+              >
+                I’m new here →
+              </button>
+              <button
+                onClick={() => setStep('signin')}
+                className="rounded-full border-2 border-gold/60 py-2.5 font-display font-bold text-accent transition hover:bg-gold/10"
+              >
+                I already have an account →
+              </button>
+            </div>
+            <p className="mt-4 text-xs text-muted">You’ll go straight into the club after this.</p>
+          </div>
+        ) : step === 'hello' ? (
           <>
             <div className="mx-auto h-28 w-24">
               <Poppy />
@@ -70,7 +109,7 @@ export function WelcomeDialog() {
               {/* When sign-in succeeds, the app loads your account and this screen closes by itself */}
               <EmailCodeForm mode="signin" onDone={() => {}} />
             </div>
-            <button onClick={() => setStep('hello')} className="mt-4 text-sm font-semibold text-muted hover:text-cream">
+            <button onClick={() => setStep(pendingInvite ? 'invite' : 'hello')} className="mt-4 text-sm font-semibold text-muted hover:text-cream">
               ← Back
             </button>
           </>

@@ -315,7 +315,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
       {nothingYet ? (
         <EmptyState
           emoji="🎟️"
-          title={isMe ? 'Your shelf is empty' : `${firstName} hasn’t added anything yet`}
+          title={isMe ? 'Your list is empty' : `${firstName} hasn’t added anything yet`}
           text={isMe ? 'Add something you’ve watched or want to watch.' : 'Once they track, rate or review something, it shows up here.'}
           action="🔍 Discover titles"
           onAction={onGoSearch}

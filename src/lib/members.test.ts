@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { SearchResult } from '../types'
 import {
+  addedBy,
   addMember,
   addTitle,
+  myList,
   emptyClub,
   isHost,
   recommendations,
@@ -48,6 +50,28 @@ describe('updateMember', () => {
 
   it('keeps the old name if the new one is empty', () => {
     expect(updateMember(makeClub(), 'ben', { name: '   ' }).members[1].name).toBe('Ben')
+  })
+})
+
+describe('club shelf vs my list', () => {
+  let club = makeClub()
+  club = addTitle(club, title('Asha pick'), 'asha', NOW)
+  club = addTitle(club, title('Ben pick'), 'ben', NOW)
+
+  it('puts what you add on your own list', () => {
+    expect(myList(club, 'asha').map((t) => t.id)).toEqual(['Asha pick'])
+    expect(myList(club, 'ben').map((t) => t.id)).toEqual(['Ben pick'])
+  })
+
+  it('keeps a friend’s pick off your list until you choose a status', () => {
+    expect(myList(club, 'cal')).toEqual([])
+    const after = updateEntry(club, 'cal', 'Ben pick', { status: 'want' }, NOW)
+    expect(myList(after, 'cal').map((t) => t.id)).toEqual(['Ben pick'])
+  })
+
+  it('knows who added each title', () => {
+    expect(addedBy(club, club.titles['Ben pick'])?.name).toBe('Ben')
+    expect(addedBy(removeMember(club, 'ben'), club.titles['Ben pick'])).toBeUndefined()
   })
 })
 

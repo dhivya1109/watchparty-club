@@ -33,8 +33,8 @@ export function ClubExplainer() {
   }
 
   const steps = [
-    { icon: '＋', title: 'Add it', text: 'Tap the gold “Add to My Club” on anything you’ve watched or want to.' },
-    { icon: '🎟️', title: 'It lands on your shelf', text: 'Find it in the My Club tab at the top — like a cinema ticket.' },
+    { icon: '＋', title: 'Add it', text: 'Tap the gold “Add to club” on anything you’ve watched or want to watch.' },
+    { icon: '🎟️', title: 'It lands on the club shelf', text: 'Everyone sees it — marked as your pick — and it’s on your own list too.' },
     { icon: '⭐', title: 'Track, rate, review', text: 'Mark progress, give stars, write a review. Friends see it all.' },
   ]
 
@@ -77,7 +77,7 @@ export function ClubExplainer() {
 
 /**
  * The "Recently added" tray: stays at the bottom of the screen after you add something,
- * so you can see what's in your club — until you close it or open My Club.
+ * so you can see what's in your club — until you close it or open the club shelf.
  */
 export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenClub: () => void; onClear: () => void }) {
   const { data, remove } = useClub()
@@ -112,7 +112,7 @@ export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenC
 
         <div className="min-w-0 flex-1">
           <p className="font-display text-base font-extrabold leading-tight text-book">
-            {added.length === 1 ? 'Added to My Club!' : `${added.length} added to My Club!`}
+            {added.length === 1 ? 'Added to the club!' : `${added.length} added to the club!`}
           </p>
           <p className="truncate text-xs text-soft">
             {MEDIA_TYPES.find((m) => m.type === latest.type)!.emoji} {latest.title}
@@ -136,7 +136,7 @@ export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenC
         >
           Open
           <br />
-          My Club →
+          club shelf →
         </button>
       </div>
     </div>

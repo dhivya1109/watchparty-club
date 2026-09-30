@@ -261,6 +261,23 @@ export async function joinClub(linkOrCode: string): Promise<ClubSummary> {
   return { id: c.id, name: c.name, inviteCode: c.invite_code, role: 'member' }
 }
 
+export interface InvitePreview {
+  clubName: string
+  hostName: string | null
+  memberCount: number
+}
+
+/**
+ * Who invited you to which club — readable with just the invite code, before joining.
+ * Returns null if the code is wrong (or the database doesn't have this feature yet).
+ */
+export async function clubPreview(code: string): Promise<InvitePreview | null> {
+  const { data, error } = await db().rpc('club_preview', { code })
+  const row = (data as { club_name: string; host_name: string | null; member_count: number }[] | null)?.[0]
+  if (error || !row) return null
+  return { clubName: row.club_name, hostName: row.host_name, memberCount: row.member_count }
+}
+
 export function inviteLink(code: string): string {
   return `${location.origin}/?join=${code}`
 }

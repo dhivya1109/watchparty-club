@@ -167,6 +167,19 @@ export function getEntry(data: ClubData, memberId: string, titleId: string): Ent
   return data.entries.find((e) => e.memberId === memberId && e.titleId === titleId)
 }
 
+/**
+ * "My list": the club's titles this member chose to track (they have an entry for it).
+ * Titles a friend added don't appear here until the member picks a status for them.
+ */
+export function myList(data: ClubData, memberId: string): ClubTitle[] {
+  return Object.values(data.titles).filter((t) => getEntry(data, memberId, t.id))
+}
+
+/** Who added a title to the club — undefined if they've since left. */
+export function addedBy(data: ClubData, title: ClubTitle): Member | undefined {
+  return data.members.find((m) => m.id === title.addedBy)
+}
+
 /** The group's average rating for a title, or null if nobody rated it. */
 export function averageRating(data: ClubData, titleId: string): number | null {
   const ratings = data.entries.filter((e) => e.titleId === titleId && e.rating !== null).map((e) => e.rating!)

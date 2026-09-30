@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import {
+  addedBy,
   averageRating,
   getEntry,
   previewChange,
@@ -18,82 +19,128 @@ import { Celebration, CELEBRATION_MS, type CelebrationKind } from './Celebration
 import { EmptyState, Pill, Poster, TypeBadge } from './ui'
 
 type Sort = 'recent' | 'title' | 'rating'
+export type ShelfView = 'club' | 'mine'
 
-export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
-  const { data, me } = useClub()
+/**
+ * 🎟️ Two views of the same club:
+ *  - Club shelf: everything anyone added — each marked with whose pick it was
+ *  - My list:    only what YOU chose to track (you added it, or picked a status for it)
+ */
+export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () => void; initialView?: ShelfView }) {
+  const { data, me, activeClub } = useClub()
+  const [view, setView] = useState<ShelfView>(initialView)
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all')
+  const [addedByFilter, setAddedByFilter] = useState<string>('everyone')
   const [sort, setSort] = useState<Sort>('recent')
 
-  const items = Object.values(data.titles).map((title) => ({
-    title,
-    entry: getEntry(data, me.id, title.id),
-  }))
+  const all = Object.values(data.titles).map((title) => ({ title, entry: getEntry(data, me.id, title.id) }))
+  const mine = all.filter((i) => i.entry)
+  const clubName = data.name ?? activeClub?.name ?? 'your club'
 
-  if (items.length === 0) {
+  if (all.length === 0) {
     return (
       <EmptyState
         emoji="🎟️"
-        title="Your shelf is empty"
-        text="Find something you’ve watched or want to watch, and tap the gold + to add it."
+        title="The club shelf is empty"
+        text={`Be the first! Find something you’ve watched or want to watch, and add it to ${clubName}.`}
         action="🔍 Start discovering"
         onAction={onGoSearch}
       />
     )
   }
 
-  const shown = items
+  const shown = (view === 'club' ? all : mine)
     .filter((i) => typeFilter === 'all' || i.title.type === typeFilter)
-    .filter((i) => statusFilter === 'all' || (i.entry?.status ?? 'want') === statusFilter)
+    .filter((i) => view === 'club' || statusFilter === 'all' || i.entry?.status === statusFilter)
+    .filter((i) => view === 'mine' || addedByFilter === 'everyone' || i.title.addedBy === addedByFilter)
     .sort((a, b) => {
       if (sort === 'title') return a.title.title.localeCompare(b.title.title)
       if (sort === 'rating') return (b.entry?.rating ?? 0) - (a.entry?.rating ?? 0)
       return b.title.addedAt.localeCompare(a.title.addedAt)
     })
 
-  // A title a friend added has no entry for you yet — that counts as "Want to".
-  const countByStatus = (s: Status) => items.filter((i) => (i.entry?.status ?? 'want') === s).length
+  const countByStatus = (s: Status) => mine.filter((i) => i.entry?.status === s).length
+  // Only people who actually added something appear in the "Added by" filter
+  const pickers = data.members.filter((m) => all.some((i) => i.title.addedBy === m.id))
+  const views: { value: ShelfView; emoji: string; label: string; count: number }[] = [
+    { value: 'club', emoji: '🎟️', label: 'Club shelf', count: all.length },
+    { value: 'mine', emoji: '👤', label: 'My list', count: mine.length },
+  ]
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Your shelf</p>
-        <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
-          {me.name}’s tickets <span className="text-muted">· {items.length}</span>
-        </h2>
-      </div>
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">🎬 {clubName}</p>
 
-      {/* Summary: one tile per status — also works as a filter */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {STATUSES.map((s) => {
-          const active = statusFilter === s.value
-          return (
-            <button
-              key={s.value}
-              onClick={() => setStatusFilter(active ? 'all' : s.value)}
-              className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${
-                active ? 'border-gold bg-gold/10 shadow-lg shadow-gold/10' : 'border-line bg-surface hover:border-muted'
-              }`}
-            >
-              <span className="absolute -right-2 -top-3 text-6xl opacity-10 transition group-hover:opacity-20">{s.emoji}</span>
-              <div className={`font-display text-3xl font-extrabold tabular-nums ${active ? 'text-marquee' : ''}`}>
-                {countByStatus(s.value)}
-              </div>
-              <div className="text-sm text-soft">
-                {s.emoji} {s.label}
-              </div>
-            </button>
-          )
-        })}
+      {/* The two views, as a big switch */}
+      <div className="mt-3 grid grid-cols-2 gap-1 rounded-2xl border border-line bg-surface p-1" role="tablist">
+        {views.map((v) => (
+          <button
+            key={v.value}
+            role="tab"
+            aria-selected={view === v.value}
+            onClick={() => setView(v.value)}
+            className={`rounded-xl px-2 py-2.5 font-display text-[clamp(0.95rem,4vw,1.15rem)] font-extrabold transition ${
+              view === v.value ? 'bg-gold text-ink shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
+            }`}
+          >
+            {v.emoji} {v.label} <span className={view === v.value ? 'opacity-70' : 'text-muted'}>· {v.count}</span>
+          </button>
+        ))}
       </div>
+      <p className="mt-2 text-sm text-soft">
+        {view === 'club'
+          ? `Everything anyone in ${clubName} added — you can see whose pick each one is.`
+          : 'Only what you’re tracking: things you added, or friends’ picks you gave a status.'}
+      </p>
+
+      {view === 'mine' && (
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {STATUSES.map((s) => {
+            const active = statusFilter === s.value
+            return (
+              <button
+                key={s.value}
+                onClick={() => setStatusFilter(active ? 'all' : s.value)}
+                className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${
+                  active ? 'border-gold bg-gold/10 shadow-lg shadow-gold/10' : 'border-line bg-surface hover:border-muted'
+                }`}
+              >
+                <span className="absolute -right-2 -top-3 text-6xl opacity-10 transition group-hover:opacity-20">{s.emoji}</span>
+                <div className={`font-display text-3xl font-extrabold tabular-nums ${active ? 'text-marquee' : ''}`}>{countByStatus(s.value)}</div>
+                <div className="text-sm text-soft">
+                  {s.emoji} {s.label}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* Filters and sorting */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <div className="mt-5 flex flex-wrap items-center gap-2">
         {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
           <Pill key={m.type} active={typeFilter === m.type} onClick={() => setTypeFilter(m.type)}>
             {m.emoji} {m.label}
           </Pill>
         ))}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {view === 'club' && pickers.length > 0 && (
+          <select
+            value={addedByFilter}
+            onChange={(e) => setAddedByFilter(e.target.value)}
+            aria-label="Added by"
+            className="rounded-full border border-line bg-raised px-4 py-1.5 text-sm text-soft outline-none focus:border-gold"
+          >
+            <option value="everyone">👥 Added by everyone</option>
+            {pickers.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.id === me.id ? '⭐ Added by you' : `${m.emoji ?? '🙂'} Added by ${m.name}`}
+              </option>
+            ))}
+          </select>
+        )}
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
@@ -102,12 +149,25 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
         >
           <option value="recent">↓ Recently added</option>
           <option value="title">A–Z Title</option>
-          <option value="rating">★ Highest rated</option>
+          <option value="rating">★ Your highest rated</option>
         </select>
       </div>
 
       {shown.length === 0 ? (
-        <p className="mt-14 text-center text-muted">Nothing matches these filters.</p>
+        view === 'mine' && mine.length === 0 ? (
+          <div className="mt-10 text-center">
+            <p className="text-soft">Nothing on your list yet.</p>
+            <p className="mt-1 text-sm text-muted">Browse the club shelf and tap a status on anything you like.</p>
+            <button
+              onClick={() => setView('club')}
+              className="mt-4 rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10"
+            >
+              🎟️ Open the club shelf
+            </button>
+          </div>
+        ) : (
+          <p className="mt-14 text-center text-muted">Nothing matches these filters.</p>
+        )
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           {shown.map(({ title, entry }) => (
@@ -133,6 +193,9 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
     .map((member) => ({ member, entry: getEntry(data, member.id, title.id) }))
     .filter((o) => o.entry)
   const status = entry?.status ?? 'want'
+  /** Is this title on MY list? (No entry = a friend's pick you haven't chosen yet.) */
+  const onMyList = Boolean(entry)
+  const picker = addedBy(data, title)
   const progress = entry?.progress ?? 0
   const hasProgress = title.type !== 'movie'
   const unit = LENGTH_UNIT[title.type]
@@ -173,6 +236,26 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
       }`}
     >
     <article className="ticket animate-pop flex h-full flex-col rounded-3xl border border-line bg-gradient-to-br from-surface to-raised/60 transition hover:border-muted">
+    {/* Whose pick is this, and is it on my list? */}
+    <div className="flex items-center gap-2 border-b border-dashed border-line px-4 py-2 text-xs">
+      {picker ? <Avatar member={picker} size={22} /> : <span className="text-base">🎟️</span>}
+      <span className="min-w-0 truncate text-soft">
+        {picker?.id === me.id ? (
+          <b className="text-cream">Your pick</b>
+        ) : (
+          <>
+            <b className="text-cream">{picker?.name ?? 'A former member'}</b>’s pick
+          </>
+        )}
+      </span>
+      <span
+        className={`ml-auto shrink-0 rounded-full px-2 py-0.5 font-semibold ${
+          onMyList ? 'bg-book/15 text-book' : 'bg-raised text-muted'
+        }`}
+      >
+        {onMyList ? '✓ On your list' : 'Not on your list'}
+      </span>
+    </div>
     {/* Top row: poster, title and status — always side by side */}
     <div className="flex gap-3 p-3 pl-4 sm:gap-4">
       <div className="relative w-20 shrink-0 sm:w-28">
@@ -213,9 +296,9 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
                 onClick={() => act({ status: s.value })}
                 title={s.label}
                 aria-label={s.label}
-                aria-pressed={status === s.value}
+                aria-pressed={onMyList && status === s.value}
                 className={`flex h-9 flex-1 items-center justify-center rounded-xl border text-base transition ${
-                  status === s.value
+                  onMyList && status === s.value
                     ? 'border-gold bg-gold/15 shadow-inner'
                     : 'border-line bg-night/40 opacity-60 grayscale hover:opacity-100 hover:grayscale-0'
                 }`}
@@ -224,7 +307,9 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
               </button>
             ))}
           </div>
-          <p className="mt-1 text-[11px] font-medium text-soft">{STATUSES.find((s) => s.value === status)!.label}</p>
+          <p className="mt-1 text-[11px] font-medium text-soft">
+            {onMyList ? STATUSES.find((s) => s.value === status)!.label : 'Not on your list yet — tap a status to add it'}
+          </p>
         </div>
       </div>
     </div>

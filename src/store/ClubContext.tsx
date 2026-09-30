@@ -50,6 +50,10 @@ interface ClubStore {
   activeClub: ClubSummary | null
   /** An invite code from a link, waiting to be used once you have a profile */
   pendingInvite: string | null
+  /** Who invited you to which club (shown before signing in); null if unknown */
+  invitePreview: cloud.InvitePreview | null
+  /** Changes each time you join a club from an invite — the app then opens that club's shelf */
+  joinedCount: number
   /** Titles in the old device-only club that can be brought into a shared club */
   localTitleCount: number
 
@@ -94,6 +98,9 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [data, setData] = useState<ClubData>(emptyClub)
   const [pendingInvite, setPendingInvite] = useState<string | null>(() => readInviteFromUrl())
+  const pendingRef = useRef(pendingInvite)
+  const [invitePreview, setInvitePreview] = useState<cloud.InvitePreview | null>(null)
+  const [joinedCount, setJoinedCount] = useState(0)
   const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: true })
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -112,6 +119,30 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     setStatus(pick ? 'ready' : 'no-club')
   }, [])
 
+  /**
+   * After signing in: if you arrived with an invite, join that club first and open it
+   * (so you never see another screen in between). Otherwise open your clubs as usual.
+   */
+  const enterClubs = useCallback(
+    async (uid: string) => {
+      const code = pendingRef.current
+      if (!code) return loadClubs(uid)
+      pendingRef.current = null
+      setPendingInvite(null)
+      remove(PENDING_JOIN_KEY)
+      try {
+        const club = await cloud.joinClub(code)
+        await loadClubs(uid, club.id)
+        setJoinedCount((n) => n + 1)
+        toast({ title: `Welcome to ${club.name}! 🎉`, text: 'This is the club shelf — everything your friends picked.', emoji: '🎟️' })
+      } catch (err) {
+        fail(err)
+        await loadClubs(uid)
+      }
+    },
+    [loadClubs, toast, fail],
+  )
+
   /** Load everything for an account: guest or saved, profile, and clubs. */
   const loadAccount = useCallback(
     async (uid: string) => {
@@ -120,9 +151,9 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       const p = await cloud.fetchProfile(uid)
       setProfile(p)
       if (!p) return setStatus('setup')
-      await loadClubs(uid)
+      await enterClubs(uid)
     },
-    [loadClubs],
+    [enterClubs],
   )
 
   // 1. On startup: find this device's account and profile.
@@ -143,6 +174,11 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       }
     })()
   }, [loadAccount])
+
+  // Invited? Find out who invited you to which club (works before signing in).
+  useEffect(() => {
+    if (pendingInvite && cloud.supabase) void cloud.clubPreview(pendingInvite).then(setInvitePreview)
+  }, [pendingInvite])
 
   // 2. Whenever the open club changes: load it, and listen for live changes from friends.
   const reloadClub = useCallback(async () => {
@@ -176,22 +212,6 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     }
   }, [activeId, reloadClub])
 
-  // 3. Opened from an invite link? Join as soon as you have a profile.
-  useEffect(() => {
-    if (!pendingInvite || !userId || (status !== 'ready' && status !== 'no-club')) return
-    const code = pendingInvite
-    setPendingInvite(null)
-    sessionStorage.removeItem(PENDING_JOIN_KEY)
-    ;(async () => {
-      try {
-        const club = await cloud.joinClub(code)
-        await loadClubs(userId, club.id)
-        toast({ title: `You joined ${club.name}! 🎉`, text: 'Everything your friends add and rate shows up here — live.', emoji: '🎟️' })
-      } catch (err) {
-        fail(err)
-      }
-    })()
-  }, [pendingInvite, userId, status, loadClubs, toast, fail])
 
   const me: Member = useMemo(() => {
     const inClub = data.members.find((m) => m.id === profile?.id)
@@ -231,6 +251,8 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       clubs,
       activeClub,
       pendingInvite,
+      invitePreview,
+      joinedCount,
       localTitleCount,
       account,
 
@@ -273,7 +295,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         await cloud.saveProfile(uid, p)
         setUserId(uid)
         setProfile({ id: uid, ...p, role: 'member' })
-        await loadClubs(uid)
+        await enterClubs(uid)
       },
 
       updateProfile: async (change) => {
@@ -359,7 +381,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         )
       },
     }),
-    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, localTitleCount, account, userId, profile, activeId, loadClubs, loadAccount, reloadClub, optimistic, toast],
+    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
   )
 
   return <ClubContext.Provider value={store}>{children}</ClubContext.Provider>
@@ -376,12 +398,12 @@ function readInviteFromUrl(): string | null {
   const params = new URLSearchParams(location.search)
   const code = params.get('join')
   if (code) {
-    sessionStorage.setItem(PENDING_JOIN_KEY, code)
+    write(PENDING_JOIN_KEY, code)
     params.delete('join')
     const rest = params.toString()
     history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : ''))
   }
-  return code ?? sessionStorage.getItem(PENDING_JOIN_KEY)
+  return code ?? read(PENDING_JOIN_KEY)
 }
 
 // Browser storage can be blocked (e.g. private mode) — the app still works.
@@ -390,6 +412,14 @@ function read(key: string): string | null {
     return localStorage.getItem(key)
   } catch {
     return null
+  }
+}
+
+function remove(key: string) {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // ignore
   }
 }
 

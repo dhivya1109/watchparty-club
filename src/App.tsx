@@ -15,13 +15,22 @@ import { useClub } from './store/ClubContext'
 export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
 
 function App() {
-  const { data, status, error } = useClub()
+  const { data, status, error, joinedCount } = useClub()
   const [page, setPage] = useState<Page>('search')
   /** Whose profile is open on the Friends page (null = the list of everyone) */
   const [profileId, setProfileId] = useState<string | null>(null)
   const clubCount = Object.keys(data.titles).length
-  /** Goes up each time a flying poster lands on the My Club tab — replays its "catch" animation. */
+  /** Goes up each time a flying poster lands on the Club tab — replays its "catch" animation. */
   const [catches, setCatches] = useState(0)
+
+  // Just joined a club from an invite? Go straight to its shelf.
+  useEffect(() => {
+    if (joinedCount > 0) {
+      setPage('club')
+      setProfileId(null)
+      window.scrollTo({ top: 0 })
+    }
+  }, [joinedCount])
 
   useEffect(() => {
     const onCatch = () => setCatches((c) => c + 1)
@@ -64,7 +73,7 @@ function App() {
 
   const tabs: { page: Page; emoji: string; label: string; count?: number }[] = [
     { page: 'search', emoji: '🔍', label: 'Discover' },
-    { page: 'club', emoji: '🎟️', label: 'My Club', count: clubCount },
+    { page: 'club', emoji: '🎟️', label: 'Club', count: clubCount },
     { page: 'tonight', emoji: '🎡', label: 'Tonight' },
     { page: 'friends', emoji: '👥', label: 'Friends' },
     { page: 'stats', emoji: '📊', label: 'Stats' },
@@ -102,7 +111,7 @@ function App() {
           <nav className="col-span-2 grid grid-cols-5 gap-1 rounded-2xl border border-line bg-surface/80 p-1 lg:order-2 lg:col-span-1 lg:flex lg:justify-self-end lg:rounded-full">
             {tabs.map((t) => (
               <button
-                // A new key for My Club after each catch restarts its wiggle-and-glow animation.
+                // A new key for the Club tab after each catch restarts its wiggle-and-glow animation.
                 key={t.page === 'club' ? `club-${catches}` : t.page}
                 data-club-tab={t.page === 'club' ? '' : undefined}
                 onClick={() => go(t.page)}

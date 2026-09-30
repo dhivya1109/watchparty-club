@@ -12,7 +12,8 @@ A shared shelf for everything your friends love — movies, TV series, anime and
 
 1. Install [Node.js](https://nodejs.org) (v20 or newer).
 2. Create a free [Supabase](https://supabase.com) project, turn on **anonymous sign-ins**
-   (Authentication → Sign In / Providers), and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL Editor.
+   (Authentication → Sign In / Providers), and run [`supabase/schema.sql`](supabase/schema.sql), then
+   [`supabase/002_invite_preview.sql`](supabase/002_invite_preview.sql), in its SQL Editor.
 3. Copy `.env.example` to `.env.local` and fill in your [TMDB API key](https://www.themoviedb.org/settings/api)
    and your Supabase project URL + publishable key.
 4. Then:

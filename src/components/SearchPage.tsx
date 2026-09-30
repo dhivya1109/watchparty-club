@@ -221,7 +221,7 @@ function ResultCard({
     add(result)
     onAdded(result.id)
     setSparkle((s) => s + 1) // replays the sparkle burst on the button
-    // The poster flies up into the 🎟️ My Club tab, so you can see where it went.
+    // The poster flies up into the 🎟️ Club tab, so you can see where it went.
     if (posterRef.current) flyToClub(posterRef.current, result.image, MEDIA_TYPES.find((m) => m.type === result.type)!.emoji)
   }
   const details = [
@@ -245,7 +245,7 @@ function ResultCard({
         {/* A ribbon that stays on the poster once it's in your club */}
         {inClub && (
           <div className="animate-pop absolute -right-9 top-5 rotate-45 bg-book px-9 py-1 text-[10px] font-extrabold tracking-wider text-ink shadow-lg">
-            IN MY CLUB
+            IN THE CLUB
           </div>
         )}
       </div>
@@ -268,23 +268,23 @@ function ResultCard({
             >
               <span className="flex items-center gap-1.5">
                 <span className="animate-pop flex h-5 w-5 items-center justify-center rounded-full bg-book text-xs font-black text-ink">✓</span>
-                <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">In My Club</span>
+                <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">On the shelf</span>
               </span>
-              <span className="text-[10px] font-semibold opacity-80">Open my shelf →</span>
+              <span className="text-[10px] font-semibold opacity-80">Open the club shelf →</span>
             </button>
           ) : (
             <button
               onClick={addToClub}
-              aria-label={`Add ${result.title} to My Club`}
+              aria-label={`Add ${result.title} to the club`}
               className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-ink shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
             >
               <span className="flex items-center gap-1.5">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink/15 text-base font-black leading-none transition duration-300 group-hover/add:rotate-90">
                   +
                 </span>
-                <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">Add to My Club</span>
+                <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">Add to club</span>
               </span>
-              <span className="text-[10px] font-semibold opacity-75">Track · rate · review</span>
+              <span className="text-[10px] font-semibold opacity-75">Share it · rate · review</span>
               {/* A soft light sweeps across now and then, inviting a tap */}
               <span className="animate-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-white/35" />
             </button>
