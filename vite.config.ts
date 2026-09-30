@@ -9,11 +9,17 @@ function devApi(tmdbKey: string | undefined): Plugin {
     name: 'dev-api',
     configureServer(server) {
       server.middlewares.use('/api/movies', async (req, res) => {
-        const query = new URL(req.url ?? '', 'http://localhost').searchParams.get('query')
-        const response = await searchTmdbMovies(query, tmdbKey)
-        res.statusCode = response.status
         res.setHeader('Content-Type', 'application/json')
-        res.end(await response.text())
+        try {
+          const query = new URL(req.url ?? '', 'http://localhost').searchParams.get('query')
+          const response = await searchTmdbMovies(query, tmdbKey)
+          res.statusCode = response.status
+          res.end(await response.text())
+        } catch {
+          // Never let one failed search take down the whole dev server.
+          res.statusCode = 500
+          res.end(JSON.stringify({ error: 'Movie search failed. Try again in a moment.' }))
+        }
       })
     },
   }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { recommendations, shelfOf, STATUSES, type ClubTitle, type Entry, type Member, type Status } from '../lib/club'
 import { genreTaste } from '../lib/picker'
 import { personStats, tasteMatches } from '../lib/stats'
+import { inviteLink } from '../lib/cloud'
 import { useClub } from '../store/ClubContext'
 import { Avatar } from './Avatar'
 import { ProfileForm } from './ProfileForm'
@@ -30,23 +31,15 @@ export function FriendsPage({
 // ---------- The list of everyone ----------
 
 function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
-  const { data, me, amHost, addMember, removeMember, renameClub } = useClub()
-  const toast = useToast()
+  const { data, me, amHost, removeMember, renameClub, leaveClub } = useClub()
   const host = data.members.find((m) => m.role === 'host')
   const matches = tasteMatches(data)
-  const [newName, setNewName] = useState('')
   const [editingName, setEditingName] = useState(false)
   const [clubName, setClubName] = useState(data.name ?? '')
 
   const matchWithMe = (id: string) =>
     matches.find((m) => (m.a.id === me.id && m.b.id === id) || (m.b.id === me.id && m.a.id === id))?.match ?? null
 
-  const invite = () => {
-    if (!newName.trim()) return
-    addMember(newName)
-    toast({ title: `${newName.trim()} joined the club 🎉`, text: 'Hand them the phone and they can pick “I’m …” in the menu.', emoji: '👋' })
-    setNewName('')
-  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -122,7 +115,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
                 {amHost && m.id !== me.id && (
                   <button
                     onClick={() =>
-                      confirm(`Remove ${m.name} from the club? Their ratings, reviews and progress will be deleted.`) && removeMember(m.id)
+                      confirm(`Remove ${m.name} from ${data.name ?? 'the club'}? They’ll lose access to this club.`) && removeMember(m.id)
                     }
                     className="rounded-xl px-3 py-2 text-sm text-muted transition hover:bg-coral/10 hover:text-coral"
                   >
@@ -134,50 +127,79 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
           )
         })}
 
-        {/* Invite a friend */}
-        <article className="flex flex-col rounded-3xl border-2 border-dashed border-line p-4">
-          <div className="text-3xl">➕</div>
-          <h3 className="mt-2 text-lg font-extrabold">Invite a friend</h3>
-          {amHost ? (
-            <>
-              <p className="mt-1 text-sm text-soft">
-                Add their name, then hand them this phone — they tap your avatar (top right) and choose <b>“I’m …”</b>.
-              </p>
-              <form
-                className="mt-3 flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  invite()
-                }}
-              >
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  maxLength={30}
-                  placeholder="Friend’s name"
-                  className="min-w-0 flex-1 rounded-xl border border-line bg-raised px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-gold"
-                />
-                <button className="rounded-xl bg-gold px-4 text-sm font-bold text-ink transition hover:brightness-110">Add</button>
-              </form>
-            </>
-          ) : (
-            <p className="mt-1 text-sm text-soft">Only the host{host ? ` (${host.name})` : ''} can invite people. Ask them to add your friend!</p>
-          )}
-          <p className="mt-auto pt-3 text-xs text-muted">🔗 Coming soon: share an invite link so friends join from their own phones.</p>
-        </article>
+        <InviteCard />
       </div>
 
       <Panel title="ℹ️ How roles work" className="mt-6">
         <ul className="grid gap-3 text-sm text-soft sm:grid-cols-2">
           <li>
-            <b className="text-cream">👑 Host</b> — started the club. Can invite and remove friends, and rename the club.
+            <b className="text-cream">👑 Host</b> — started the club. Shares the invite link, removes people, renames the club.
           </li>
           <li>
             <b className="text-cream">🙂 Member</b> — adds titles, tracks progress, rates, reviews and spins the wheel.
           </li>
         </ul>
       </Panel>
+
+      {!amHost && (
+        <p className="mt-6 text-center text-sm text-muted">
+          Want out?{' '}
+          <button
+            onClick={() => confirm(`Leave ${data.name ?? 'this club'}? You can rejoin later with an invite link.`) && void leaveClub()}
+            className="font-semibold text-coral hover:underline"
+          >
+            Leave this club
+          </button>
+        </p>
+      )}
     </div>
+  )
+}
+
+/** ➕ The club's invite link — the host shares it; friends open it on their own phones. */
+function InviteCard() {
+  const { data, amHost, activeClub } = useClub()
+  const toast = useToast()
+  const host = data.members.find((m) => m.role === 'host')
+  const link = activeClub ? inviteLink(activeClub.inviteCode) : ''
+  const canShare = typeof navigator.share === 'function'
+
+  return (
+    <article className="flex flex-col rounded-3xl border-2 border-dashed border-gold/50 bg-gold/5 p-4">
+      <div className="text-3xl">➕</div>
+      <h3 className="mt-2 text-lg font-extrabold">Invite friends</h3>
+      {amHost ? (
+        <>
+          <p className="mt-1 text-sm text-soft">Send this link. Friends open it on their own phone and join straight away.</p>
+          <code className="mt-3 block truncate rounded-xl border border-line bg-night/60 px-3 py-2 text-xs text-soft">{link}</code>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(link)
+                  toast({ title: 'Invite link copied 📋', text: 'Paste it in WhatsApp, Instagram, anywhere.', emoji: '🔗' })
+                } catch {
+                  toast({ title: 'Couldn’t copy', text: 'Select the link above and copy it by hand.', emoji: '⚠️' })
+                }
+              }}
+              className="flex-1 rounded-xl bg-gold py-2 text-sm font-bold text-ink transition hover:brightness-110"
+            >
+              📋 Copy link
+            </button>
+            {canShare && (
+              <button
+                onClick={() => void navigator.share({ title: `Join ${data.name ?? 'my club'} on WatchParty Club`, text: 'Come track what we watch together 🍿', url: link }).catch(() => {})}
+                className="flex-1 rounded-xl border border-gold py-2 text-sm font-bold text-accent transition hover:bg-gold/10"
+              >
+                📤 Share
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="mt-1 text-sm text-soft">Only the host{host ? ` (${host.name})` : ''} can invite people. Ask them for the link!</p>
+      )}
+    </article>
   )
 }
 
@@ -200,7 +222,7 @@ const SHELF_HEADINGS: Record<Status, string> = {
 }
 
 function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () => void; onGoSearch: () => void }) {
-  const { data, me, setMe, updateMember } = useClub()
+  const { data, me, updateProfile } = useClub()
   const [editing, setEditing] = useState(false)
   const isMe = member.id === me.id
   const shelf = shelfOf(data, member.id)
@@ -234,8 +256,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
                 initial={member}
                 submitLabel="Save profile"
                 onSubmit={(change) => {
-                  updateMember(member.id, change)
-                  setEditing(false)
+                  void updateProfile(change).then(() => setEditing(false))
                 }}
                 onCancel={() => setEditing(false)}
               />
@@ -286,14 +307,6 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
                 <MiniStat value={stats.averageGiven ?? '—'} label="Avg rating" />
                 <MiniStat value={reviews.length} label="Reviews" />
               </div>
-              {!isMe && (
-                <p className="mt-3 text-xs text-muted">
-                  Sharing this phone?{' '}
-                  <button onClick={() => setMe(member.id)} className="font-semibold text-accent hover:underline">
-                    Switch to {firstName}
-                  </button>
-                </p>
-              )}
             </>
           )}
         </div>

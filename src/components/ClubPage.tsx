@@ -120,7 +120,7 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
 }
 
 function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
-  const { data, me, update, remove } = useClub()
+  const { data, me, amHost, update, remove } = useClub()
   const [celebration, setCelebration] = useState<{ kind: CelebrationKind; id: number } | null>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -190,14 +190,17 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
               {[title.year, title.subtitle].filter(Boolean).join(' · ')}
             </p>
           </div>
-          <button
-            onClick={() => confirm(`Remove “${title.title}” from the club?`) && remove(title.id)}
-            title="Remove from club"
-            aria-label="Remove from club"
-            className="rounded-full p-1 text-muted transition hover:bg-coral/15 hover:text-coral"
-          >
-            ✕
-          </button>
+          {/* Same rule as the database: whoever added it, or the host, can remove it */}
+          {(title.addedBy === me.id || amHost) && (
+            <button
+              onClick={() => confirm(`Remove “${title.title}” from the club?`) && remove(title.id)}
+              title="Remove from club"
+              aria-label="Remove from club"
+              className="rounded-full p-1 text-muted transition hover:bg-coral/15 hover:text-coral"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         {/* Status: four big buttons instead of a small dropdown */}

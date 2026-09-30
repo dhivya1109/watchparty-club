@@ -18,10 +18,18 @@ export async function searchTmdbMovies(query: string | null, apiKey: string | un
   if (!query?.trim()) return json(400, { error: 'Type something to search for.' })
 
   const url = `https://api.themoviedb.org/3/search/movie?include_adult=false&query=${encodeURIComponent(query)}&api_key=${apiKey}`
-  const res = await fetch(url)
+  let res: Response
+  let body: string
+  try {
+    res = await fetch(url)
+    body = await res.text()
+  } catch {
+    // Network hiccups happen (dropped connection, timeout) — answer politely instead of crashing.
+    return json(502, { error: 'Couldn’t reach the movie database just now. Try again in a moment.' })
+  }
   if (!res.ok) return json(502, { error: `The movie database answered with an error (${res.status}). Try again in a moment.` })
 
-  return new Response(await res.text(), {
+  return new Response(body, {
     headers: {
       'Content-Type': 'application/json',
       // Let Vercel remember each search for an hour — faster for friends, fewer calls to TMDB.

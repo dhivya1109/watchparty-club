@@ -11,10 +11,11 @@ applyTheme(loadTheme())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClubProvider>
-      <ToastProvider>
+    {/* Toasts go outside the store, so the store can show messages (e.g. "You joined …!") */}
+    <ToastProvider>
+      <ClubProvider>
         <App />
-      </ToastProvider>
-    </ClubProvider>
+      </ClubProvider>
+    </ToastProvider>
   </StrictMode>,
 )

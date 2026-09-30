@@ -2,12 +2,9 @@ import { useState } from 'react'
 import { useClub } from '../store/ClubContext'
 import { Avatar } from './Avatar'
 
-/**
- * Header avatar button: who is using this device.
- * Switch person, open your profile, or go to the Friends page to manage the club.
- */
+/** Header avatar button: you, your role in this club, and shortcuts to your profile and friends. */
 export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (id: string) => void; onOpenFriends: () => void }) {
-  const { data, me, setMe } = useClub()
+  const { me, activeClub } = useClub()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
 
@@ -33,38 +30,17 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
               <Avatar member={me} size={44} />
               <div className="min-w-0">
                 <p className="truncate font-display text-lg font-bold">{me.name}</p>
-                <p className="text-xs text-muted">{me.role === 'host' ? '👑 Host of ' : '🙂 Member of '}{data.name || 'the club'}</p>
+                <p className="truncate text-xs text-muted">
+                  {me.role === 'host' ? '👑 Host of ' : '🙂 Member of '}
+                  {activeClub?.name ?? 'your club'}
+                </p>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <MenuButton onClick={() => { close(); onOpenProfile(me.id) }}>👤 My profile</MenuButton>
               <MenuButton onClick={() => { close(); onOpenFriends() }}>👥 Friends</MenuButton>
             </div>
-
-            {data.members.length > 1 && (
-              <>
-                <p className="mt-4 text-xs font-semibold text-muted">Sharing this phone? Switch to:</p>
-                <ul className="mt-2 flex flex-col gap-1">
-                  {data.members
-                    .filter((m) => m.id !== me.id)
-                    .map((m) => (
-                      <li key={m.id}>
-                        <button
-                          onClick={() => {
-                            setMe(m.id)
-                            close()
-                          }}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left text-sm transition hover:bg-raised"
-                        >
-                          <Avatar member={m} size={26} />
-                          <span className="flex-1 truncate">I’m {m.name}</span>
-                          {m.role === 'host' && <span className="text-xs">👑</span>}
-                        </button>
-                      </li>
-                    ))}
-                </ul>
-              </>
-            )}
+            <p className="mt-3 text-[11px] text-muted">🔒 Your account lives in this browser — no password needed.</p>
           </div>
         </>
       )}

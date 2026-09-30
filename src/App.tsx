@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ClubPage } from './components/ClubPage'
+import { ClubSwitcher, NoClubScreen } from './components/Clubs'
+import { Poppy } from './components/home/Characters'
 import { FriendsPage } from './components/FriendsPage'
 import { MembersMenu } from './components/MembersMenu'
 import { PickerPage } from './components/PickerPage'
@@ -13,7 +15,7 @@ import { useClub } from './store/ClubContext'
 export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
 
 function App() {
-  const { data, welcomed } = useClub()
+  const { data, status, error } = useClub()
   const [page, setPage] = useState<Page>('search')
   /** Whose profile is open on the Friends page (null = the list of everyone) */
   const [profileId, setProfileId] = useState<string | null>(null)
@@ -33,6 +35,33 @@ function App() {
     window.scrollTo({ top: 0 })
   }
 
+  // Before a club is open: loading → welcome → pick your first club
+  if (status === 'loading') return <Splash text="Getting the popcorn ready…" />
+  if (status === 'error') return <Splash text={error ?? 'Something went wrong.'} emoji="⚠️" />
+  if (status === 'setup') return (
+    <>
+      <Splash text="" />
+      <WelcomeDialog />
+    </>
+  )
+  if (status === 'no-club') return (
+    <div className="min-h-screen">
+      <header className="border-b border-line/70 px-4 py-3">
+        <div className="mx-auto flex max-w-3xl items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg">🍿</span>
+          <span className="font-display text-lg font-extrabold">
+            WatchParty <span className="text-marquee">Club</span>
+          </span>
+          <span className="ml-auto">
+            <ThemeMenu />
+          </span>
+        </div>
+        <div className="marquee-lights mt-3 opacity-70" />
+      </header>
+      <NoClubScreen />
+    </div>
+  )
+
   const tabs: { page: Page; emoji: string; label: string; count?: number }[] = [
     { page: 'search', emoji: '🔍', label: 'Discover' },
     { page: 'club', emoji: '🎟️', label: 'My Club', count: clubCount },
@@ -45,17 +74,24 @@ function App() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-line/70 bg-night/75 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-3 px-4 py-3 sm:gap-x-6">
-          <button onClick={() => go('search')} className="flex min-w-0 items-center gap-2.5 text-left">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg shadow-lg shadow-gold/20 sm:h-10 sm:w-10 sm:text-xl">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <button
+              onClick={() => go('search')}
+              aria-label="Home"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg shadow-lg shadow-gold/20 sm:h-10 sm:w-10 sm:text-xl"
+            >
               🍿
-            </span>
-            <span className="min-w-0">
-              <span className="block whitespace-nowrap font-display text-lg font-extrabold leading-none tracking-tight sm:text-2xl">
+            </button>
+            <div className="min-w-0">
+              <button onClick={() => go('search')} className="block whitespace-nowrap font-display text-lg font-extrabold leading-none tracking-tight sm:text-2xl">
                 WatchParty <span className="text-marquee">Club</span>
-              </span>
-              <span className="hidden text-xs text-muted sm:block">{data.name || 'A shared shelf for everything your friends love'}</span>
-            </span>
-          </button>
+              </button>
+              {/* Which club is open — tap to switch, create or join another */}
+              <div className="mt-1">
+                <ClubSwitcher />
+              </div>
+            </div>
+          </div>
 
           <div className="ml-auto flex items-center gap-2 lg:order-last lg:ml-0">
             <ThemeMenu />
@@ -111,10 +147,18 @@ function App() {
       )}
 
       <footer className="mx-auto max-w-6xl px-4 pb-24 pt-6 text-center text-xs text-muted">
-        🧪 Test version — your club is saved on this device only. Shared clubs are coming soon!
+        ☁️ Synced live with everyone in {data.name ?? 'your club'}.
       </footer>
+    </div>
+  )
+}
 
-      {!welcomed && <WelcomeDialog />}
+/** A full-screen message: while loading, on errors, and behind the welcome screen. */
+function Splash({ text, emoji }: { text: string; emoji?: string }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+      {emoji ? <div className="text-5xl">{emoji}</div> : <div className="h-28 w-24"><Poppy /></div>}
+      {text && <p className="max-w-md text-soft">{text}</p>}
     </div>
   )
 }
