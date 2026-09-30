@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { useClub } from '../store/ClubContext'
 import { AccountDialog } from './Account'
 import { Avatar } from './Avatar'
+import { ClubsSheet } from './Clubs'
 import { Portal } from './ui'
 
 /** Header avatar button: you, your role in this club, and shortcuts to your profile and friends. */
 export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (id: string) => void; onOpenFriends: () => void }) {
-  const { me, activeClub, account, signOut } = useClub()
+  const { me, activeClub, account, signOut, clubs } = useClub()
   const [open, setOpen] = useState(false)
   const [dialog, setDialog] = useState(false)
+  const [clubsOpen, setClubsOpen] = useState(false)
   const close = () => setOpen(false)
 
   return (
@@ -45,6 +47,18 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
               <MenuButton onClick={() => { close(); onOpenProfile(me.id) }}>👤 My profile</MenuButton>
               <MenuButton onClick={() => { close(); onOpenFriends() }}>👥 Friends</MenuButton>
             </div>
+            <button
+              onClick={() => {
+                close()
+                setClubsOpen(true)
+              }}
+              className="mt-2 flex w-full items-center justify-between rounded-xl border border-line px-3 py-2 text-sm font-semibold transition hover:border-gold hover:text-accent"
+            >
+              <span className="whitespace-nowrap">🎬 Your clubs</span>
+              <span className="whitespace-nowrap text-xs text-muted">
+                {clubs.length} {clubs.length === 1 ? 'club' : 'clubs'} →
+              </span>
+            </button>
             {account.isGuest ? (
               <button
                 onClick={() => {
@@ -76,6 +90,7 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
         </>
       )}
       {dialog && <AccountDialog mode="save" onClose={() => setDialog(false)} />}
+      {clubsOpen && <ClubsSheet onClose={() => setClubsOpen(false)} />}
     </div>
   )
 }

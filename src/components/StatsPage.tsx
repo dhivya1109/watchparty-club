@@ -46,12 +46,13 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
       </div>
 
       {/* Headline numbers */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {/* 2 columns on phones (the 5th tile spans both, so no gap), all 5 in a row from tablets up */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Tile emoji="🎟️" value={totals.titles} label="Titles in the club" />
         <Tile emoji="✅" value={totals.completed} label="Times completed" />
         <Tile emoji="⏱️" value={`≈${totals.watchHours}`} label="Hours watched" />
         <Tile emoji="📖" value={totals.pagesRead.toLocaleString()} label="Pages read" />
-        <Tile emoji="⭐" value={totals.averageRating ?? '—'} label="Average rating" />
+        <Tile emoji="⭐" value={totals.averageRating ?? '—'} label="Average rating" className="col-span-2 sm:col-span-1" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -165,9 +166,9 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
   )
 }
 
-function Tile({ emoji, value, label }: { emoji: string; value: ReactNode; label: string }) {
+function Tile({ emoji, value, label, className = '' }: { emoji: string; value: ReactNode; label: string; className?: string }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-line bg-surface p-4">
+    <div className={`relative overflow-hidden rounded-2xl border border-line bg-surface p-4 ${className}`}>
       <span className="absolute -right-1 -top-2 text-5xl opacity-10">{emoji}</span>
       <div className="text-marquee font-display text-3xl font-extrabold tabular-nums">{value}</div>
       <div className="text-sm text-soft">{label}</div>

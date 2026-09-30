@@ -14,6 +14,47 @@ export function Portal({ children }: { children: ReactNode }) {
   return createPortal(children, document.body)
 }
 
+/**
+ * A dropdown that looks the same everywhere: full width of its space, text cut off
+ * neatly if too long, and our own ▾ arrow (browsers draw theirs in different places).
+ */
+export function Select({
+  label,
+  value,
+  onChange,
+  children,
+  className = '',
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <label className={`relative block min-w-0 ${className}`}>
+      <span className="sr-only">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full appearance-none truncate rounded-full border border-line bg-raised py-2 pl-4 pr-9 text-sm text-soft outline-none transition hover:border-muted focus:border-gold"
+      >
+        {children}
+      </select>
+      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-muted">▾</span>
+    </label>
+  )
+}
+
+/**
+ * A single row of filter pills you can swipe sideways — never wraps into ragged rows.
+ * `edge` matches the padding of what it sits in (page = 4, panel = 5), so the row scrolls edge to edge.
+ */
+export function PillRow({ children, className = '', edge = 4 }: { children: ReactNode; className?: string; edge?: 4 | 5 }) {
+  const bleed = edge === 5 ? '-mx-5 px-5' : '-mx-4 px-4'
+  return <div className={`no-scrollbar flex gap-2 overflow-x-auto pb-1 ${bleed} ${className}`}>{children}</div>
+}
+
 /** Rounded filter / tab button. Active = gold. */
 export function Pill({
   active,

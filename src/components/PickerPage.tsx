@@ -3,7 +3,7 @@ import { rankTitles, sliceAtAngle, wheelSlices, type Suggestion } from '../lib/p
 import { useClub } from '../store/ClubContext'
 import { MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
-import { EmptyState, GoldButton, Panel, Pill, Poster, TypeBadge } from './ui'
+import { EmptyState, GoldButton, Panel, Pill, PillRow, Poster, Select, TypeBadge } from './ui'
 
 const WHEEL_SIZE = 6
 // The same colours as the design tokens in index.css (gold, coral, series, anime, book) plus lilac.
@@ -74,7 +74,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
           </Panel>
 
           <Panel title="🎭 In the mood for…">
-            <div className="flex flex-wrap gap-2">
+            <PillRow edge={5}>
               {[{ type: 'all' as const, emoji: '✨', label: 'Anything' }, ...MEDIA_TYPES].map((m) => (
                 <Pill
                   key={m.type}
@@ -87,18 +87,13 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
                   {m.emoji} {m.label}
                 </Pill>
               ))}
-            </div>
-            <select
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              aria-label="Genre"
-              className="mt-3 rounded-full border border-line bg-raised px-4 py-1.5 text-sm text-soft outline-none focus:border-gold"
-            >
-              <option value="">Any genre</option>
+            </PillRow>
+            <Select label="Genre" value={genre} onChange={setGenre} className="mt-3">
+              <option value="">🎭 Any genre</option>
               {genres.map((g) => (
                 <option key={g}>{g}</option>
               ))}
-            </select>
+            </Select>
           </Panel>
 
           <Panel title="🏆 Top picks" note="Scored by who wants it, their favourite genres, and what’s already started">

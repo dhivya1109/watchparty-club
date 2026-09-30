@@ -16,7 +16,7 @@ import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
 import { Celebration, CELEBRATION_MS, type CelebrationKind } from './Celebration'
-import { EmptyState, Pill, Poster, TypeBadge } from './ui'
+import { EmptyState, Pill, PillRow, Poster, Select, TypeBadge } from './ui'
 
 type Sort = 'recent' | 'title' | 'rating'
 export type ShelfView = 'club' | 'mine'
@@ -117,40 +117,30 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
         </div>
       )}
 
-      {/* Filters and sorting */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      {/* Filters: one swipeable row of types, then the dropdowns side by side at equal width */}
+      <PillRow className="mt-5">
         {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
           <Pill key={m.type} active={typeFilter === m.type} onClick={() => setTypeFilter(m.type)}>
             {m.emoji} {m.label}
           </Pill>
         ))}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      </PillRow>
+      <div className={`mt-3 grid gap-2 ${view === 'club' && pickers.length > 0 ? 'grid-cols-2' : 'grid-cols-1 sm:max-w-xs'}`}>
         {view === 'club' && pickers.length > 0 && (
-          <select
-            value={addedByFilter}
-            onChange={(e) => setAddedByFilter(e.target.value)}
-            aria-label="Added by"
-            className="rounded-full border border-line bg-raised px-4 py-1.5 text-sm text-soft outline-none focus:border-gold"
-          >
-            <option value="everyone">👥 Added by everyone</option>
+          <Select label="Whose picks" value={addedByFilter} onChange={setAddedByFilter}>
+            <option value="everyone">👥 Everyone</option>
             {pickers.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.id === me.id ? '⭐ Added by you' : `${m.emoji ?? '🙂'} Added by ${m.name}`}
+                {m.id === me.id ? '⭐ My picks' : `${m.emoji ?? '🙂'} ${m.name}`}
               </option>
             ))}
-          </select>
+          </Select>
         )}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as Sort)}
-          aria-label="Sort"
-          className="ml-auto rounded-full border border-line bg-raised px-4 py-1.5 text-sm text-soft outline-none focus:border-gold"
-        >
-          <option value="recent">↓ Recently added</option>
-          <option value="title">A–Z Title</option>
-          <option value="rating">★ Your highest rated</option>
-        </select>
+        <Select label="Sort" value={sort} onChange={(v) => setSort(v as Sort)}>
+          <option value="recent">↓ Newest</option>
+          <option value="title">A–Z</option>
+          <option value="rating">★ My top rated</option>
+        </Select>
       </div>
 
       {shown.length === 0 ? (

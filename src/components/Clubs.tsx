@@ -113,80 +113,134 @@ export function NoClubScreen() {
   )
 }
 
-/** Header button: which club is open, with a menu to switch, create or join. */
+/** Header button: which club is open. Tap it to see all your clubs, switch, create or join. */
 export function ClubSwitcher() {
-  const { clubs, activeClub, switchClub } = useClub()
+  const { activeClub, clubs } = useClub()
   const [open, setOpen] = useState(false)
-  const [adding, setAdding] = useState(false)
   if (!activeClub) return null
 
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen(true)}
         className="flex max-w-[11rem] items-center gap-1 rounded-full border border-line bg-surface/80 px-2.5 py-0.5 text-xs font-semibold text-soft transition hover:border-gold hover:text-cream sm:max-w-[16rem]"
-        aria-label={`Current club: ${activeClub.name}. Switch club`}
+        aria-label={`Current club: ${activeClub.name}. You're in ${clubs.length} ${clubs.length === 1 ? 'club' : 'clubs'} — open your clubs`}
       >
         <span>🎬</span>
         <span className="truncate">{activeClub.name}</span>
+        {clubs.length > 1 && <span className="shrink-0 rounded-full bg-raised px-1.5 text-[10px] text-muted">{clubs.length}</span>}
         <span className="text-muted">▾</span>
       </button>
+      {open && <ClubsSheet onClose={() => setOpen(false)} />}
+    </>
+  )
+}
 
-      {open && (
-        <>
-          <Portal>
-            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          </Portal>
-          <div className="animate-pop absolute left-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-surface p-3 shadow-2xl shadow-black/40">
-            <p className="px-2 pb-2 text-xs font-semibold text-muted">Your clubs</p>
-            <ul className="flex flex-col gap-1">
-              {clubs.map((c) => (
-                <li key={c.id}>
-                  <button
-                    onClick={() => {
-                      switchClub(c.id)
-                      setOpen(false)
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
-                      c.id === activeClub.id ? 'bg-gold/15 font-bold' : 'hover:bg-raised'
-                    }`}
-                  >
-                    <span>🎬</span>
-                    <span className="flex-1 truncate">{c.name}</span>
-                    {c.role === 'host' && <span title="You’re the host">👑</span>}
-                    {c.id === activeClub.id && <span className="text-accent">✓</span>}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => {
-                setOpen(false)
-                setAdding(true)
-              }}
-              className="mt-2 w-full rounded-xl border border-dashed border-line py-2 text-sm font-semibold text-soft transition hover:border-gold hover:text-accent"
-            >
-              ＋ New club or join one
-            </button>
-          </div>
-        </>
-      )}
+/**
+ * 🎬 "Your clubs": every club you're in — even 20+ — with search, and
+ * "New club" / "Join a club" always visible at the top (never pushed off-screen).
+ */
+export function ClubsSheet({ onClose }: { onClose: () => void }) {
+  const { clubs, activeClub, switchClub } = useClub()
+  const [mode, setMode] = useState<'list' | 'add'>('list')
+  const [query, setQuery] = useState('')
+  const shown = clubs.filter((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
 
-      {adding && (
-        <Portal>
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true">
-          <div className="animate-pop max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-line bg-night p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-extrabold">Another club? 🎬</h2>
-              <button onClick={() => setAdding(false)} className="rounded-full px-3 py-1 text-sm text-muted hover:text-cream">
-                Close ✕
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="clubs-title">
+        {/* Tapping the dark area closes the sheet */}
+        <div className="absolute inset-0" onClick={onClose} />
+        <div className="animate-pop relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] border border-line bg-surface shadow-2xl">
+          {/* Title + actions: pinned at the top, however many clubs there are */}
+          <div className="border-b border-line p-5 pb-4">
+            <div className="flex items-center justify-between gap-3">
+              {mode === 'list' ? (
+                <h2 id="clubs-title" className="text-2xl font-extrabold">
+                  🎬 Your clubs <span className="text-muted">· {clubs.length}</span>
+                </h2>
+              ) : (
+                <button onClick={() => setMode('list')} className="text-sm font-semibold text-soft hover:text-cream">
+                  ← Your clubs
+                </button>
+              )}
+              <button onClick={onClose} aria-label="Close" className="rounded-full px-2 text-lg text-muted hover:text-cream">
+                ✕
               </button>
             </div>
-            <CreateOrJoin onDone={() => setAdding(false)} />
+            {mode === 'list' && (
+              <>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setMode('add')}
+                    className="rounded-2xl bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-ink shadow-md shadow-gold/20 transition hover:brightness-110"
+                  >
+                    ＋ New club
+                  </button>
+                  <button
+                    onClick={() => setMode('add')}
+                    className="rounded-2xl border-2 border-gold/60 py-2.5 font-display font-bold text-accent transition hover:bg-gold/10"
+                  >
+                    🔗 Join a club
+                  </button>
+                </div>
+                {clubs.length > 5 && (
+                  <label className="relative mt-3 block">
+                    <span className="sr-only">Search your clubs</span>
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm">🔍</span>
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={`Search ${clubs.length} clubs…`}
+                      className="w-full rounded-full border border-line bg-night/50 py-2 pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-gold"
+                    />
+                  </label>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* The list scrolls on its own, so the top stays put */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+            {mode === 'add' ? (
+              <div className="p-2">
+                <CreateOrJoin onDone={onClose} />
+              </div>
+            ) : shown.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted">No club called “{query}”.</p>
+            ) : (
+              <ul className="flex flex-col gap-1">
+                {shown.map((c) => {
+                  const current = c.id === activeClub?.id
+                  return (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => {
+                          switchClub(c.id)
+                          onClose()
+                        }}
+                        aria-current={current}
+                        className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition ${
+                          current ? 'bg-gold/15 ring-1 ring-gold/50' : 'hover:bg-raised'
+                        }`}
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-raised font-display text-lg font-extrabold text-accent">
+                          {c.name.trim().charAt(0).toUpperCase()}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-bold">{c.name}</span>
+                          <span className="block text-xs text-muted">{c.role === 'host' ? '👑 You’re the host' : '🙂 Member'}</span>
+                        </span>
+                        {current && <span className="shrink-0 rounded-full bg-gold px-2 py-0.5 text-[11px] font-bold text-ink">Open</span>}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </div>
         </div>
-        </Portal>
-      )}
-    </div>
+      </div>
+    </Portal>
   )
 }

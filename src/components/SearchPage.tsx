@@ -6,7 +6,7 @@ import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget }
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
-import { Pill, Poster, TypeBadge } from './ui'
+import { Pill, PillRow, Poster, TypeBadge } from './ui'
 
 type Tab = MediaType | 'all'
 
@@ -92,13 +92,13 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
         </div>
       </div>
 
-      <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
+      <PillRow className="mt-4">
         {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
           <Pill key={m.type} active={tab === m.type} onClick={() => setTab(m.type)}>
             {m.emoji} {m.label}
           </Pill>
         ))}
-      </div>
+      </PillRow>
 
       <ClubExplainer />
 
