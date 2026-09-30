@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useClub } from '../store/ClubContext'
+import { AccountDialog } from './Account'
 import { Avatar } from './Avatar'
+import { Portal } from './ui'
 
 /** Header avatar button: you, your role in this club, and shortcuts to your profile and friends. */
 export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (id: string) => void; onOpenFriends: () => void }) {
-  const { me, activeClub } = useClub()
+  const { me, activeClub, account, signOut } = useClub()
   const [open, setOpen] = useState(false)
+  const [dialog, setDialog] = useState(false)
   const close = () => setOpen(false)
 
   return (
@@ -24,7 +27,9 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
       {open && (
         <>
           {/* Clicking outside the panel closes it */}
-          <div className="fixed inset-0 z-20" onClick={close} />
+          <Portal>
+            <div className="fixed inset-0 z-10" onClick={close} />
+          </Portal>
           <div className="animate-pop absolute right-0 z-30 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-surface p-4 shadow-2xl shadow-black/40">
             <div className="flex items-center gap-3">
               <Avatar member={me} size={44} />
@@ -40,10 +45,37 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
               <MenuButton onClick={() => { close(); onOpenProfile(me.id) }}>👤 My profile</MenuButton>
               <MenuButton onClick={() => { close(); onOpenFriends() }}>👥 Friends</MenuButton>
             </div>
-            <p className="mt-3 text-[11px] text-muted">🔒 Your account lives in this browser — no password needed.</p>
+            {account.isGuest ? (
+              <button
+                onClick={() => {
+                  close()
+                  setDialog(true)
+                }}
+                className="mt-3 w-full rounded-2xl border-2 border-gold/60 bg-gold/10 p-3 text-left transition hover:bg-gold/20"
+              >
+                <span className="block font-display font-bold">💾 Save my account</span>
+                <span className="block text-xs text-soft">Right now it only lives in this browser. Add your email to use it on any device.</span>
+              </button>
+            ) : (
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl bg-night/40 px-3 py-2 text-xs">
+                <span className="min-w-0 truncate text-soft">✉️ {account.email}</span>
+                <button
+                  onClick={() => {
+                    if (confirm('Sign out on this device? Sign back in any time with your email.')) {
+                      close()
+                      void signOut()
+                    }
+                  }}
+                  className="shrink-0 font-semibold text-muted hover:text-coral"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
+      {dialog && <AccountDialog mode="save" onClose={() => setDialog(false)} />}
     </div>
   )
 }

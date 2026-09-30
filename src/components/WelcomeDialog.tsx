@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useClub } from '../store/ClubContext'
+import { EmailCodeForm } from './Account'
 import { Poppy } from './home/Characters'
 import { ProfileForm } from './ProfileForm'
 
@@ -9,7 +10,7 @@ import { ProfileForm } from './ProfileForm'
  */
 export function WelcomeDialog() {
   const { setupProfile, pendingInvite } = useClub()
-  const [step, setStep] = useState<'hello' | 'profile'>('hello')
+  const [step, setStep] = useState<'hello' | 'profile' | 'signin'>('hello')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -52,6 +53,26 @@ export function WelcomeDialog() {
             >
               Let’s set you up →
             </button>
+            <p className="mt-4 text-center text-sm text-soft">
+              Already have an account?{' '}
+              <button onClick={() => setStep('signin')} className="font-bold text-accent hover:underline">
+                Sign in with email
+              </button>
+            </p>
+          </>
+        ) : step === 'signin' ? (
+          <>
+            <h2 id="welcome-title" className="text-2xl font-extrabold">
+              ✉️ Welcome back
+            </h2>
+            <p className="mt-1 text-sm text-soft">Sign in to get your profile, clubs and ratings on this device.</p>
+            <div className="mt-5">
+              {/* When sign-in succeeds, the app loads your account and this screen closes by itself */}
+              <EmailCodeForm mode="signin" onDone={() => {}} />
+            </div>
+            <button onClick={() => setStep('hello')} className="mt-4 text-sm font-semibold text-muted hover:text-cream">
+              ← Back
+            </button>
           </>
         ) : (
           <>
@@ -77,7 +98,7 @@ export function WelcomeDialog() {
             </div>
             {error && <p className="mt-3 rounded-xl bg-coral/10 px-3 py-2 text-sm text-coral">⚠️ {error}</p>}
             <p className="mt-4 text-xs text-muted">
-              🔒 Your account lives in this browser — no email or password. (Signing in on other devices is coming later.)
+              🔒 No password needed. Later you can save your account with your email to use it on any device.
             </p>
           </>
         )}

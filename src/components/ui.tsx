@@ -1,9 +1,18 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { MEDIA_TYPES, TYPE_STYLE, type MediaType } from '../types'
 
 /**
  * The app's small UI kit: shared building blocks so every page looks consistent.
  */
+
+/**
+ * Draws its children straight onto the page body. Needed for pop-ups opened from the header:
+ * the header's blur effect would otherwise trap "full-screen" layers inside the header's box.
+ */
+export function Portal({ children }: { children: ReactNode }) {
+  return createPortal(children, document.body)
+}
 
 /** Rounded filter / tab button. Active = gold. */
 export function Pill({

@@ -101,6 +101,68 @@ export async function signIn(): Promise<string> {
   return data.user.id
 }
 
+// ---------- Saving your account with email ----------
+// Supabase emails a short code. (Codes, not links: on phones a link often opens in a
+// different browser — a code keeps you signed in right where you are.)
+
+export interface Account {
+  email: string | null
+  /** true = a guest account that only lives in this browser */
+  isGuest: boolean
+}
+
+export async function getAccount(): Promise<Account> {
+  const { data } = await db().auth.getUser()
+  return { email: data.user?.email ?? null, isGuest: data.user?.is_anonymous ?? true }
+}
+
+/** Step 1 of saving a guest account: attach an email. Supabase sends a code to it. */
+export async function sendSaveCode(email: string): Promise<void> {
+  const { error } = await db().auth.updateUser({ email: email.trim() })
+  if (error) throw new Error(friendly(error.message))
+}
+
+/** Step 2: the code from the email confirms it — the account is now saved. */
+export async function confirmSaveCode(email: string, code: string): Promise<void> {
+  const { error } = await db().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email_change' })
+  if (error) throw new Error(friendly(error.message))
+}
+
+/** On another device: send a sign-in code (only to emails that already have an account). */
+export async function sendSignInCode(email: string): Promise<void> {
+  const { error } = await db().auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
+  if (error) throw new Error(friendly(error.message))
+}
+
+/** …and sign in with it. Returns your account's id. */
+export async function confirmSignInCode(email: string, code: string): Promise<string> {
+  const { data, error } = await db().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
+  if (error || !data.user) throw new Error(friendly(error?.message ?? 'Could not sign in.'))
+  return data.user.id
+}
+
+export async function signOut(): Promise<void> {
+  await db().auth.signOut()
+}
+
+/** Supabase's error messages are written for developers — translate the common ones. */
+function friendly(message: string): string {
+  const m = message.toLowerCase()
+  if (m.includes('signups not allowed') || m.includes('user not found'))
+    return 'No saved account uses that email yet. Check the spelling — or save this account first.'
+  if (m.includes('already been registered') || m.includes('already registered'))
+    return 'That email is already used by another account. Sign in with it instead.'
+  if (m.includes('rate limit') || m.includes('too many'))
+    return 'Too many emails were sent just now. Please wait a few minutes and try again.'
+  // Check the email-format message BEFORE the code message — both contain the word "invalid".
+  if (m.includes('email') && (m.includes('format') || m.includes('validate')))
+    return 'That doesn’t look like a valid email address.'
+  if (m.includes('expired') || m.includes('invalid') || m.includes('token'))
+    return 'That code didn’t work — it may be mistyped or expired. Check the latest email, or send a new code.'
+  if (m.includes('not authorized')) return 'Emails can’t be sent to that address yet (the app’s email sender is limited).'
+  return message
+}
+
 export async function fetchProfile(userId: string): Promise<Member | null> {
   const row = ok<ProfileRow | null>(await db().from('profiles').select('*').eq('id', userId).maybeSingle())
   return row ? toMember(row, 'member') : null

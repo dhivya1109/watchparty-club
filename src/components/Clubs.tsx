@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useClub } from '../store/ClubContext'
+import { Portal } from './ui'
 
 /**
  * 🎬 Clubs: start a new one, join one with an invite link, and switch between the clubs you're in.
@@ -133,7 +134,9 @@ export function ClubSwitcher() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+          <Portal>
+            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          </Portal>
           <div className="animate-pop absolute left-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-surface p-3 shadow-2xl shadow-black/40">
             <p className="px-2 pb-2 text-xs font-semibold text-muted">Your clubs</p>
             <ul className="flex flex-col gap-1">
@@ -170,6 +173,7 @@ export function ClubSwitcher() {
       )}
 
       {adding && (
+        <Portal>
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true">
           <div className="animate-pop max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-line bg-night p-5">
             <div className="mb-4 flex items-center justify-between">
@@ -181,6 +185,7 @@ export function ClubSwitcher() {
             <CreateOrJoin onDone={() => setAdding(false)} />
           </div>
         </div>
+        </Portal>
       )}
     </div>
   )

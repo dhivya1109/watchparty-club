@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { applyTheme, loadTheme, THEMES, type ThemeId } from '../theme'
+import { Portal } from './ui'
 
 /** 🎨 Header button: pick one of the colour themes. */
 export function ThemeMenu() {
@@ -24,7 +25,9 @@ export function ThemeMenu() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+          <Portal>
+            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          </Portal>
           <div className="animate-pop absolute right-0 z-30 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-surface p-4 shadow-2xl shadow-black/40">
             <h3 className="text-lg font-bold">🎨 Choose your cinema</h3>
             <p className="text-xs text-muted">Saved on this device.</p>

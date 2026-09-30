@@ -53,6 +53,16 @@ interface ClubStore {
   /** Titles in the old device-only club that can be brought into a shared club */
   localTitleCount: number
 
+  /** Is this a guest account (this browser only), or saved with an email? */
+  account: cloud.Account
+  /** Save this guest account: step 1 sends a code, step 2 confirms it */
+  sendSaveCode: (email: string) => Promise<void>
+  confirmSaveCode: (email: string, code: string) => Promise<void>
+  /** Sign in to a saved account (e.g. on a new phone) */
+  sendSignInCode: (email: string) => Promise<void>
+  confirmSignInCode: (email: string, code: string) => Promise<void>
+  signOut: () => Promise<void>
+
   setupProfile: (profile: cloud.Profile) => Promise<void>
   updateProfile: (change: MemberChange) => Promise<void>
   createClub: (name: string, importLocal: boolean) => Promise<void>
@@ -79,6 +89,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [data, setData] = useState<ClubData>(emptyClub)
   const [pendingInvite, setPendingInvite] = useState<string | null>(() => readInviteFromUrl())
+  const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: true })
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const fail = useCallback(
@@ -96,6 +107,19 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     setStatus(pick ? 'ready' : 'no-club')
   }, [])
 
+  /** Load everything for an account: guest or saved, profile, and clubs. */
+  const loadAccount = useCallback(
+    async (uid: string) => {
+      setUserId(uid)
+      setAccount(await cloud.getAccount())
+      const p = await cloud.fetchProfile(uid)
+      setProfile(p)
+      if (!p) return setStatus('setup')
+      await loadClubs(uid)
+    },
+    [loadClubs],
+  )
+
   // 1. On startup: find this device's account and profile.
   useEffect(() => {
     ;(async () => {
@@ -107,17 +131,13 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       try {
         const uid = await cloud.currentUserId()
         if (!uid) return setStatus('setup')
-        setUserId(uid)
-        const p = await cloud.fetchProfile(uid)
-        if (!p) return setStatus('setup')
-        setProfile(p)
-        await loadClubs(uid)
+        await loadAccount(uid)
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
         setStatus('error')
       }
     })()
-  }, [loadClubs])
+  }, [loadAccount])
 
   // 2. Whenever the open club changes: load it, and listen for live changes from friends.
   const reloadClub = useCallback(async () => {
@@ -207,6 +227,30 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       activeClub,
       pendingInvite,
       localTitleCount,
+      account,
+
+      sendSaveCode: (email) => cloud.sendSaveCode(email),
+      confirmSaveCode: async (email, code) => {
+        await cloud.confirmSaveCode(email, code)
+        setAccount(await cloud.getAccount())
+        toast({ title: 'Account saved ✉️', text: `Sign in with ${email.trim()} on any device to get your clubs back.`, emoji: '💾' })
+      },
+      sendSignInCode: (email) => cloud.sendSignInCode(email),
+      confirmSignInCode: async (email, code) => {
+        const uid = await cloud.confirmSignInCode(email, code)
+        setActiveId(null)
+        await loadAccount(uid)
+        toast({ title: 'Welcome back! 🍿', text: 'Your clubs and ratings are here.', emoji: '👋' })
+      },
+      signOut: async () => {
+        await cloud.signOut()
+        setUserId(null)
+        setProfile(null)
+        setClubs([])
+        setActiveId(null)
+        setAccount({ email: null, isGuest: true })
+        setStatus('setup')
+      },
 
       setupProfile: async (p) => {
         const uid = userId ?? (await cloud.signIn())
@@ -299,7 +343,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         )
       },
     }),
-    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, localTitleCount, userId, profile, activeId, loadClubs, reloadClub, optimistic, toast],
+    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, localTitleCount, account, userId, profile, activeId, loadClubs, loadAccount, reloadClub, optimistic, toast],
   )
 
   return <ClubContext.Provider value={store}>{children}</ClubContext.Provider>
