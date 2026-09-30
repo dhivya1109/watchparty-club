@@ -24,7 +24,7 @@ export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNav
           {/* Screen sheen */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent" />
           <p className="relative text-[11px] font-bold uppercase tracking-[0.35em] text-accent">★ Now showing ★</p>
-          <h2 className="relative mx-auto mt-3 max-w-2xl text-4xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl">
+          <h2 className="relative mx-auto mt-3 max-w-2xl text-[clamp(2rem,9vw,3.75rem)] font-extrabold leading-[1.02] tracking-tight">
             Your friends’ own <span className="text-marquee">cinema</span>
           </h2>
           <p className="relative mx-auto mt-4 max-w-lg text-sm text-soft sm:text-base">
@@ -36,7 +36,9 @@ export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNav
               onClick={onStart}
               className="rounded-full bg-gradient-to-b from-gold to-gold-deep px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base text-ink shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
             >
-              🔍 Find something to watch
+              {/* Shorter words on the smallest phones, so the button stays on one line */}
+              <span className="min-[380px]:hidden">🔍 Find something</span>
+              <span className="max-[379px]:hidden">🔍 Find something to watch</span>
             </button>
             <button
               onClick={() => onNavigate('tonight')}
@@ -117,7 +119,7 @@ export function NowShowing({ onNavigate }: { onNavigate: (page: HomeTarget) => v
   return (
     <section className="mt-14">
       <SectionTitle kicker="The programme" title="What’s playing at the club" />
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((f, i) => (
           <article
             key={f.title}
@@ -156,7 +158,7 @@ export function HowItWorks() {
   return (
     <section className="mt-14">
       <SectionTitle kicker="Tonight’s schedule" title="How it works" />
-      <ol className="relative mt-6 grid gap-4 sm:grid-cols-3">
+      <ol className="relative mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {/* Dashed line joining the steps (bigger screens) */}
         <div className="absolute left-[16%] right-[16%] top-9 hidden border-t-2 border-dashed border-line sm:block" />
         {STEPS.map((s, i) => (

@@ -78,7 +78,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
         {host && ` · 👑 Host: ${host.name}`}
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.members.map((m) => {
           const s = personStats(data, m)
           const match = m.id === me.id ? null : matchWithMe(m.id)
@@ -131,7 +131,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
       </div>
 
       <Panel title="ℹ️ How roles work" className="mt-6">
-        <ul className="grid gap-3 text-sm text-soft sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-3 text-sm text-soft sm:grid-cols-2">
           <li>
             <b className="text-cream">👑 Host</b> — started the club. Shares the invite link, removes people, renames the club.
           </li>
@@ -355,7 +355,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
               <h3 className="text-xl font-extrabold">
                 ✍️ {isMe ? 'Your reviews' : `${firstName}’s reviews`} <span className="text-sm font-medium text-muted">· {reviews.length}</span>
               </h3>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {reviews.map(({ title, entry }) => (
                   <figure key={title.id} className="flex gap-3 rounded-2xl border border-line bg-surface p-3">
                     <Poster src={title.image} type={title.type} className="aspect-[2/3] w-14 shrink-0 rounded-lg" />

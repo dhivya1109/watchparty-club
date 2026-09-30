@@ -109,7 +109,7 @@ export function ClubPage({ onGoSearch }: { onGoSearch: () => void }) {
       {shown.length === 0 ? (
         <p className="mt-14 text-center text-muted">Nothing matches these filters.</p>
       ) : (
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           {shown.map(({ title, entry }) => (
             <ClubCard key={title.id} title={title} entry={entry} />
           ))}
@@ -173,8 +173,9 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
       }`}
     >
     <article className="ticket animate-pop flex h-full flex-col rounded-3xl border border-line bg-gradient-to-br from-surface to-raised/60 transition hover:border-muted">
-    <div className="flex gap-4 p-3 pl-4">
-      <div className="relative w-24 shrink-0 sm:w-28">
+    {/* Top row: poster, title and status — always side by side */}
+    <div className="flex gap-3 p-3 pl-4 sm:gap-4">
+      <div className="relative w-20 shrink-0 sm:w-28">
         <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-2xl shadow-lg shadow-black/40" />
       </div>
 
@@ -225,7 +226,11 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           </div>
           <p className="mt-1 text-[11px] font-medium text-soft">{STATUSES.find((s) => s.value === status)!.label}</p>
         </div>
+      </div>
+    </div>
 
+      {/* Full width below: progress, your stars, and what friends think — room to breathe on any phone */}
+      <div className="flex flex-col gap-3 px-4 pb-3">
         {hasProgress && (
           <div>
             <div className="flex items-center gap-2 text-sm">
@@ -266,7 +271,6 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           </div>
         )}
       </div>
-    </div>
 
       {/* ---------- Reviews ---------- */}
       <div className="flex flex-col gap-3 border-t border-dashed border-line px-4 pb-4 pt-3">

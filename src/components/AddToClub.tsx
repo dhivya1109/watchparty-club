@@ -88,7 +88,7 @@ export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenC
   const shown = added.slice(-4)
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-3 z-40 flex justify-center px-3" role="status" aria-live="polite">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-3" role="status" aria-live="polite">
       <div
         key={added.length}
         className="animate-toast pointer-events-auto relative flex w-full max-w-lg items-center gap-3 overflow-hidden rounded-3xl border-2 border-book/60 bg-surface p-3 shadow-2xl shadow-black/60"

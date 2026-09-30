@@ -54,7 +54,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
         <Tile emoji="⭐" value={totals.averageRating ?? '—'} label="Average rating" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <HighlightCard emoji="🔥" heading="Most loved" item={loved} empty="Needs 2+ people rating the same title.">
           {loved && `Group average ${loved.average}/10`}
         </HighlightCard>
@@ -63,7 +63,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
         </HighlightCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel title="🎭 Genres in your club" note="Number of titles · group rating">
           <BarList
             rows={genres.map((g) => ({
@@ -110,7 +110,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_2fr]">
         <Panel title="🗂️ By type">
           <div className="grid grid-cols-2 gap-2">
             {MEDIA_TYPES.map((t) => (

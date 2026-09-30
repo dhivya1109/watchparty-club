@@ -9,23 +9,23 @@
   --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* Velvet night: backgrounds, from darkest to lightest */
-  --color-night: #0c0a10;
-  --color-surface: #16121c;
-  --color-raised: #221b2b;
-  --color-line: #322839;
+  /* Soft velvet: backgrounds, from darkest to lightest (a warm plum, not black) */
+  --color-night: #1c1624;
+  --color-surface: #261e30;
+  --color-raised: #33293f;
+  --color-line: #473b55;
 
   /* Text */
   --color-cream: #fbf6ee;
-  --color-soft: #c7bdd3;
-  --color-muted: #8b809a;
+  --color-soft: #d6ccdf;
+  --color-muted: #a498b3;
 
-  /* Marquee gold: main actions, stars, highlights */
-  --color-gold: #ffc53d;
-  --color-gold-deep: #f29d12;
-  --color-marquee-1: #ffe08a; /* top of the gold text gradient */
+  /* Warm gold: main actions, stars, highlights (a little softer than pure yellow) */
+  --color-gold: #f6c56b;
+  --color-gold-deep: #e9a23f;
+  --color-marquee-1: #ffe3a8; /* top of the gold text gradient */
   /* Gold-coloured TEXT. Same as gold on dark themes; darker on light ones so it stays readable. */
-  --color-accent: #ffc53d;
+  --color-accent: #f6c56b;
   --color-coral: #ff6b57;
   /* Text ON a bright button (gold, lime…) — dark in every theme */
   --color-ink: #0c0a10;
@@ -43,9 +43,9 @@
  */
 :root {
   color-scheme: dark;
-  --spot-1: rgb(255 197 61 / 0.11);
-  --spot-2: rgb(244 114 182 / 0.10);
-  --grain: 0.05;
+  --spot-1: rgb(246 197 107 / 0.10);
+  --spot-2: rgb(244 114 182 / 0.08);
+  --grain: 0.04;
 }
 
 /* 🖤 Noir — plain black, silver-white accents, a touch of red */
@@ -110,8 +110,18 @@
   --grain: 0.05;
 }
 
+/* Phones: don't let the browser auto-enlarge text (it does so differently on each phone) */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   @apply bg-night text-cream font-sans antialiased;
+  /* Keep content clear of notches and rounded corners when the phone is sideways */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  overflow-x: clip;
   /* Soft spotlights from the top of the "theatre" */
   background-image:
     radial-gradient(ellipse 60% 40% at 10% -5%, var(--spot-1), transparent),

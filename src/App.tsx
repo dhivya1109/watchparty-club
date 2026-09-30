@@ -73,8 +73,8 @@ function App() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-line/70 bg-night/75 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-3 px-4 py-3 sm:gap-x-6">
-          <div className="flex min-w-0 items-center gap-2.5">
+        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-x-6">
+          <div className="flex min-w-0 items-center gap-2.5 lg:order-1">
             <button
               onClick={() => go('search')}
               aria-label="Home"
@@ -83,7 +83,7 @@ function App() {
               🍿
             </button>
             <div className="min-w-0">
-              <button onClick={() => go('search')} className="block whitespace-nowrap font-display text-lg font-extrabold leading-none tracking-tight sm:text-2xl">
+              <button onClick={() => go('search')} className="block whitespace-nowrap font-display text-[clamp(1rem,4.8vw,1.5rem)] font-extrabold leading-none tracking-tight">
                 WatchParty <span className="text-marquee">Club</span>
               </button>
               {/* Which club is open — tap to switch, create or join another */}
@@ -93,13 +93,13 @@ function App() {
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 lg:order-last lg:ml-0">
+          <div className="flex shrink-0 items-center gap-2 lg:order-3">
             <ThemeMenu />
             <MembersMenu onOpenProfile={(id) => go('friends', id)} onOpenFriends={() => go('friends')} />
           </div>
 
           {/* Phones & tablets: 5 equal buttons, icon above label. Wide screens: one pill-shaped bar. */}
-          <nav className="grid w-full grid-cols-5 gap-1 rounded-2xl border border-line bg-surface/80 p-1 lg:ml-auto lg:flex lg:w-auto lg:rounded-full">
+          <nav className="col-span-2 grid grid-cols-5 gap-1 rounded-2xl border border-line bg-surface/80 p-1 lg:order-2 lg:col-span-1 lg:flex lg:justify-self-end lg:rounded-full">
             {tabs.map((t) => (
               <button
                 // A new key for My Club after each catch restarts its wiggle-and-glow animation.

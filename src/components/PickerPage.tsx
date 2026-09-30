@@ -49,7 +49,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">What are we watching tonight?</h2>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div className="flex flex-col gap-5">
           <Panel title="👥 Who’s here?">
             <div className="flex flex-wrap gap-2">

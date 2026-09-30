@@ -29,7 +29,7 @@ export function CreateOrJoin({ onDone }: { onDone?: () => void }) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <form
         className="flex flex-col rounded-3xl border border-gold/50 bg-gradient-to-br from-gold/10 to-surface p-5"
         onSubmit={(e) => {

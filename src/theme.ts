@@ -6,7 +6,7 @@
 export type ThemeId = 'marquee' | 'noir' | 'matinee' | 'festival'
 
 export const THEMES: { id: ThemeId; emoji: string; name: string; description: string; swatch: string[] }[] = [
-  { id: 'marquee', emoji: '🎭', name: 'Marquee', description: 'Velvet night & gold lights', swatch: ['#0c0a10', '#221b2b', '#ffc53d', '#ff6b57'] },
+  { id: 'marquee', emoji: '🎭', name: 'Marquee', description: 'Soft velvet & warm gold', swatch: ['#1c1624', '#33293f', '#f6c56b', '#ff6b57'] },
   { id: 'noir', emoji: '🖤', name: 'Noir', description: 'Plain black, silver screen', swatch: ['#000000', '#171717', '#f2f2f2', '#ff3b3b'] },
   { id: 'matinee', emoji: '☀️', name: 'Matinee', description: 'Light mode, paper tickets', swatch: ['#f5eee2', '#fffaf2', '#f0a500', '#d9412f'] },
   { id: 'festival', emoji: '🌏', name: 'Festival', description: 'International filmy colours', swatch: ['#13061c', '#2c123d', '#ffa41b', '#ff2e88'] },
