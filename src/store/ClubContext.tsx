@@ -62,6 +62,11 @@ interface ClubStore {
   sendSignInCode: (email: string) => Promise<void>
   confirmSignInCode: (email: string, code: string) => Promise<void>
   signOut: () => Promise<void>
+  /**
+   * Checks whether an email link was used (maybe in another tab): 'switched' = now signed in
+   * to a different (saved) account, 'saved' = this account now has an email, 'guest' = nothing yet.
+   */
+  refreshAccount: () => Promise<'switched' | 'saved' | 'guest'>
 
   setupProfile: (profile: cloud.Profile) => Promise<void>
   updateProfile: (change: MemberChange) => Promise<void>
@@ -241,6 +246,17 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         setActiveId(null)
         await loadAccount(uid)
         toast({ title: 'Welcome back! 🍿', text: 'Your clubs and ratings are here.', emoji: '👋' })
+      },
+      refreshAccount: async () => {
+        const uid = await cloud.currentUserId()
+        if (uid && uid !== userId) {
+          setActiveId(null)
+          await loadAccount(uid)
+          return 'switched'
+        }
+        const acc = await cloud.getAccount()
+        setAccount(acc)
+        return acc.isGuest ? 'guest' : 'saved'
       },
       signOut: async () => {
         await cloud.signOut()

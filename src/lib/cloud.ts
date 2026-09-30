@@ -11,7 +11,17 @@ import type { ClubData, ClubTitle, Entry, Member, Role, Status } from './club'
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null
+export const supabase: SupabaseClient | null =
+  url && key
+    ? createClient(url, key, {
+        auth: {
+          // Email links carry the sign-in in the address itself, so they work in whichever
+          // browser the phone opens them in (the default "PKCE" flow needs the same browser).
+          flowType: 'implicit',
+          detectSessionInUrl: true,
+        },
+      })
+    : null
 
 export interface ClubSummary {
   id: string
@@ -102,8 +112,8 @@ export async function signIn(): Promise<string> {
 }
 
 // ---------- Saving your account with email ----------
-// Supabase emails a short code. (Codes, not links: on phones a link often opens in a
-// different browser — a code keeps you signed in right where you are.)
+// Supabase emails a link (and, with a custom email service, a code too).
+// Links bring people back to this app; the app notices by itself when they've been used.
 
 export interface Account {
   email: string | null
@@ -118,7 +128,7 @@ export async function getAccount(): Promise<Account> {
 
 /** Step 1 of saving a guest account: attach an email. Supabase sends a code to it. */
 export async function sendSaveCode(email: string): Promise<void> {
-  const { error } = await db().auth.updateUser({ email: email.trim() })
+  const { error } = await db().auth.updateUser({ email: email.trim() }, { emailRedirectTo: location.origin })
   if (error) throw new Error(friendly(error.message))
 }
 
@@ -130,7 +140,10 @@ export async function confirmSaveCode(email: string, code: string): Promise<void
 
 /** On another device: send a sign-in code (only to emails that already have an account). */
 export async function sendSignInCode(email: string): Promise<void> {
-  const { error } = await db().auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
+  const { error } = await db().auth.signInWithOtp({
+    email: email.trim(),
+    options: { shouldCreateUser: false, emailRedirectTo: location.origin },
+  })
   if (error) throw new Error(friendly(error.message))
 }
 
