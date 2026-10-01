@@ -11,3 +11,12 @@
 | 5 | Clearing the search jumps back to the home screen | Stay in search until you press Back | ✅ |
 | 6 | Club page = endless scrolling with many picks | Compact rows of posters per person; tap for details | ✅ |
 | 7 | Completing something forces the review box (keyboard pops up) | Review is optional and only offered after completing | ✅ |
+
+## Round 2 — 2026-10-01
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | Log in should use a code from email, not a password or a link | Email → 6-digit code → profile (new people) → app | ✅ (needs email sender set up in Supabase) |
+| 2 | "Added to the club" card and light effects after adding feel noisy | Removed the card, sparkles, flying poster and button shine — the button simply turns into ✓ On the shelf | ✅ |
+| 3 | Not clear how to set my own status on a friend's pick | Full-width "Your status" buttons with labels; a Friends list shows everyone's status | ✅ |
+| 4 | "Your picks" cards should feel alive (like the District app) | Soft light sweep + tilt towards your finger | ✅ |

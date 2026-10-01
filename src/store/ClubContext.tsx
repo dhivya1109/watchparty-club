@@ -60,14 +60,12 @@ interface ClubStore {
 
   /** Is this a guest account (this browser only), or saved with an email? */
   account: cloud.Account
-  signUp: (email: string, password: string) => Promise<void>
-  logIn: (email: string, password: string) => Promise<void>
-  /** Older guest accounts: add an email + password so they're kept */
-  saveGuestAccount: (email: string, password: string) => Promise<void>
-  sendPasswordReset: (email: string) => Promise<void>
-  /** true after opening a "reset your password" email → ask for a new password */
-  recovering: boolean
-  setNewPassword: (password: string) => Promise<void>
+  /** Log in (or create an account): step 1 emails a code, step 2 checks it */
+  sendLoginCode: (email: string) => Promise<void>
+  verifyLoginCode: (email: string, code: string) => Promise<void>
+  /** Older guest accounts: add an email so they're kept — same two steps */
+  sendSaveCode: (email: string) => Promise<void>
+  confirmSaveCode: (email: string, code: string) => Promise<void>
   signOut: () => Promise<void>
 
   setupProfile: (profile: cloud.Profile) => Promise<void>
@@ -100,7 +98,6 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [invitePreview, setInvitePreview] = useState<cloud.InvitePreview | null>(null)
   const [joinedCount, setJoinedCount] = useState(0)
   const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: false })
-  const [recovering, setRecovering] = useState(false)
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const fail = useCallback(
@@ -173,9 +170,6 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       }
     })()
   }, [loadAccount])
-
-  // Arrived from a "reset your password" email → ask for the new password.
-  useEffect(() => (cloud.supabase ? cloud.onPasswordRecovery(() => setRecovering(true)) : undefined), [])
 
   // Invited? Find out who invited you to which club (works before signing in).
   useEffect(() => {
@@ -258,32 +252,17 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       localTitleCount,
       account,
 
-      recovering,
-
-      signUp: async (email, password) => {
-        const uid = await cloud.signUp(email, password)
-        await loadAccount(uid)
-      },
-      logIn: async (email, password) => {
-        const uid = await cloud.logIn(email, password)
+      sendLoginCode: (email) => cloud.sendLoginCode(email),
+      verifyLoginCode: async (email, code) => {
+        const uid = await cloud.verifyLoginCode(email, code)
         setActiveId(null)
         await loadAccount(uid)
-        toast({ title: 'Welcome back! 🍿', text: 'Your clubs and ratings are here.', emoji: '👋' })
       },
-      saveGuestAccount: async (email, password) => {
-        const saved = await cloud.saveGuestAccount(email, password)
+      sendSaveCode: (email) => cloud.sendSaveCode(email),
+      confirmSaveCode: async (email, code) => {
+        await cloud.confirmSaveCode(email, code)
         setAccount(await cloud.getAccount())
-        toast(
-          saved
-            ? { title: 'Account saved 💾', text: `Log in with ${email.trim()} on any device to get your clubs back.`, emoji: '✉️' }
-            : { title: 'Almost there ✉️', text: `Open the link we sent to ${email.trim()} to finish saving.`, emoji: '📬' },
-        )
-      },
-      sendPasswordReset: (email) => cloud.sendPasswordReset(email),
-      setNewPassword: async (password) => {
-        await cloud.setNewPassword(password)
-        setRecovering(false)
-        toast({ title: 'Password changed 🔑', text: 'Use it next time you log in.', emoji: '✅' })
+        toast({ title: 'Account saved 💾', text: `Log in with ${email.trim()} on any device to get your clubs back.`, emoji: '✉️' })
       },
       signOut: async () => {
         await cloud.signOut()
@@ -387,7 +366,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         )
       },
     }),
-    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, recovering, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
+    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
   )
 
   return <ClubContext.Provider value={store}>{children}</ClubContext.Provider>

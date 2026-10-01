@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AuthScreen, NewPasswordDialog } from './components/Account'
+import { AuthScreen } from './components/Account'
 import { ClubPage } from './components/ClubPage'
 import { ClubSwitcher, NoClubScreen } from './components/Clubs'
 import { Poppy } from './components/home/Characters'
@@ -10,30 +10,16 @@ import { SearchPage } from './components/SearchPage'
 import { StatsPage } from './components/StatsPage'
 import { ThemeMenu } from './components/ThemeMenu'
 import { WelcomeDialog } from './components/WelcomeDialog'
-import { CLUB_CATCH_EVENT } from './effects/flyToClub'
 import { useClub } from './store/ClubContext'
 
 export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
 
 function App() {
-  const { recovering } = useClub()
-  return (
-    <>
-      <Screens />
-      {/* Arrived from a "reset your password" email → choose a new one */}
-      {recovering && <NewPasswordDialog />}
-    </>
-  )
-}
-
-function Screens() {
   const { data, status, error, joinedCount } = useClub()
   const [page, setPage] = useState<Page>('search')
   /** Whose profile is open on the Friends page (null = the list of everyone) */
   const [profileId, setProfileId] = useState<string | null>(null)
   const clubCount = Object.keys(data.titles).length
-  /** Goes up each time a flying poster lands on the Club tab — replays its "catch" animation. */
-  const [catches, setCatches] = useState(0)
 
   // Just joined a club from an invite? Go straight to its shelf.
   useEffect(() => {
@@ -44,11 +30,6 @@ function Screens() {
     }
   }, [joinedCount])
 
-  useEffect(() => {
-    const onCatch = () => setCatches((c) => c + 1)
-    window.addEventListener(CLUB_CATCH_EVENT, onCatch)
-    return () => window.removeEventListener(CLUB_CATCH_EVENT, onCatch)
-  }, [])
 
   const go = (next: Page, profile: string | null = null) => {
     setPage(next)
@@ -124,13 +105,11 @@ function Screens() {
           <nav className="col-span-2 grid grid-cols-5 gap-1 rounded-2xl border border-line bg-surface/80 p-1 lg:order-2 lg:col-span-1 lg:flex lg:justify-self-end lg:rounded-full">
             {tabs.map((t) => (
               <button
-                // A new key for the Club tab after each catch restarts its wiggle-and-glow animation.
-                key={t.page === 'club' ? `club-${catches}` : t.page}
-                data-club-tab={t.page === 'club' ? '' : undefined}
+                key={t.page}
                 onClick={() => go(t.page)}
                 className={`relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition lg:flex-row lg:gap-1.5 lg:rounded-full lg:px-3.5 lg:text-sm ${
                   page === t.page ? 'bg-gold text-on-gold shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
-                } ${t.page === 'club' && catches > 0 ? 'animate-catch' : ''}`}
+                }`}
               >
                 <span className="text-base leading-none lg:text-sm">{t.emoji}</span>
                 <span className="whitespace-nowrap">{t.label}</span>

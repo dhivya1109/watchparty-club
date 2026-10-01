@@ -102,9 +102,9 @@ export async function currentUserId(): Promise<string | null> {
   return data.session?.user.id ?? null
 }
 
-// ---------- Accounts: email + password ----------
-// No emails are needed to sign up or log in (Supabase's "Confirm email" setting is off),
-// so it works for everyone. Only "forgot password" sends an email.
+// ---------- Accounts: email + a one-time code ----------
+// Type your email → we email you a code → type the code. No passwords, no links to click.
+// The same two steps create a new account or log in to an existing one.
 
 export interface Account {
   email: string | null
@@ -112,57 +112,34 @@ export interface Account {
   isGuest: boolean
 }
 
-/** Thrown when Supabase still asks new accounts to confirm their email first. */
-export const CONFIRM_EMAIL_MESSAGE = 'We sent you an email to confirm your account. Open the link in it, then log in here.'
-
 export async function getAccount(): Promise<Account> {
   const { data } = await db().auth.getUser()
   return { email: data.user?.email ?? null, isGuest: data.user?.is_anonymous ?? false }
 }
 
-/** Create an account. Returns its id. */
-export async function signUp(email: string, password: string): Promise<string> {
-  const { data, error } = await db().auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: location.origin } })
+/** Step 1: email a login code (creates the account if it's new). */
+export async function sendLoginCode(email: string): Promise<void> {
+  const { error } = await db().auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } })
   if (error) throw new Error(friendly(error.message))
-  if (!data.session || !data.user) throw new Error(CONFIRM_EMAIL_MESSAGE)
+}
+
+/** Step 2: check the code. Returns the account's id. */
+export async function verifyLoginCode(email: string, code: string): Promise<string> {
+  const { data, error } = await db().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
+  if (error || !data.user) throw new Error(friendly(error?.message ?? 'That code didn’t work.'))
   return data.user.id
 }
 
-/** Log in to an existing account. Returns its id. */
-export async function logIn(email: string, password: string): Promise<string> {
-  const { data, error } = await db().auth.signInWithPassword({ email: email.trim(), password })
-  if (error || !data.user) throw new Error(friendly(error?.message ?? 'Could not log in.'))
-  return data.user.id
-}
-
-/**
- * Older guest accounts: add an email + password so the account (clubs, ratings) is kept.
- * Returns true if saved straight away, false if Supabase sent a confirmation email first.
- */
-export async function saveGuestAccount(email: string, password: string): Promise<boolean> {
-  const { error } = await db().auth.updateUser({ email: email.trim(), password }, { emailRedirectTo: location.origin })
-  if (error) throw new Error(friendly(error.message))
-  return !(await getAccount()).isGuest
-}
-
-/** Email a link to choose a new password. */
-export async function sendPasswordReset(email: string): Promise<void> {
-  const { error } = await db().auth.resetPasswordForEmail(email.trim(), { redirectTo: location.origin })
+/** Older guest accounts, step 1: add an email — Supabase emails a code to it. */
+export async function sendSaveCode(email: string): Promise<void> {
+  const { error } = await db().auth.updateUser({ email: email.trim() })
   if (error) throw new Error(friendly(error.message))
 }
 
-/** After opening the reset link: set the new password. */
-export async function setNewPassword(password: string): Promise<void> {
-  const { error } = await db().auth.updateUser({ password })
+/** Older guest accounts, step 2: confirm the code — the account is now saved. */
+export async function confirmSaveCode(email: string, code: string): Promise<void> {
+  const { error } = await db().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email_change' })
   if (error) throw new Error(friendly(error.message))
-}
-
-/** Calls `onRecovery` when someone arrives from a "reset your password" email. */
-export function onPasswordRecovery(onRecovery: () => void): () => void {
-  const { data } = db().auth.onAuthStateChange((event) => {
-    if (event === 'PASSWORD_RECOVERY') onRecovery()
-  })
-  return () => data.subscription.unsubscribe()
 }
 
 export async function signOut(): Promise<void> {
@@ -172,24 +149,19 @@ export async function signOut(): Promise<void> {
 /** Supabase's error messages are written for developers — translate the common ones. */
 function friendly(message: string): string {
   const m = message.toLowerCase()
-  if (m.includes('invalid login credentials')) return 'That email and password don’t match. Check both — or create an account.'
-  if (m.includes('password should be') || m.includes('password is too short') || m.includes('weak password'))
-    return 'Please choose a password with at least 6 characters.'
-  if (m.includes('user already registered')) return 'An account with this email already exists — log in instead.'
-  if (m.includes('email not confirmed')) return 'Please confirm your email first — check your inbox for the link.'
-  if (m.includes('signups not allowed') && m.includes('email')) return 'New accounts are switched off in Supabase (Email provider).'
-  if (m.includes('signups not allowed') || m.includes('user not found'))
-    return 'No saved account uses that email yet. Check the spelling — or save this account first.'
+  if (m.includes('signups not allowed') && m.includes('email')) return 'New accounts are switched off in Supabase (Authentication → Sign In / Providers → Email).'
   if (m.includes('already been registered') || m.includes('already registered'))
-    return 'That email is already used by another account. Sign in with it instead.'
+    return 'That email already has an account. Log out, then log in with it instead.'
+  if (m.includes('security purposes') || (m.includes('after') && m.includes('seconds')))
+    return 'Please wait a minute before asking for another code.'
   if (m.includes('rate limit') || m.includes('too many'))
     return 'Too many emails were sent just now. Please wait a few minutes and try again.'
   // Check the email-format message BEFORE the code message — both contain the word "invalid".
   if (m.includes('email') && (m.includes('format') || m.includes('validate')))
     return 'That doesn’t look like a valid email address.'
   if (m.includes('expired') || m.includes('invalid') || m.includes('token'))
-    return 'That code didn’t work — it may be mistyped or expired. Check the latest email, or send a new code.'
-  if (m.includes('not authorized')) return 'Emails can’t be sent to that address yet (the app’s email sender is limited).'
+    return 'That code didn’t work — it may be mistyped or expired. Check the newest email, or send a new code.'
+  if (m.includes('not authorized')) return 'Emails can’t be sent to that address yet — the app’s email sender isn’t set up.'
   return message
 }
 

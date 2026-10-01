@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { SEARCHERS } from '../api/search'
-import { flyToClub } from '../effects/flyToClub'
-import { AddedTray, ClubExplainer } from './AddToClub'
+import { ClubExplainer } from './AddToClub'
 import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
@@ -28,8 +27,6 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  /** Titles added during this visit — shown in the "Recently added" tray */
-  const [addedIds, setAddedIds] = useState<string[]>([])
   const [sections, setSections] = useState<Partial<Record<MediaType, SectionState>>>({})
   const debouncedQuery = useDebounce(query.trim())
 
@@ -182,12 +179,9 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
             limit={tab === 'all' ? 6 : 12}
             showHeading={tab === 'all'}
             onOpenClub={() => onNavigate('club')}
-            onAdded={(id) => setAddedIds((ids) => [...ids.filter((x) => x !== id), id])}
           />
         ))
       )}
-
-      <AddedTray ids={addedIds} onOpenClub={() => onNavigate('club')} onClear={() => setAddedIds([])} />
     </div>
   )
 }
@@ -198,14 +192,12 @@ function ResultSection({
   limit,
   showHeading,
   onOpenClub,
-  onAdded,
 }: {
   type: MediaType
   state?: SectionState
   limit: number
   showHeading: boolean
   onOpenClub: () => void
-  onAdded: (id: string) => void
 }) {
   const meta = MEDIA_TYPES.find((m) => m.type === type)!
   return (
@@ -238,7 +230,7 @@ function ResultSection({
       ) : (
         <CardGrid>
           {state.results.slice(0, limit).map((r) => (
-            <ResultCard key={r.id} result={r} onOpenClub={onOpenClub} onAdded={onAdded} />
+            <ResultCard key={r.id} result={r} onOpenClub={onOpenClub} />
           ))}
         </CardGrid>
       )}
@@ -253,24 +245,12 @@ function CardGrid({ children }: { children: React.ReactNode }) {
 function ResultCard({
   result,
   onOpenClub,
-  onAdded,
 }: {
   result: SearchResult
   onOpenClub: () => void
-  onAdded: (id: string) => void
 }) {
   const { data, add } = useClub()
   const inClub = Boolean(data.titles[result.id])
-  const posterRef = useRef<HTMLDivElement>(null)
-  const [sparkle, setSparkle] = useState(0)
-
-  const addToClub = () => {
-    add(result)
-    onAdded(result.id)
-    setSparkle((s) => s + 1) // replays the sparkle burst on the button
-    // The poster flies up into the 🎟️ Club tab, so you can see where it went.
-    if (posterRef.current) flyToClub(posterRef.current, result.image, MEDIA_TYPES.find((m) => m.type === result.type)!.emoji)
-  }
   const details = [
     result.year,
     result.length ? `${result.length} ${LENGTH_UNIT[result.type]}` : undefined,
@@ -282,7 +262,7 @@ function ResultCard({
         inClub ? 'border-book/60' : `border-line ${TYPE_STYLE[result.type].hover}`
       }`}
     >
-      <div ref={posterRef} className="relative overflow-hidden">
+      <div className="relative overflow-hidden">
         <Poster src={result.image} type={result.type} className="aspect-[2/3] transition duration-500 group-hover:scale-[1.03]" />
         <div className="absolute inset-0 bg-gradient-to-t from-night via-night/10 to-transparent" />
         <TypeBadge type={result.type} className="absolute left-2 top-2 backdrop-blur-md" />
@@ -291,7 +271,7 @@ function ResultCard({
         )}
         {/* A ribbon that stays on the poster once it's in your club */}
         {inClub && (
-          <div className="animate-pop absolute -right-9 top-5 rotate-45 bg-book px-9 py-1 text-[10px] font-extrabold tracking-wider text-ink shadow-lg">
+          <div className="absolute -right-9 top-5 rotate-45 bg-book px-9 py-1 text-[10px] font-extrabold tracking-wider text-ink shadow-lg">
             IN THE CLUB
           </div>
         )}
@@ -314,51 +294,25 @@ function ResultCard({
               className="flex w-full flex-col items-center rounded-xl border-2 border-book/70 bg-book/15 px-1 py-1.5 text-book transition hover:bg-book/25 active:scale-95"
             >
               <span className="flex items-center gap-1.5">
-                <span className="animate-pop flex h-5 w-5 items-center justify-center rounded-full bg-book text-xs font-black text-ink">✓</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-book text-xs font-black text-ink">✓</span>
                 <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">On the shelf</span>
               </span>
               <span className="text-[10px] font-semibold opacity-80">Open the club shelf →</span>
             </button>
           ) : (
             <button
-              onClick={addToClub}
+              onClick={() => add(result)}
               aria-label={`Add ${result.title} to the club`}
-              className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+              className="flex w-full flex-col items-center rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
             >
               <span className="flex items-center gap-1.5">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink/15 text-base font-black leading-none transition duration-300 group-hover/add:rotate-90">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink/15 text-base font-black leading-none">
                   +
                 </span>
                 <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">Add to club</span>
               </span>
               <span className="text-[10px] font-semibold opacity-75">Share it · rate · review</span>
-              {/* A soft light sweeps across now and then, inviting a tap */}
-              <span className="animate-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-white/35" />
             </button>
-          )}
-          {/* Sparkles burst out of the button when you add */}
-          {sparkle > 0 && (
-            <span key={sparkle} className="pointer-events-none absolute inset-x-0 bottom-4 top-3" aria-hidden="true">
-              {Array.from({ length: 10 }, (_, i) => {
-                const angle = (i * 36 * Math.PI) / 180
-                return (
-                  <span
-                    key={i}
-                    className="particle absolute text-sm"
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      animation: `burst 0.7s cubic-bezier(0.1, 0.7, 0.3, 1) ${(i % 3) * 0.04}s both`,
-                      ['--dx' as string]: `${Math.cos(angle) * 60}px`,
-                      ['--dy' as string]: `${Math.sin(angle) * 34}px`,
-                      ['--rot' as string]: `${i * 40}deg`,
-                    }}
-                  >
-                    {['✨', '⭐', '🎟️'][i % 3]}
-                  </span>
-                )
-              })}
-            </span>
           )}
         </div>
       </div>

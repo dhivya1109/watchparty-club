@@ -155,10 +155,10 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
                   <span className="shrink-0 text-sm font-medium text-muted">· {g.items.length}</span>
                   {g.items.length > 3 && <span className="ml-auto shrink-0 text-xs font-medium text-muted">swipe →</span>}
                 </h3>
-                <div className="no-scrollbar -mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
-                  {g.items.map(({ title }) => (
+                <div className="no-scrollbar -mx-4 mt-1 flex snap-x gap-3 overflow-x-auto px-4 pb-2 pt-2">
+                  {g.items.map(({ title }, i) => (
                     <div key={title.id} className="w-[7.25rem] shrink-0 snap-start sm:w-36">
-                      <PosterTile title={title} onOpen={() => setOpenId(title.id)} />
+                      <PosterTile title={title} onOpen={() => setOpenId(title.id)} shine={g.member?.id === me.id ? i : undefined} />
                     </div>
                   ))}
                 </div>
@@ -192,19 +192,63 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
   )
 }
 
-/** A compact poster: your status, the group's rating, and how many reviews — tap for everything else. */
-function PosterTile({ title, onOpen, showPicker = false }: { title: ClubTitle; onOpen: () => void; showPicker?: boolean }) {
+/**
+ * A compact poster: your status, the group's rating, and how many reviews — tap for everything else.
+ * `shine` (your own picks): a soft light sweeps across now and then (staggered by position),
+ * and the card tilts towards your finger or mouse, like a premium ticket.
+ */
+function PosterTile({
+  title,
+  onOpen,
+  showPicker = false,
+  shine,
+}: {
+  title: ClubTitle
+  onOpen: () => void
+  showPicker?: boolean
+  shine?: number
+}) {
   const { data, me } = useClub()
   const entry = getEntry(data, me.id, title.id)
   const status = entry ? STATUSES.find((s) => s.value === entry.status) : undefined
   const avg = averageRating(data, title.id)
   const reviews = data.entries.filter((e) => e.titleId === title.id && e.review).length
   const picker = addedBy(data, title)
+  const fancy = shine !== undefined && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  /** Tilt up to 10° towards the pointer; flat again when it leaves. */
+  const tilt = (e: React.PointerEvent<HTMLElement>) => {
+    const box = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - box.left) / box.width - 0.5
+    const y = (e.clientY - box.top) / box.height - 0.5
+    e.currentTarget.style.transform = `perspective(600px) rotateX(${-y * 10}deg) rotateY(${x * 10}deg) scale(1.03)`
+  }
+  const flatten = (e: React.PointerEvent<HTMLElement>) => {
+    e.currentTarget.style.transform = ''
+  }
 
   return (
     <button onClick={onOpen} className="group block w-full text-left" aria-label={`Open ${title.title}`}>
-      <div className="relative">
-        <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-xl shadow-md shadow-black/30 transition duration-300 group-hover:-translate-y-1" />
+      <div
+        className={`relative ${fancy ? 'transition-transform duration-200 ease-out will-change-transform' : ''}`}
+        onPointerMove={fancy ? tilt : undefined}
+        onPointerLeave={fancy ? flatten : undefined}
+        onPointerCancel={fancy ? flatten : undefined}
+        onPointerUp={fancy ? flatten : undefined}
+      >
+        <Poster
+          src={title.image}
+          type={title.type}
+          className={`aspect-[2/3] rounded-xl shadow-md shadow-black/30 ${fancy ? 'ring-1 ring-gold/40' : 'transition duration-300 group-hover:-translate-y-1'}`}
+        />
+        {fancy && (
+          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl" aria-hidden="true">
+            <span
+              className="animate-card-shine absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              style={{ animationDelay: `${((shine ?? 0) % 6) * 0.6}s` }}
+            />
+          </span>
+        )}
         {status && (
           <span title={status.label} className="absolute left-1.5 top-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-xs backdrop-blur">
             {status.emoji}
@@ -341,7 +385,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         {onMyList ? '✓ On your list' : 'Not on your list'}
       </span>
     </div>
-    {/* Top row: poster, title and status — always side by side */}
+    {/* Top row: poster and title, side by side */}
     <div className="flex gap-3 p-3 pl-4 sm:gap-4">
       <div className="relative w-20 shrink-0 sm:w-28">
         <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-2xl shadow-lg shadow-black/40" />
@@ -372,35 +416,37 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           )}
         </div>
 
-        {/* Status: four big buttons instead of a small dropdown */}
-        <div>
-          <div className="flex gap-1.5">
-            {STATUSES.map((s) => (
-              <button
-                key={s.value}
-                onClick={() => act({ status: s.value })}
-                title={s.label}
-                aria-label={s.label}
-                aria-pressed={onMyList && status === s.value}
-                className={`flex h-9 flex-1 items-center justify-center rounded-xl border text-base transition ${
-                  onMyList && status === s.value
-                    ? 'border-gold bg-gold/15 shadow-inner'
-                    : 'border-line bg-night/40 opacity-60 grayscale hover:opacity-100 hover:grayscale-0'
-                }`}
-              >
-                {s.emoji}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1 text-[11px] font-medium text-soft">
-            {onMyList ? STATUSES.find((s) => s.value === status)!.label : 'Not on your list yet — tap a status to add it'}
-          </p>
-        </div>
       </div>
     </div>
 
       {/* Full width below: progress, your stars, and what friends think — room to breathe on any phone */}
       <div className="flex flex-col gap-3 px-4 pb-3">
+        {/* YOUR status — everyone sets their own, on anyone's pick */}
+        <div>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-soft">
+            {onMyList ? 'Your status' : 'Where are you with this?'}
+          </p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {STATUSES.map((s) => {
+              const active = onMyList && status === s.value
+              return (
+                <button
+                  key={s.value}
+                  onClick={() => act({ status: s.value })}
+                  aria-pressed={active}
+                  className={`flex flex-col items-center gap-0.5 rounded-xl border px-1 py-1.5 transition ${
+                    active ? 'border-gold bg-gold/15 text-cream' : 'border-line bg-night/40 text-muted hover:border-muted hover:text-cream'
+                  }`}
+                >
+                  <span className={`text-base leading-none ${active ? '' : 'opacity-70'}`}>{s.emoji}</span>
+                  <span className="whitespace-nowrap text-[11px] font-semibold">{s.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          {!onMyList && <p className="mt-1 text-[11px] text-muted">Tap one to add it to your list. Only you can change your status.</p>}
+        </div>
+
         {hasProgress && (
           <div>
             <div className="flex items-center gap-2 text-sm">
@@ -427,17 +473,30 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         <RatingPicker value={entry?.rating ?? null} onChange={(rating) => act({ rating })} />
 
         {(others.length > 0 || groupAverage !== null) && (
-          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-dashed border-line pt-2.5 text-xs text-soft">
-            {groupAverage !== null && (
-              <span className="rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-accent">Group ★ {groupAverage}</span>
+          <div className="border-t border-dashed border-line pt-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-soft">Friends</p>
+              {groupAverage !== null && (
+                <span className="rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-accent">Group ★ {groupAverage}</span>
+              )}
+            </div>
+            {others.length > 0 && (
+              <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                {others.map(({ member, entry: e }) => {
+                  const st = STATUSES.find((x) => x.value === e!.status)!
+                  return (
+                    <li key={member.id} className="flex max-w-full items-center gap-1.5 rounded-full bg-night/40 py-0.5 pl-0.5 pr-2.5 text-xs">
+                      <Avatar member={member} size={20} />
+                      <span className="truncate font-semibold text-cream">{member.name}</span>
+                      <span className="shrink-0 text-soft">
+                        {st.emoji} {st.label}
+                      </span>
+                      {e!.rating !== null && <span className="shrink-0 font-semibold text-star">★ {e!.rating}</span>}
+                    </li>
+                  )
+                })}
+              </ul>
             )}
-            {others.map(({ member, entry: e }) => (
-              <span key={member.id} className="flex items-center gap-1" title={member.name}>
-                <Avatar member={member} size={20} />
-                {STATUSES.find((s) => s.value === e!.status)!.emoji}
-                {e!.rating !== null && <span className="font-semibold text-accent">{e!.rating}</span>}
-              </span>
-            ))}
           </div>
         )}
       </div>

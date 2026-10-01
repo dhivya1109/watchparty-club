@@ -351,6 +351,16 @@ h1, h2, h3 {
 }
 
 /* Projector light beam sweeping across */
+/* Your pick cards: a soft light sweeps across, then rests */
+@keyframes card-shine {
+  0% { transform: translateX(0) skewX(-18deg); }
+  35%, 100% { transform: translateX(400%) skewX(-18deg); }
+}
+
+@utility animate-card-shine {
+  animation: card-shine 4s ease-in-out infinite both;
+}
+
 @keyframes sweep {
   from { transform: translateX(-120%) skewX(-18deg); }
   to { transform: translateX(320%) skewX(-18deg); }
