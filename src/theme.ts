@@ -3,13 +3,13 @@
  * (look for :root[data-theme="…"]); this file only lists them and remembers the choice.
  */
 
-export type ThemeId = 'marquee' | 'noir' | 'matinee' | 'festival'
+export type ThemeId = 'premiere' | 'noir' | 'matinee' | 'drivein'
 
 export const THEMES: { id: ThemeId; emoji: string; name: string; description: string; swatch: string[] }[] = [
-  { id: 'marquee', emoji: '🎭', name: 'Marquee', description: 'Soft velvet & warm gold', swatch: ['#1c1624', '#33293f', '#f6c56b', '#ff6b57'] },
+  { id: 'premiere', emoji: '🎬', name: 'Premiere', description: 'Midnight blue & red carpet', swatch: ['#0b1120', '#1b2540', '#d22a46', '#ffd23f'] },
   { id: 'noir', emoji: '🖤', name: 'Noir', description: 'Plain black, silver screen', swatch: ['#000000', '#171717', '#f2f2f2', '#ff3b3b'] },
   { id: 'matinee', emoji: '☀️', name: 'Matinee', description: 'Light mode, paper tickets', swatch: ['#f5eee2', '#fffaf2', '#f0a500', '#d9412f'] },
-  { id: 'festival', emoji: '🌏', name: 'Festival', description: 'International filmy colours', swatch: ['#13061c', '#2c123d', '#ffa41b', '#ff2e88'] },
+  { id: 'drivein', emoji: '🌃', name: 'Drive-in', description: 'Neon signs, teal night', swatch: ['#071416', '#152c30', '#2ee6c5', '#ff4f8b'] },
 ]
 
 const STORAGE_KEY = 'watchparty-club:theme'
@@ -21,7 +21,7 @@ export function loadTheme(): ThemeId {
   } catch {
     // Storage blocked — fall through to the default
   }
-  return 'marquee'
+  return 'premiere'
 }
 
 /** Switch the whole app to a theme, and remember it on this device. */

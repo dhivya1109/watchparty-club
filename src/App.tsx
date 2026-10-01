@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AuthScreen, NewPasswordDialog } from './components/Account'
 import { ClubPage } from './components/ClubPage'
 import { ClubSwitcher, NoClubScreen } from './components/Clubs'
 import { Poppy } from './components/home/Characters'
@@ -15,6 +16,17 @@ import { useClub } from './store/ClubContext'
 export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
 
 function App() {
+  const { recovering } = useClub()
+  return (
+    <>
+      <Screens />
+      {/* Arrived from a "reset your password" email → choose a new one */}
+      {recovering && <NewPasswordDialog />}
+    </>
+  )
+}
+
+function Screens() {
   const { data, status, error, joinedCount } = useClub()
   const [page, setPage] = useState<Page>('search')
   /** Whose profile is open on the Friends page (null = the list of everyone) */
@@ -44,9 +56,10 @@ function App() {
     window.scrollTo({ top: 0 })
   }
 
-  // Before a club is open: loading → welcome → pick your first club
+  // Before a club is open: loading → log in → your profile → pick your first club
   if (status === 'loading') return <Splash text="Getting the popcorn ready…" />
   if (status === 'error') return <Splash text={error ?? 'Something went wrong.'} emoji="⚠️" />
+  if (status === 'auth') return <AuthScreen />
   if (status === 'setup') return (
     <>
       <Splash text="" />
@@ -116,7 +129,7 @@ function App() {
                 data-club-tab={t.page === 'club' ? '' : undefined}
                 onClick={() => go(t.page)}
                 className={`relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition lg:flex-row lg:gap-1.5 lg:rounded-full lg:px-3.5 lg:text-sm ${
-                  page === t.page ? 'bg-gold text-ink shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
+                  page === t.page ? 'bg-gold text-on-gold shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
                 } ${t.page === 'club' && catches > 0 ? 'animate-catch' : ''}`}
               >
                 <span className="text-base leading-none lg:text-sm">{t.emoji}</span>

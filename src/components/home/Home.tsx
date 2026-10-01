@@ -34,7 +34,7 @@ export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNav
           <div className="relative mt-6 flex flex-wrap justify-center gap-3">
             <button
               onClick={onStart}
-              className="rounded-full bg-gradient-to-b from-gold to-gold-deep px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base text-ink shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+              className="rounded-full bg-gradient-to-b from-gold to-gold-deep px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
             >
               {/* Shorter words on the smallest phones, so the button stays on one line */}
               <span className="min-[380px]:hidden">🔍 Find something</span>
@@ -165,7 +165,7 @@ export function HowItWorks() {
           <li key={s.title} className="relative flex flex-col items-center rounded-3xl p-4 text-center">
             <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-2 border-gold/50 bg-surface text-3xl shadow-lg shadow-gold/10">
               {s.emoji}
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gold font-display text-xs font-extrabold text-ink">
+              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gold font-display text-xs font-extrabold text-on-gold">
                 {i + 1}
               </span>
             </div>

@@ -61,7 +61,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
             placeholder="e.g. Goa Gang"
             className="rounded-xl border border-line bg-surface px-3 py-2 font-display text-2xl font-extrabold outline-none focus:border-gold"
           />
-          <button className="rounded-full bg-gold px-4 py-2 text-sm font-bold text-ink">Save</button>
+          <button className="rounded-full bg-gold px-4 py-2 text-sm font-bold text-on-gold">Save</button>
         </form>
       ) : (
         <h2 className="mt-1 flex flex-wrap items-center gap-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -182,7 +182,7 @@ function InviteCard() {
                   toast({ title: 'Couldn’t copy', text: 'Select the link above and copy it by hand.', emoji: '⚠️' })
                 }
               }}
-              className="flex-1 rounded-xl bg-gold py-2 text-sm font-bold text-ink transition hover:brightness-110"
+              className="flex-1 rounded-xl bg-gold py-2 text-sm font-bold text-on-gold transition hover:brightness-110"
             >
               📋 Copy link
             </button>

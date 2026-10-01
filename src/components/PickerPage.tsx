@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { rankTitles, sliceAtAngle, wheelSlices, type Suggestion } from '../lib/picker'
 import { useClub } from '../store/ClubContext'
 import { MEDIA_TYPES, type MediaType } from '../types'
@@ -8,7 +8,7 @@ import { EmptyState, GoldButton, Panel, Pill, PillRow, Poster, Select, TypeBadge
 const WHEEL_SIZE = 6
 // The same colours as the design tokens in index.css (gold, coral, series, anime, book) plus lilac.
 const SLICE_COLORS = ['#ffc53d', '#ff7a66', '#4cc9f0', '#f472b6', '#a3e635', '#b69cff']
-const SPIN_MS = 4500
+const SPIN_MS = 3000
 const BULBS = 24
 
 export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
@@ -96,42 +96,84 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
             </Select>
           </Panel>
 
-          <Panel title="🏆 Top picks" note="Scored by who wants it, their favourite genres, and what’s already started">
-            {present.length === 0 ? (
-              <p className="text-muted">Pick at least one person.</p>
-            ) : suggestions.length === 0 ? (
-              <p className="text-muted">Nothing left that fits — everyone here has seen it all! Try another type or genre.</p>
-            ) : (
-              <ol className="flex flex-col gap-2.5">
-                {suggestions.slice(0, 3).map((s, i) => (
-                  <li
-                    key={s.title.id}
-                    className={`flex gap-3 rounded-2xl border p-2.5 ${i === 0 ? 'border-gold/50 bg-gold/5' : 'border-line bg-night/30'}`}
-                  >
-                    <Poster src={s.title.image} type={s.title.type} className="aspect-[2/3] w-12 shrink-0 rounded-lg" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{['🥇', '🥈', '🥉'][i]}</span>
-                        <h3 className="truncate font-bold">{s.title.title}</h3>
-                        <span className="ml-auto shrink-0 rounded-full bg-raised px-2 py-0.5 text-[11px] tabular-nums text-soft">
-                          {s.score} pts
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-muted">{s.reasons.join(' · ') || 'In the club list'}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </Panel>
+          {/* Wide screens: top picks under the filters. Phones: below the wheel (see further down). */}
+          <div className="hidden lg:block">
+            <TopPicks present={present.length} suggestions={suggestions} />
+          </div>
         </div>
 
-        {suggestions.length > 0 && present.length > 0 && (
+        {present.length > 0 && suggestions.length > 0 ? (
           // A new key resets the wheel whenever the options change.
           <Wheel key={`${absent.join()}|${type}|${genre}`} suggestions={suggestions.slice(0, WHEEL_SIZE)} />
+        ) : (
+          // Never just disappear: say why there's nothing to spin, and how to fix it.
+          <Panel className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="text-5xl opacity-60">🎡</div>
+            <h3 className="text-xl font-extrabold">Nothing to spin yet</h3>
+            <p className="max-w-xs text-sm text-soft">
+              {present.length === 0
+                ? 'Tap at least one person under “Who’s here?”.'
+                : type !== 'all' || genre
+                  ? 'Nothing fits this type or genre that everyone here hasn’t seen.'
+                  : 'Everyone here has already watched everything on the club shelf!'}
+            </p>
+            {present.length > 0 && (type !== 'all' || genre) ? (
+              <button
+                onClick={() => {
+                  setType('all')
+                  setGenre('')
+                }}
+                className="rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10"
+              >
+                Show everything
+              </button>
+            ) : present.length > 0 ? (
+              <button onClick={onGoSearch} className="rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10">
+                🔍 Add something new
+              </button>
+            ) : null}
+          </Panel>
         )}
+
+        <div className="lg:hidden">
+          <TopPicks present={present.length} suggestions={suggestions} />
+        </div>
       </div>
     </div>
+  )
+}
+
+/** 🏆 The three best-scoring titles for the people here, with the reasons. */
+function TopPicks({ present, suggestions }: { present: number; suggestions: Suggestion[] }) {
+  return (
+    <Panel title="🏆 Top picks" note="Scored by who wants it, their favourite genres, and what’s already started">
+      {present === 0 ? (
+        <p className="text-muted">Pick at least one person.</p>
+      ) : suggestions.length === 0 ? (
+        <p className="text-muted">Nothing left that fits — everyone here has seen it all! Try another type or genre.</p>
+      ) : (
+        <ol className="flex flex-col gap-2.5">
+          {suggestions.slice(0, 3).map((s, i) => (
+            <li
+              key={s.title.id}
+              className={`flex gap-3 rounded-2xl border p-2.5 ${i === 0 ? 'border-gold/50 bg-gold/5' : 'border-line bg-night/30'}`}
+            >
+              <Poster src={s.title.image} type={s.title.type} className="aspect-[2/3] w-12 shrink-0 rounded-lg" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{['🥇', '🥈', '🥉'][i]}</span>
+                  <h3 className="truncate font-bold">{s.title.title}</h3>
+                  <span className="ml-auto shrink-0 rounded-full bg-raised px-2 py-0.5 text-[11px] tabular-nums text-soft">
+                    {s.score} pts
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted">{s.reasons.join(' · ') || 'In the club list'}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
   )
 }
 
@@ -139,23 +181,42 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
   const [rotation, setRotation] = useState(0)
   const [spinning, setSpinning] = useState(false)
   const [winner, setWinner] = useState<Suggestion | null>(null)
-  const slices = wheelSlices(suggestions)
+  // While (and after) spinning, the wheel keeps the list it started with — live updates
+  // from friends can't reshuffle the slices under the pointer.
+  const [frozen, setFrozen] = useState<Suggestion[] | null>(null)
+  const list = frozen ?? suggestions
+  const slices = wheelSlices(list)
+  const pending = useRef<{ winner: Suggestion; timer: ReturnType<typeof setTimeout> } | null>(null)
+  // Phones with "remove animations" switched on: no spinning, just a quick result.
+  const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : SPIN_MS
+
+  /** Show the result — when the wheel stops, or after a backup timer if the "stopped" signal never comes. */
+  const finish = () => {
+    if (!pending.current) return
+    clearTimeout(pending.current.timer)
+    setWinner(pending.current.winner)
+    setSpinning(false)
+    pending.current = null
+  }
 
   const spin = () => {
+    const current = suggestions
+    const currentSlices = wheelSlices(current)
     // Pick a random point on the wheel; the slice under it wins (bigger slice = more likely).
     const target = Math.random() * 360
-    const winnerIndex = sliceAtAngle(slices, target)
-    // Rotate so that point ends under the pointer at the top, after 6 full turns.
-    const current = ((rotation % 360) + 360) % 360
-    const extra = (((360 - target - current) % 360) + 360) % 360
-    setRotation(rotation + 6 * 360 + extra)
+    const winnerIndex = sliceAtAngle(currentSlices, target)
+    // Rotate so that point ends under the pointer at the top, after 5 full turns.
+    const at = ((rotation % 360) + 360) % 360
+    const extra = (((360 - target - at) % 360) + 360) % 360
+    setFrozen(current)
+    setRotation(rotation + 5 * 360 + extra)
     setSpinning(true)
     setWinner(null)
-    setTimeout(() => {
-      setSpinning(false)
-      setWinner(suggestions[winnerIndex])
-    }, SPIN_MS)
+    pending.current = { winner: current[winnerIndex], timer: setTimeout(finish, duration + 400) }
   }
+
+  // Never leave a timer running if the wheel goes away mid-spin
+  useEffect(() => () => clearTimeout(pending.current?.timer), [])
 
   // Each slice starts where the previous ones end.
   const paths = slices.map((fraction, i) => {
@@ -198,8 +259,9 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
             style={{
               transform: `rotate(${rotation}deg)`,
               transformOrigin: `${CENTER}px ${CENTER}px`,
-              transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(0.12, 0.8, 0.18, 1)` : 'none',
+              transition: spinning && duration > 0 ? `transform ${duration}ms cubic-bezier(0.12, 0.8, 0.18, 1)` : 'none',
             }}
+            onTransitionEnd={finish}
           >
             {paths.map((p, i) => (
               <g key={i}>
@@ -250,7 +312,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
       )}
 
       <ol className="w-full text-sm">
-        {suggestions.map((s, i) => (
+        {list.map((s, i) => (
           <li key={s.title.id} className="flex items-center gap-2.5 border-b border-line/60 py-2 last:border-0">
             <span
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-display text-xs font-extrabold text-ink"

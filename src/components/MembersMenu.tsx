@@ -89,7 +89,7 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
           </div>
         </>
       )}
-      {dialog && <AccountDialog mode="save" onClose={() => setDialog(false)} />}
+      {dialog && <AccountDialog onClose={() => setDialog(false)} />}
       {clubsOpen && <ClubsSheet onClose={() => setClubsOpen(false)} />}
     </div>
   )

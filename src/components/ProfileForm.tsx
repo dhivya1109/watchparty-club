@@ -91,7 +91,7 @@ export function ProfileForm({
         )}
         <button
           disabled={!name.trim()}
-          className="rounded-full bg-gradient-to-b from-gold to-gold-deep px-6 py-2.5 font-display font-bold text-ink shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40"
+          className="rounded-full bg-gradient-to-b from-gold to-gold-deep px-6 py-2.5 font-display font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40"
         >
           {submitLabel}
         </button>

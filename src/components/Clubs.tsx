@@ -58,7 +58,7 @@ export function CreateOrJoin({ onDone }: { onDone?: () => void }) {
         )}
         <button
           disabled={!name.trim() || busy !== null}
-          className="mt-4 rounded-full bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-ink shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40"
+          className="mt-4 rounded-full bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40"
         >
           {busy === 'create' ? 'Creating…' : 'Create club 🍿'}
         </button>
@@ -173,7 +173,7 @@ export function ClubsSheet({ onClose }: { onClose: () => void }) {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMode('add')}
-                    className="rounded-2xl bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-ink shadow-md shadow-gold/20 transition hover:brightness-110"
+                    className="rounded-2xl bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-on-gold shadow-md shadow-gold/20 transition hover:brightness-110"
                   >
                     ＋ New club
                   </button>
@@ -231,7 +231,7 @@ export function ClubsSheet({ onClose }: { onClose: () => void }) {
                           <span className="block truncate font-bold">{c.name}</span>
                           <span className="block text-xs text-muted">{c.role === 'host' ? '👑 You’re the host' : '🙂 Member'}</span>
                         </span>
-                        {current && <span className="shrink-0 rounded-full bg-gold px-2 py-0.5 text-[11px] font-bold text-ink">Open</span>}
+                        {current && <span className="shrink-0 rounded-full bg-gold px-2 py-0.5 text-[11px] font-bold text-on-gold">Open</span>}
                       </button>
                     </li>
                   )

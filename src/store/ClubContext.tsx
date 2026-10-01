@@ -20,7 +20,8 @@ import { useToast } from '../components/Toast'
  *
  * status:
  *  - loading  → checking this device's account
- *  - setup    → no account/profile yet → the welcome screen
+ *  - auth     → not logged in → the log-in / create-account screen
+ *  - setup    → logged in, but no profile yet → the welcome (profile) screen
  *  - no-club  → has a profile, but isn't in any club → create or join one
  *  - ready    → a club is open
  *  - error    → something is misconfigured
@@ -28,7 +29,7 @@ import { useToast } from '../components/Toast'
  * Changes show on screen immediately ("optimistic"), then save in the background.
  */
 
-export type StoreStatus = 'loading' | 'setup' | 'no-club' | 'ready' | 'error'
+export type StoreStatus = 'loading' | 'auth' | 'setup' | 'no-club' | 'ready' | 'error'
 
 const ACTIVE_KEY = 'watchparty-club:active-club'
 const PENDING_JOIN_KEY = 'watchparty-club:pending-join'
@@ -59,18 +60,15 @@ interface ClubStore {
 
   /** Is this a guest account (this browser only), or saved with an email? */
   account: cloud.Account
-  /** Save this guest account: step 1 sends a code, step 2 confirms it */
-  sendSaveCode: (email: string) => Promise<void>
-  confirmSaveCode: (email: string, code: string) => Promise<void>
-  /** Sign in to a saved account (e.g. on a new phone) */
-  sendSignInCode: (email: string) => Promise<void>
-  confirmSignInCode: (email: string, code: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
+  logIn: (email: string, password: string) => Promise<void>
+  /** Older guest accounts: add an email + password so they're kept */
+  saveGuestAccount: (email: string, password: string) => Promise<void>
+  sendPasswordReset: (email: string) => Promise<void>
+  /** true after opening a "reset your password" email → ask for a new password */
+  recovering: boolean
+  setNewPassword: (password: string) => Promise<void>
   signOut: () => Promise<void>
-  /**
-   * Checks whether an email link was used (maybe in another tab): 'switched' = now signed in
-   * to a different (saved) account, 'saved' = this account now has an email, 'guest' = nothing yet.
-   */
-  refreshAccount: () => Promise<'switched' | 'saved' | 'guest'>
 
   setupProfile: (profile: cloud.Profile) => Promise<void>
   updateProfile: (change: MemberChange) => Promise<void>
@@ -101,7 +99,8 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const pendingRef = useRef(pendingInvite)
   const [invitePreview, setInvitePreview] = useState<cloud.InvitePreview | null>(null)
   const [joinedCount, setJoinedCount] = useState(0)
-  const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: true })
+  const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: false })
+  const [recovering, setRecovering] = useState(false)
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const fail = useCallback(
@@ -166,7 +165,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       }
       try {
         const uid = await cloud.currentUserId()
-        if (!uid) return setStatus('setup')
+        if (!uid) return setStatus('auth')
         await loadAccount(uid)
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
@@ -174,6 +173,9 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       }
     })()
   }, [loadAccount])
+
+  // Arrived from a "reset your password" email → ask for the new password.
+  useEffect(() => (cloud.supabase ? cloud.onPasswordRecovery(() => setRecovering(true)) : undefined), [])
 
   // Invited? Find out who invited you to which club (works before signing in).
   useEffect(() => {
@@ -256,29 +258,32 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       localTitleCount,
       account,
 
-      sendSaveCode: (email) => cloud.sendSaveCode(email),
-      confirmSaveCode: async (email, code) => {
-        await cloud.confirmSaveCode(email, code)
-        setAccount(await cloud.getAccount())
-        toast({ title: 'Account saved ✉️', text: `Sign in with ${email.trim()} on any device to get your clubs back.`, emoji: '💾' })
+      recovering,
+
+      signUp: async (email, password) => {
+        const uid = await cloud.signUp(email, password)
+        await loadAccount(uid)
       },
-      sendSignInCode: (email) => cloud.sendSignInCode(email),
-      confirmSignInCode: async (email, code) => {
-        const uid = await cloud.confirmSignInCode(email, code)
+      logIn: async (email, password) => {
+        const uid = await cloud.logIn(email, password)
         setActiveId(null)
         await loadAccount(uid)
         toast({ title: 'Welcome back! 🍿', text: 'Your clubs and ratings are here.', emoji: '👋' })
       },
-      refreshAccount: async () => {
-        const uid = await cloud.currentUserId()
-        if (uid && uid !== userId) {
-          setActiveId(null)
-          await loadAccount(uid)
-          return 'switched'
-        }
-        const acc = await cloud.getAccount()
-        setAccount(acc)
-        return acc.isGuest ? 'guest' : 'saved'
+      saveGuestAccount: async (email, password) => {
+        const saved = await cloud.saveGuestAccount(email, password)
+        setAccount(await cloud.getAccount())
+        toast(
+          saved
+            ? { title: 'Account saved 💾', text: `Log in with ${email.trim()} on any device to get your clubs back.`, emoji: '✉️' }
+            : { title: 'Almost there ✉️', text: `Open the link we sent to ${email.trim()} to finish saving.`, emoji: '📬' },
+        )
+      },
+      sendPasswordReset: (email) => cloud.sendPasswordReset(email),
+      setNewPassword: async (password) => {
+        await cloud.setNewPassword(password)
+        setRecovering(false)
+        toast({ title: 'Password changed 🔑', text: 'Use it next time you log in.', emoji: '✅' })
       },
       signOut: async () => {
         await cloud.signOut()
@@ -286,12 +291,13 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         setProfile(null)
         setClubs([])
         setActiveId(null)
-        setAccount({ email: null, isGuest: true })
-        setStatus('setup')
+        setAccount({ email: null, isGuest: false })
+        setStatus('auth')
       },
 
       setupProfile: async (p) => {
-        const uid = userId ?? (await cloud.signIn())
+        const uid = userId ?? (await cloud.currentUserId())
+        if (!uid) throw new Error('Please log in first.')
         await cloud.saveProfile(uid, p)
         setUserId(uid)
         setProfile({ id: uid, ...p, role: 'member' })
@@ -381,7 +387,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         )
       },
     }),
-    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
+    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, recovering, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
   )
 
   return <ClubContext.Provider value={store}>{children}</ClubContext.Provider>

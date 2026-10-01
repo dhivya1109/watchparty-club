@@ -50,7 +50,7 @@ export function ClubExplainer() {
         {steps.map((s, i) => (
           <li key={s.title} className="relative flex flex-col items-center text-center sm:flex-row sm:items-start sm:gap-3 sm:text-left">
             <span
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gold text-xl font-black text-ink shadow-lg shadow-gold/30 sm:h-12 sm:w-12"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gold text-xl font-black text-on-gold shadow-lg shadow-gold/30 sm:h-12 sm:w-12"
               style={{ animation: `bob 2.6s ease-in-out ${i * 0.3}s infinite` }}
             >
               {s.icon}
@@ -132,7 +132,7 @@ export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenC
             onClear()
             onOpenClub()
           }}
-          className="shrink-0 rounded-2xl bg-gold px-3.5 py-2.5 text-center font-display text-sm font-extrabold leading-tight text-ink shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+          className="shrink-0 rounded-2xl bg-gold px-3.5 py-2.5 text-center font-display text-sm font-extrabold leading-tight text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
         >
           Open
           <br />

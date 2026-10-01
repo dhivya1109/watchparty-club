@@ -102,56 +102,67 @@ export async function currentUserId(): Promise<string | null> {
   return data.session?.user.id ?? null
 }
 
-/** A private account for this device — no email or password needed. */
-export async function signIn(): Promise<string> {
-  const existing = await currentUserId()
-  if (existing) return existing
-  const { data, error } = await db().auth.signInAnonymously()
-  if (error || !data.user) throw new Error(error?.message ?? 'Could not create your account.')
-  return data.user.id
-}
-
-// ---------- Saving your account with email ----------
-// Supabase emails a link (and, with a custom email service, a code too).
-// Links bring people back to this app; the app notices by itself when they've been used.
+// ---------- Accounts: email + password ----------
+// No emails are needed to sign up or log in (Supabase's "Confirm email" setting is off),
+// so it works for everyone. Only "forgot password" sends an email.
 
 export interface Account {
   email: string | null
-  /** true = a guest account that only lives in this browser */
+  /** true = an older guest account that only lives in this browser */
   isGuest: boolean
 }
 
+/** Thrown when Supabase still asks new accounts to confirm their email first. */
+export const CONFIRM_EMAIL_MESSAGE = 'We sent you an email to confirm your account. Open the link in it, then log in here.'
+
 export async function getAccount(): Promise<Account> {
   const { data } = await db().auth.getUser()
-  return { email: data.user?.email ?? null, isGuest: data.user?.is_anonymous ?? true }
+  return { email: data.user?.email ?? null, isGuest: data.user?.is_anonymous ?? false }
 }
 
-/** Step 1 of saving a guest account: attach an email. Supabase sends a code to it. */
-export async function sendSaveCode(email: string): Promise<void> {
-  const { error } = await db().auth.updateUser({ email: email.trim() }, { emailRedirectTo: location.origin })
+/** Create an account. Returns its id. */
+export async function signUp(email: string, password: string): Promise<string> {
+  const { data, error } = await db().auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: location.origin } })
   if (error) throw new Error(friendly(error.message))
-}
-
-/** Step 2: the code from the email confirms it — the account is now saved. */
-export async function confirmSaveCode(email: string, code: string): Promise<void> {
-  const { error } = await db().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email_change' })
-  if (error) throw new Error(friendly(error.message))
-}
-
-/** On another device: send a sign-in code (only to emails that already have an account). */
-export async function sendSignInCode(email: string): Promise<void> {
-  const { error } = await db().auth.signInWithOtp({
-    email: email.trim(),
-    options: { shouldCreateUser: false, emailRedirectTo: location.origin },
-  })
-  if (error) throw new Error(friendly(error.message))
-}
-
-/** …and sign in with it. Returns your account's id. */
-export async function confirmSignInCode(email: string, code: string): Promise<string> {
-  const { data, error } = await db().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
-  if (error || !data.user) throw new Error(friendly(error?.message ?? 'Could not sign in.'))
+  if (!data.session || !data.user) throw new Error(CONFIRM_EMAIL_MESSAGE)
   return data.user.id
+}
+
+/** Log in to an existing account. Returns its id. */
+export async function logIn(email: string, password: string): Promise<string> {
+  const { data, error } = await db().auth.signInWithPassword({ email: email.trim(), password })
+  if (error || !data.user) throw new Error(friendly(error?.message ?? 'Could not log in.'))
+  return data.user.id
+}
+
+/**
+ * Older guest accounts: add an email + password so the account (clubs, ratings) is kept.
+ * Returns true if saved straight away, false if Supabase sent a confirmation email first.
+ */
+export async function saveGuestAccount(email: string, password: string): Promise<boolean> {
+  const { error } = await db().auth.updateUser({ email: email.trim(), password }, { emailRedirectTo: location.origin })
+  if (error) throw new Error(friendly(error.message))
+  return !(await getAccount()).isGuest
+}
+
+/** Email a link to choose a new password. */
+export async function sendPasswordReset(email: string): Promise<void> {
+  const { error } = await db().auth.resetPasswordForEmail(email.trim(), { redirectTo: location.origin })
+  if (error) throw new Error(friendly(error.message))
+}
+
+/** After opening the reset link: set the new password. */
+export async function setNewPassword(password: string): Promise<void> {
+  const { error } = await db().auth.updateUser({ password })
+  if (error) throw new Error(friendly(error.message))
+}
+
+/** Calls `onRecovery` when someone arrives from a "reset your password" email. */
+export function onPasswordRecovery(onRecovery: () => void): () => void {
+  const { data } = db().auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') onRecovery()
+  })
+  return () => data.subscription.unsubscribe()
 }
 
 export async function signOut(): Promise<void> {
@@ -161,6 +172,12 @@ export async function signOut(): Promise<void> {
 /** Supabase's error messages are written for developers — translate the common ones. */
 function friendly(message: string): string {
   const m = message.toLowerCase()
+  if (m.includes('invalid login credentials')) return 'That email and password don’t match. Check both — or create an account.'
+  if (m.includes('password should be') || m.includes('password is too short') || m.includes('weak password'))
+    return 'Please choose a password with at least 6 characters.'
+  if (m.includes('user already registered')) return 'An account with this email already exists — log in instead.'
+  if (m.includes('email not confirmed')) return 'Please confirm your email first — check your inbox for the link.'
+  if (m.includes('signups not allowed') && m.includes('email')) return 'New accounts are switched off in Supabase (Email provider).'
   if (m.includes('signups not allowed') || m.includes('user not found'))
     return 'No saved account uses that email yet. Check the spelling — or save this account first.'
   if (m.includes('already been registered') || m.includes('already registered'))

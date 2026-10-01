@@ -62,7 +62,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   setToast(null)
                 }}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                  a.primary ? 'bg-gold text-ink hover:brightness-110' : 'text-soft hover:text-cream'
+                  a.primary ? 'bg-gold text-on-gold hover:brightness-110' : 'text-soft hover:text-cream'
                 }`}
               >
                 {a.label}

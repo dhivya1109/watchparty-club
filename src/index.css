@@ -9,26 +9,30 @@
   --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* Soft velvet: backgrounds, from darkest to lightest (a warm plum, not black) */
-  --color-night: #1c1624;
-  --color-surface: #261e30;
-  --color-raised: #33293f;
-  --color-line: #473b55;
+  /* 🎬 Premiere (default): midnight blue, red-carpet crimson, yellow stars */
+  --color-night: #0b1120;
+  --color-surface: #121a2e;
+  --color-raised: #1b2540;
+  --color-line: #2b3756;
 
   /* Text */
-  --color-cream: #fbf6ee;
-  --color-soft: #d6ccdf;
-  --color-muted: #a498b3;
+  --color-cream: #f3f6fc;
+  --color-soft: #c5cee0;
+  --color-muted: #8f9bb4;
 
-  /* Warm gold: main actions, stars, highlights (a little softer than pure yellow) */
-  --color-gold: #f6c56b;
-  --color-gold-deep: #e9a23f;
-  --color-marquee-1: #ffe3a8; /* top of the gold text gradient */
-  /* Gold-coloured TEXT. Same as gold on dark themes; darker on light ones so it stays readable. */
-  --color-accent: #f6c56b;
-  --color-coral: #ff6b57;
-  /* Text ON a bright button (gold, lime…) — dark in every theme */
+  /* The main colour ("gold" is its token name): buttons, highlights, active tabs */
+  --color-gold: #d22a46;
+  --color-gold-deep: #a8182f;
+  --color-marquee-1: #ffc2cb; /* top of the headline text gradient */
+  /* Main-colour TEXT on dark/light backgrounds (lighter/darker than the buttons so it stays readable) */
+  --color-accent: #ff7b8c;
+  --color-coral: #ff6b6b;
+  /* Text ON a main-colour button */
+  --color-on-gold: #ffffff;
+  /* Dark text on bright badges (lime ticks, wheel slices) — the same in every theme */
   --color-ink: #0c0a10;
+  /* Rating stars */
+  --color-star: #ffd23f;
 
   /* One colour per type (always shown next to its emoji + name) */
   --color-movie: #ff7a66;
@@ -43,8 +47,8 @@
  */
 :root {
   color-scheme: dark;
-  --spot-1: rgb(246 197 107 / 0.10);
-  --spot-2: rgb(244 114 182 / 0.08);
+  --spot-1: rgb(210 42 70 / 0.16);
+  --spot-2: rgb(76 201 240 / 0.10);
   --grain: 0.04;
 }
 
@@ -62,6 +66,8 @@
   --color-marquee-1: #ffffff;
   --color-accent: #f2f2f2;
   --color-coral: #ff3b3b;
+  --color-on-gold: #0a0a0a;
+  --color-star: #f2f2f2;
   --spot-1: rgb(255 255 255 / 0.06);
   --spot-2: rgb(255 59 59 / 0.06);
   --grain: 0.07;
@@ -82,6 +88,8 @@
   --color-marquee-1: #d68b00;
   --color-accent: #a35f00;
   --color-coral: #d9412f;
+  --color-on-gold: #1d1519;
+  --color-star: #b07000;
   --color-movie: #e0523e;
   --color-series: #0a8fbd;
   --color-anime: #d23c8c;
@@ -91,22 +99,24 @@
   --grain: 0.035;
 }
 
-/* 🌏 Festival — international filmy: deep plum, saffron and magenta */
-:root[data-theme="festival"] {
-  --color-night: #13061c;
-  --color-surface: #1e0b2b;
-  --color-raised: #2c123d;
-  --color-line: #431e58;
-  --color-cream: #fff5e8;
-  --color-soft: #e6cdea;
-  --color-muted: #a888b4;
-  --color-gold: #ffa41b;
-  --color-gold-deep: #ff5f00;
-  --color-marquee-1: #ffd66b;
-  --color-accent: #ffa41b;
-  --color-coral: #ff2e88;
-  --spot-1: rgb(255 164 27 / 0.16);
-  --spot-2: rgb(255 46 136 / 0.16);
+/* 🌃 Drive-in — neon signs over a dark teal night: mint, hot pink, neon yellow stars */
+:root[data-theme="drivein"] {
+  --color-night: #071416;
+  --color-surface: #0d1f22;
+  --color-raised: #152c30;
+  --color-line: #224045;
+  --color-cream: #ecfffb;
+  --color-soft: #b8d8d3;
+  --color-muted: #82a5a0;
+  --color-gold: #2ee6c5;
+  --color-gold-deep: #12b89c;
+  --color-marquee-1: #c4fff3;
+  --color-accent: #5ff0d6;
+  --color-coral: #ff4f8b;
+  --color-on-gold: #04201b;
+  --color-star: #ffe45c;
+  --spot-1: rgb(46 230 197 / 0.12);
+  --spot-2: rgb(255 79 139 / 0.12);
   --grain: 0.05;
 }
 

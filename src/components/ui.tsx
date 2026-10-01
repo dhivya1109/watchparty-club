@@ -70,7 +70,7 @@ export function Pill({
       onClick={onClick}
       className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
         active
-          ? 'border-gold bg-gold text-ink shadow-lg shadow-gold/20'
+          ? 'border-gold bg-gold text-on-gold shadow-lg shadow-gold/20'
           : 'border-line bg-raised/60 text-soft hover:border-muted hover:text-cream'
       }`}
     >
@@ -153,7 +153,7 @@ export function GoldButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-full bg-gradient-to-b from-gold to-gold-deep px-6 py-2.5 font-display font-bold text-ink shadow-lg shadow-gold/25 transition hover:brightness-110 active:scale-[0.97] disabled:opacity-50 ${className}`}
+      className={`rounded-full bg-gradient-to-b from-gold to-gold-deep px-6 py-2.5 font-display font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 active:scale-[0.97] disabled:opacity-50 ${className}`}
     >
       {children}
     </button>

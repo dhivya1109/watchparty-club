@@ -35,6 +35,36 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 
   const activeTypes: MediaType[] = tab === 'all' ? MEDIA_TYPES.map((m) => m.type) : [tab]
   const searching = debouncedQuery.length >= 2
+  /**
+   * Search mode starts as soon as you tap the search bar, and only ends with ← Back
+   * (or the phone's back button). So the bar never jumps while results load, and
+   * clearing the text keeps you here, ready for the next search.
+   */
+  const [searchMode, setSearchMode] = useState(false)
+
+  const enterSearch = () => {
+    if (searchMode) return
+    setSearchMode(true)
+    // An entry in the browser's history, so the phone's back button leaves search mode
+    history.pushState({ watchpartySearch: true }, '')
+    window.scrollTo({ top: 0 })
+  }
+  const leaveSearch = () => {
+    if (history.state?.watchpartySearch) history.back() // the popstate listener below does the rest
+    else {
+      setSearchMode(false)
+      setQuery('')
+    }
+  }
+
+  useEffect(() => {
+    const onBack = () => {
+      setSearchMode(false)
+      setQuery('')
+    }
+    window.addEventListener('popstate', onBack)
+    return () => window.removeEventListener('popstate', onBack)
+  }, [])
 
   useEffect(() => {
     if (debouncedQuery.length < 2) {
@@ -60,29 +90,39 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-6">
-      {!searching && (
-        <CinemaHero
-          onNavigate={onNavigate}
-          onStart={() => {
-            inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            inputRef.current?.focus({ preventScroll: true })
-          }}
-        />
-      )}
+      {!searchMode && <CinemaHero onNavigate={onNavigate} onStart={() => inputRef.current?.focus()} />}
 
-      <div className={searching ? 'pt-6' : 'pt-8'}>
-        <div className="relative">
+      <div className={`flex items-center gap-2 ${searchMode ? 'pt-5' : 'pt-8'}`}>
+        {searchMode && (
+          <button
+            onClick={leaveSearch}
+            aria-label="Back to home"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-xl transition hover:border-gold hover:text-accent"
+          >
+            ←
+          </button>
+        )}
+        <div className="relative min-w-0 flex-1">
           <span className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-xl">🔍</span>
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onFocus={enterSearch}
+            onChange={(e) => {
+              enterSearch()
+              setQuery(e.target.value)
+            }}
+            enterKeyHint="search"
             placeholder="Search a movie, series, anime or book…"
             className="w-full rounded-full border border-line bg-surface/95 py-4 pl-14 pr-12 text-lg shadow-2xl shadow-black/40 outline-none backdrop-blur transition placeholder:text-muted focus:border-gold focus:ring-4 focus:ring-gold/15"
           />
           {query && (
             <button
-              onClick={() => setQuery('')}
+              // Clearing keeps you in search mode, with the cursor back in the box
+              onClick={() => {
+                setQuery('')
+                inputRef.current?.focus()
+              }}
               aria-label="Clear search"
               className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full px-2 text-muted hover:text-cream"
             >
@@ -102,7 +142,11 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 
       <ClubExplainer />
 
-      {!searching ? (
+      {searchMode && !searching ? (
+        <p className="mt-10 text-center text-sm text-muted">
+          {query.trim().length === 1 ? 'Keep typing…' : 'Type a title — results show up right here, under the search bar.'}
+        </p>
+      ) : !searchMode ? (
         <div className="mt-10">
           <p className="text-center text-sm text-muted">Not sure where to start? Try one:</p>
           <div className="mx-auto mt-4 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
@@ -111,7 +155,10 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
               return (
                 <button
                   key={idea.query}
-                  onClick={() => setQuery(idea.query)}
+                  onClick={() => {
+                    enterSearch()
+                    setQuery(idea.query)
+                  }}
                   className={`group rounded-2xl border border-line bg-surface p-4 text-left transition hover:-translate-y-1 hover:shadow-xl ${TYPE_STYLE[idea.type].hover}`}
                 >
                   <div className="text-3xl transition group-hover:scale-110">{meta.emoji}</div>
@@ -276,7 +323,7 @@ function ResultCard({
             <button
               onClick={addToClub}
               aria-label={`Add ${result.title} to the club`}
-              className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-ink shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+              className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
             >
               <span className="flex items-center gap-1.5">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink/15 text-base font-black leading-none transition duration-300 group-hover/add:rotate-90">

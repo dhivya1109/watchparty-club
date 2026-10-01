@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   addedBy,
   averageRating,
@@ -16,23 +16,24 @@ import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
 import { Celebration, CELEBRATION_MS, type CelebrationKind } from './Celebration'
-import { EmptyState, Pill, PillRow, Poster, Select, TypeBadge } from './ui'
+import { EmptyState, Pill, PillRow, Portal, Poster, Select, TypeBadge } from './ui'
 
 type Sort = 'recent' | 'title' | 'rating'
 export type ShelfView = 'club' | 'mine'
 
 /**
- * 🎟️ Two views of the same club:
- *  - Club shelf: everything anyone added — each marked with whose pick it was
- *  - My list:    only what YOU chose to track (you added it, or picked a status for it)
+ * 🎟️ Two views of the same club, both compact so lots of picks never mean endless scrolling:
+ *  - Club shelf: one swipeable row of posters per person ("Priya's picks · 10")
+ *  - My list:    a poster grid of what YOU chose to track, filtered by status
+ * Tapping a poster opens its full ticket (status, progress, stars, reviews) in a sheet.
  */
 export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () => void; initialView?: ShelfView }) {
   const { data, me, activeClub } = useClub()
   const [view, setView] = useState<ShelfView>(initialView)
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all')
-  const [addedByFilter, setAddedByFilter] = useState<string>('everyone')
   const [sort, setSort] = useState<Sort>('recent')
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const all = Object.values(data.titles).map((title) => ({ title, entry: getEntry(data, me.id, title.id) }))
   const mine = all.filter((i) => i.entry)
@@ -50,19 +51,25 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
     )
   }
 
-  const shown = (view === 'club' ? all : mine)
-    .filter((i) => typeFilter === 'all' || i.title.type === typeFilter)
-    .filter((i) => view === 'club' || statusFilter === 'all' || i.entry?.status === statusFilter)
-    .filter((i) => view === 'mine' || addedByFilter === 'everyone' || i.title.addedBy === addedByFilter)
-    .sort((a, b) => {
-      if (sort === 'title') return a.title.title.localeCompare(b.title.title)
-      if (sort === 'rating') return (b.entry?.rating ?? 0) - (a.entry?.rating ?? 0)
-      return b.title.addedAt.localeCompare(a.title.addedAt)
-    })
+  const sorted = (list: typeof all) =>
+    list
+      .filter((i) => typeFilter === 'all' || i.title.type === typeFilter)
+      .sort((a, b) => {
+        if (sort === 'title') return a.title.title.localeCompare(b.title.title)
+        if (sort === 'rating') return (b.entry?.rating ?? 0) - (a.entry?.rating ?? 0)
+        return b.title.addedAt.localeCompare(a.title.addedAt)
+      })
 
+  // Club shelf: one group per person who picked something — yours first
+  const people = [...data.members].sort((a, b) => (a.id === me.id ? -1 : b.id === me.id ? 1 : 0))
+  const groups = [
+    ...people.map((m) => ({ key: m.id, member: m as Member | undefined, items: sorted(all.filter((i) => i.title.addedBy === m.id)) })),
+    // Titles added by someone who has since left the club
+    { key: 'former', member: undefined, items: sorted(all.filter((i) => !data.members.some((m) => m.id === i.title.addedBy))) },
+  ].filter((g) => g.items.length > 0)
+
+  const myItems = sorted(mine).filter((i) => statusFilter === 'all' || i.entry?.status === statusFilter)
   const countByStatus = (s: Status) => mine.filter((i) => i.entry?.status === s).length
-  // Only people who actually added something appear in the "Added by" filter
-  const pickers = data.members.filter((m) => all.some((i) => i.title.addedBy === m.id))
   const views: { value: ShelfView; emoji: string; label: string; count: number }[] = [
     { value: 'club', emoji: '🎟️', label: 'Club shelf', count: all.length },
     { value: 'mine', emoji: '👤', label: 'My list', count: mine.length },
@@ -81,7 +88,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
             aria-selected={view === v.value}
             onClick={() => setView(v.value)}
             className={`rounded-xl px-2 py-2.5 font-display text-[clamp(0.95rem,4vw,1.15rem)] font-extrabold transition ${
-              view === v.value ? 'bg-gold text-ink shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
+              view === v.value ? 'bg-gold text-on-gold shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
             }`}
           >
             {v.emoji} {v.label} <span className={view === v.value ? 'opacity-70' : 'text-muted'}>· {v.count}</span>
@@ -90,25 +97,25 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
       </div>
       <p className="mt-2 text-sm text-soft">
         {view === 'club'
-          ? `Everything anyone in ${clubName} added — you can see whose pick each one is.`
-          : 'Only what you’re tracking: things you added, or friends’ picks you gave a status.'}
+          ? 'Everyone’s picks, person by person. Swipe a row; tap a poster for details.'
+          : 'What you’re tracking. Tap a poster to update it.'}
       </p>
 
       {view === 'mine' && (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-4 gap-2">
           {STATUSES.map((s) => {
             const active = statusFilter === s.value
             return (
               <button
                 key={s.value}
                 onClick={() => setStatusFilter(active ? 'all' : s.value)}
-                className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${
+                aria-pressed={active}
+                className={`rounded-2xl border px-1 py-2.5 text-center transition ${
                   active ? 'border-gold bg-gold/10 shadow-lg shadow-gold/10' : 'border-line bg-surface hover:border-muted'
                 }`}
               >
-                <span className="absolute -right-2 -top-3 text-6xl opacity-10 transition group-hover:opacity-20">{s.emoji}</span>
-                <div className={`font-display text-3xl font-extrabold tabular-nums ${active ? 'text-marquee' : ''}`}>{countByStatus(s.value)}</div>
-                <div className="text-sm text-soft">
+                <div className={`font-display text-2xl font-extrabold tabular-nums ${active ? 'text-marquee' : ''}`}>{countByStatus(s.value)}</div>
+                <div className="truncate text-[11px] text-soft">
                   {s.emoji} {s.label}
                 </div>
               </button>
@@ -117,7 +124,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
         </div>
       )}
 
-      {/* Filters: one swipeable row of types, then the dropdowns side by side at equal width */}
+      {/* Filters: one swipeable row of types, and the sort order */}
       <PillRow className="mt-5">
         {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
           <Pill key={m.type} active={typeFilter === m.type} onClick={() => setTypeFilter(m.type)}>
@@ -125,47 +132,138 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
           </Pill>
         ))}
       </PillRow>
-      <div className={`mt-3 grid gap-2 ${view === 'club' && pickers.length > 0 ? 'grid-cols-2' : 'grid-cols-1 sm:max-w-xs'}`}>
-        {view === 'club' && pickers.length > 0 && (
-          <Select label="Whose picks" value={addedByFilter} onChange={setAddedByFilter}>
-            <option value="everyone">👥 Everyone</option>
-            {pickers.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.id === me.id ? '⭐ My picks' : `${m.emoji ?? '🙂'} ${m.name}`}
-              </option>
-            ))}
-          </Select>
-        )}
+      <div className="mt-3 grid grid-cols-1 sm:max-w-xs">
         <Select label="Sort" value={sort} onChange={(v) => setSort(v as Sort)}>
-          <option value="recent">↓ Newest</option>
+          <option value="recent">↓ Newest first</option>
           <option value="title">A–Z</option>
           <option value="rating">★ My top rated</option>
         </Select>
       </div>
 
-      {shown.length === 0 ? (
-        view === 'mine' && mine.length === 0 ? (
-          <div className="mt-10 text-center">
-            <p className="text-soft">Nothing on your list yet.</p>
-            <p className="mt-1 text-sm text-muted">Browse the club shelf and tap a status on anything you like.</p>
-            <button
-              onClick={() => setView('club')}
-              className="mt-4 rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10"
-            >
-              🎟️ Open the club shelf
-            </button>
-          </div>
+      {view === 'club' ? (
+        groups.length === 0 ? (
+          <p className="mt-14 text-center text-muted">Nothing matches this type.</p>
         ) : (
-          <p className="mt-14 text-center text-muted">Nothing matches these filters.</p>
+          <div className="mt-6 flex flex-col gap-7">
+            {groups.map((g) => (
+              <section key={g.key}>
+                <h3 className="flex items-center gap-2 text-lg font-extrabold">
+                  {g.member ? <Avatar member={g.member} size={26} /> : <span>🎟️</span>}
+                  <span className="truncate">
+                    {g.member?.id === me.id ? 'Your picks' : g.member ? `${g.member.name}’s picks` : 'Picks from past members'}
+                  </span>
+                  <span className="shrink-0 text-sm font-medium text-muted">· {g.items.length}</span>
+                  {g.items.length > 3 && <span className="ml-auto shrink-0 text-xs font-medium text-muted">swipe →</span>}
+                </h3>
+                <div className="no-scrollbar -mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+                  {g.items.map(({ title }) => (
+                    <div key={title.id} className="w-[7.25rem] shrink-0 snap-start sm:w-36">
+                      <PosterTile title={title} onOpen={() => setOpenId(title.id)} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         )
+      ) : mine.length === 0 ? (
+        <div className="mt-10 text-center">
+          <p className="text-soft">Nothing on your list yet.</p>
+          <p className="mt-1 text-sm text-muted">Open something on the club shelf and tap a status to add it.</p>
+          <button
+            onClick={() => setView('club')}
+            className="mt-4 rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10"
+          >
+            🎟️ Open the club shelf
+          </button>
+        </div>
+      ) : myItems.length === 0 ? (
+        <p className="mt-14 text-center text-muted">Nothing matches these filters.</p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-          {shown.map(({ title, entry }) => (
-            <ClubCard key={title.id} title={title} entry={entry} />
+        <div className="mt-6 grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:grid-cols-6">
+          {myItems.map(({ title }) => (
+            <PosterTile key={title.id} title={title} showPicker onOpen={() => setOpenId(title.id)} />
           ))}
         </div>
       )}
+
+      {openId && <TitleSheet titleId={openId} onClose={() => setOpenId(null)} />}
     </div>
+  )
+}
+
+/** A compact poster: your status, the group's rating, and how many reviews — tap for everything else. */
+function PosterTile({ title, onOpen, showPicker = false }: { title: ClubTitle; onOpen: () => void; showPicker?: boolean }) {
+  const { data, me } = useClub()
+  const entry = getEntry(data, me.id, title.id)
+  const status = entry ? STATUSES.find((s) => s.value === entry.status) : undefined
+  const avg = averageRating(data, title.id)
+  const reviews = data.entries.filter((e) => e.titleId === title.id && e.review).length
+  const picker = addedBy(data, title)
+
+  return (
+    <button onClick={onOpen} className="group block w-full text-left" aria-label={`Open ${title.title}`}>
+      <div className="relative">
+        <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-xl shadow-md shadow-black/30 transition duration-300 group-hover:-translate-y-1" />
+        {status && (
+          <span title={status.label} className="absolute left-1.5 top-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-xs backdrop-blur">
+            {status.emoji}
+          </span>
+        )}
+        {avg !== null && (
+          <span className="absolute right-1.5 top-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-bold text-star backdrop-blur">
+            ★ {avg}
+          </span>
+        )}
+        {showPicker && picker && (
+          <span className="absolute bottom-1.5 left-1.5" title={`${picker.name}’s pick`}>
+            <Avatar member={picker} size={20} />
+          </span>
+        )}
+        {reviews > 0 && (
+          <span className="absolute bottom-1.5 right-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-semibold text-soft backdrop-blur">
+            💬 {reviews}
+          </span>
+        )}
+      </div>
+      <p className="mt-1.5 line-clamp-2 text-xs font-semibold leading-tight">{title.title}</p>
+    </button>
+  )
+}
+
+/** The full ticket for one title, in a sheet that slides up. */
+function TitleSheet({ titleId, onClose }: { titleId: string; onClose: () => void }) {
+  const { data, me } = useClub()
+  const title = data.titles[titleId]
+
+  // Removed (by you, or live by someone else)? Close the sheet.
+  useEffect(() => {
+    if (!title) onClose()
+  }, [title, onClose])
+  if (!title) return null
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-2 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title.title}>
+        <div className="absolute inset-0" onClick={onClose} />
+        <div className="animate-pop relative flex max-h-[90vh] w-full max-w-xl flex-col">
+          {/* Handle + close, above the ticket so they never cover it */}
+          <div className="mb-2 flex items-center justify-center">
+            <span className="h-1.5 w-12 rounded-full bg-white/30" aria-hidden="true" />
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-1 top-0 -mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-night/80 text-muted backdrop-blur hover:text-cream"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="min-h-0 overflow-y-auto overscroll-contain rounded-[2rem]">
+            <ClubCard title={title} entry={getEntry(data, me.id, title.id)} />
+          </div>
+        </div>
+      </div>
+    </Portal>
   )
 }
 
@@ -211,9 +309,6 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
     if (next.status !== status && next.status !== 'want') kind = next.status
     if (change.rating != null) kind = change.rating >= 8 ? 'loved' : change.rating <= 4 ? 'bad' : 'okay'
     if (kind) celebrate(kind)
-
-    // Just finished it? Invite a review.
-    if (next.status === 'completed' && status !== 'completed' && !entry?.review) openReview()
   }
 
   const clubReviews = others.filter((o) => o.entry!.review)
@@ -347,7 +442,8 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
         )}
       </div>
 
-      {/* ---------- Reviews ---------- */}
+      {/* ---------- Reviews (only shown when there's something to show) ---------- */}
+      {(editing || entry?.review || (onMyList && status === 'completed') || clubReviews.length > 0) && (
       <div className="flex flex-col gap-3 border-t border-dashed border-line px-4 pb-4 pt-3">
         {editing ? (
           <ReviewEditor
@@ -370,14 +466,12 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
             </div>
             <ReviewQuote text={entry.review} rating={entry.rating} member={me} />
           </div>
-        ) : (
-          <button
-            onClick={openReview}
-            className="w-full rounded-2xl border border-dashed border-line py-2.5 text-sm font-medium text-soft transition hover:border-gold hover:text-accent"
-          >
-            ✍️ {status === 'completed' ? 'How was it? Write a review' : 'Write a review'}
+        ) : onMyList && status === 'completed' ? (
+          // Finished it? You *can* review it — a quiet link, never a pop-up.
+          <button onClick={openReview} className="w-fit text-sm font-medium text-muted transition hover:text-accent">
+            ✍️ Add a review <span className="text-xs">(optional)</span>
           </button>
-        )}
+        ) : null}
 
         {clubReviews.length > 0 && (
           <div>
@@ -390,6 +484,7 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           </div>
         )}
       </div>
+      )}
     </article>
 
     {celebration && <Celebration key={celebration.id} kind={celebration.kind} />}
@@ -433,7 +528,7 @@ function ReviewEditor({
         </button>
         <button
           onClick={onSave}
-          className="rounded-full bg-gold px-4 py-1.5 text-sm font-bold text-ink transition hover:brightness-110"
+          className="rounded-full bg-gold px-4 py-1.5 text-sm font-bold text-on-gold transition hover:brightness-110"
         >
           Save review
         </button>
@@ -492,7 +587,7 @@ function RatingPicker({ value, onChange }: { value: number | null; onChange: (v:
             onClick={() => onChange(value === n ? null : n)}
             aria-label={`Rate ${n} out of 10`}
             className={`py-1 text-xl leading-none transition hover:scale-125 ${
-              n <= shown ? 'text-accent drop-shadow-[0_0_6px_rgb(255_197_61/0.5)]' : 'text-line'
+              n <= shown ? 'text-star drop-shadow-sm' : 'text-line'
             }`}
           >
             ★
