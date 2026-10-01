@@ -230,7 +230,9 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
   })
 
   return (
-    <Panel className="flex flex-col items-center gap-5 overflow-hidden">
+    <Panel className="overflow-hidden">
+      {/* Panel puts its contents in a plain box, so centre everything in our own column */}
+      <div className="flex flex-col items-center gap-5">
       <div className="relative w-full max-w-[22rem]">
         {/* Spotlight behind the wheel */}
         <div className="absolute inset-6 rounded-full bg-gold/20 blur-3xl" />
@@ -293,7 +295,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
         </svg>
       </div>
 
-      <GoldButton onClick={spin} disabled={spinning} className="px-10 py-3.5 text-lg">
+      <GoldButton onClick={spin} disabled={spinning} className="mt-4 px-10 py-3.5 text-lg">
         {spinning ? '🎡 Spinning…' : winner ? '🎡 Spin again' : '🎡 Spin the wheel!'}
       </GoldButton>
 
@@ -325,6 +327,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
           </li>
         ))}
       </ol>
+      </div>
     </Panel>
   )
 }

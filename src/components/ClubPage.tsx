@@ -326,7 +326,7 @@ export function TitleSheet({ titleId, onClose, person }: { titleId: string; onCl
               ✕
             </button>
           </div>
-          <div className="min-h-0 overflow-y-auto overscroll-contain rounded-[2rem]">
+          <div className="min-h-0 overflow-y-auto overscroll-contain rounded-3xl">
             {person && theirs && <PersonStatus member={person} entry={theirs} title={title} />}
             <ClubCard title={title} entry={getEntry(data, me.id, title.id)} />
           </div>

@@ -9,30 +9,30 @@
   --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* 🌙 Midnight (default): clean deep blue-grey, one soft blue highlight */
-  --color-night: #0d1117;
-  --color-surface: #151b24;
-  --color-raised: #1e2632;
-  --color-line: #2d3744;
+  /* 🎦 Screening Room (default): a cinema before the film — warm charcoal, soft cream, brick-red seats */
+  --color-night: #16130f;
+  --color-surface: #1f1b17;
+  --color-raised: #2a251f;
+  --color-line: #3b342c;
 
   /* Text */
-  --color-cream: #edf1f7;
-  --color-soft: #b6c0ce;
-  --color-muted: #8693a5;
+  --color-cream: #efe8dd;
+  --color-soft: #c7bcad;
+  --color-muted: #9a8e7f;
 
   /* The main colour ("gold" is its token name): buttons, highlights, active tabs */
-  --color-gold: #7aa7ff;
-  --color-gold-deep: #5584e8;
-  --color-marquee-1: #cfe0ff; /* top of the headline text gradient */
+  --color-gold: #b84c37;
+  --color-gold-deep: #933a29;
+  --color-marquee-1: #f2c4b4; /* top of the headline text gradient */
   /* Main-colour TEXT on dark/light backgrounds (lighter/darker than the buttons so it stays readable) */
-  --color-accent: #93b8ff;
-  --color-coral: #ff7b72;
+  --color-accent: #e08a74;
+  --color-coral: #e2685a;
   /* Text ON a main-colour button */
-  --color-on-gold: #0a1222;
+  --color-on-gold: #ffffff;
   /* Dark text on bright badges (lime ticks, wheel slices) — the same in every theme */
   --color-ink: #0c0a10;
   /* Rating stars */
-  --color-star: #f5c451;
+  --color-star: #d9a55a;
 
   /* One colour per type (always shown next to its emoji + name) */
   --color-movie: #ff7a66;
@@ -47,9 +47,9 @@
  */
 :root {
   color-scheme: dark;
-  --spot-1: rgb(122 167 255 / 0.10);
-  --spot-2: rgb(122 167 255 / 0.05);
-  --grain: 0.03;
+  --spot-1: rgb(184 76 55 / 0.10);
+  --spot-2: rgb(239 232 221 / 0.04);
+  --grain: 0.04;
 }
 
 /* 🖤 Noir — plain black, silver-white accents, a touch of red */
@@ -73,7 +73,7 @@
   --grain: 0.07;
 }
 
-/* ☀️ Matinee — light mode, warm paper like a printed ticket */
+/* ☀️ Matinee — light mode, warm paper like a printed ticket, soft honey highlights */
 :root[data-theme="matinee"] {
   color-scheme: light;
   --color-night: #f5eee2;
@@ -83,46 +83,47 @@
   --color-cream: #1d1519;
   --color-soft: #4b3f49;
   --color-muted: #75676f;
-  --color-gold: #f0a500;
-  --color-gold-deep: #c46d00;
-  --color-marquee-1: #d68b00;
-  --color-accent: #a35f00;
-  --color-coral: #d9412f;
+  --color-gold: #e2b462;
+  --color-gold-deep: #c99642;
+  --color-marquee-1: #c08a2e;
+  --color-accent: #8f5a12;
+  --color-coral: #c0392b;
   --color-on-gold: #1d1519;
   --color-star: #b07000;
-  --color-movie: #e0523e;
-  --color-series: #0a8fbd;
-  --color-anime: #d23c8c;
-  --color-book: #4f8c06;
-  --spot-1: rgb(240 165 0 / 0.16);
+  --color-movie: #c2412e;
+  --color-series: #08739a;
+  --color-anime: #b8367c;
+  --color-book: #3f7a08;
+  --spot-1: rgb(226 180 98 / 0.12);
   --spot-2: rgb(210 60 140 / 0.08);
   --grain: 0.035;
 }
 
-/* 🌿 Sage — light mode, cool and calm: off-white with a muted green */
-:root[data-theme="sage"] {
+/* 📝 Script — light mode like a printed screenplay: paper, black ink, red pencil, typewriter headings */
+:root[data-theme="script"] {
   color-scheme: light;
-  --color-night: #eef3ef;
-  --color-surface: #fbfdfb;
-  --color-raised: #e2ebe4;
-  --color-line: #cddbd1;
-  --color-cream: #14201a;
-  --color-soft: #3a4a40;
-  --color-muted: #5b6b61;
-  --color-gold: #2e7d5b;
-  --color-gold-deep: #1f6247;
-  --color-marquee-1: #3f9a72;
-  --color-accent: #236b4c;
-  --color-coral: #c5412f;
-  --color-on-gold: #ffffff;
-  --color-star: #a86b00;
+  --font-display: "Courier Prime", ui-monospace, "Courier New", monospace;
+  --color-night: #f3f1ec;
+  --color-surface: #fdfcf9;
+  --color-raised: #ebe7df;
+  --color-line: #d8d2c6;
+  --color-cream: #1b1a17;
+  --color-soft: #45423c;
+  --color-muted: #6c675e;
+  --color-gold: #1b1a17;
+  --color-gold-deep: #3a3833;
+  --color-marquee-1: #b0302a;
+  --color-accent: #b0302a;
+  --color-coral: #c0392b;
+  --color-on-gold: #fdfcf9;
+  --color-star: #9a6b14;
   --color-movie: #c2412e;
   --color-series: #08739a;
-  --color-anime: #c23a84;
+  --color-anime: #b8367c;
   --color-book: #3f7a08;
-  --spot-1: rgb(46 125 91 / 0.10);
-  --spot-2: rgb(46 125 91 / 0.05);
-  --grain: 0.025;
+  --spot-1: rgb(27 26 23 / 0.04);
+  --spot-2: rgb(176 48 42 / 0.04);
+  --grain: 0.03;
 }
 
 /* Phones: don't let the browser auto-enlarge text (it does so differently on each phone) */
@@ -173,9 +174,21 @@ h1, h2, h3 {
 
 /* Cinema-ticket shape: two half-circle notches on the sides */
 @utility ticket {
+  position: relative;
   mask:
     radial-gradient(circle 9px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat,
     radial-gradient(circle 9px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+
+  /* Outline the two notches, so the border runs all the way round them */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle 10px at 0 50%, #0000 9px, var(--color-line) 9px, var(--color-line) 10px, #0000 10.5px),
+      radial-gradient(circle 10px at 100% 50%, #0000 9px, var(--color-line) 9px, var(--color-line) 10px, #0000 10.5px);
+  }
 }
 
 /* Gold gradient text for the logo and big numbers */

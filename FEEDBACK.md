@@ -29,3 +29,12 @@
 | 2 | Profile posters only show names, nothing happens on tap | Each poster shows its status/progress; tap opens the details (with that friend's status on top) | ✅ |
 | 3 | Add to club should be like before, just without sparkles | Restored the "Added" card, flying poster and button shine; sparkles stay gone | ✅ |
 | 4 | Premiere & Drive-in themes feel cluttered | Replaced with two clean themes like Noir/Matinee: 🌙 Midnight (dark) and 🌿 Sage (light) | ✅ |
+
+## Round 4 — 2026-10-01
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | Login code has 8 digits, want 6 | Supabase setting: Email OTP Length = 6 (the app accepts 6–8) | ✅ (Supabase setting) |
+| 2 | Midnight & Sage look generic/AI-made; Matinee's yellow is harsh | 🎦 Screening Room (warm cinema dark) and 📝 Script (screenplay paper, typewriter headings); Matinee yellow → soft honey | ✅ |
+| 3 | Ticket border cut off at the corners in the details pop-up | Pop-up corners now match the ticket; the side notches get an outline | ✅ |
+| 4 | Spin button left-aligned, too close to the wheel | Centred, with more space above it | ✅ |
