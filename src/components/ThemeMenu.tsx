@@ -8,7 +8,7 @@ export function ThemeMenu() {
   const [current, setCurrent] = useState<ThemeId>(loadTheme)
 
   const choose = (id: ThemeId) => {
-    applyTheme(id)
+    applyTheme(id, true)
     setCurrent(id)
   }
 
