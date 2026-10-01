@@ -7,6 +7,8 @@ const inputClass =
   'mt-1 w-full rounded-xl border border-line bg-night/50 px-3 py-2.5 font-normal outline-none placeholder:text-muted focus:border-gold focus:ring-4 focus:ring-gold/10'
 const goldButton =
   'rounded-full bg-gradient-to-b from-gold to-gold-deep py-3 font-display text-lg font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40'
+/** Digits in the emailed code (Supabase → Sign In / Providers → Email → Email OTP Length). */
+const CODE_LENGTH = 6
 /** Supabase only allows a new code once a minute. */
 const RESEND_SECONDS = 60
 
@@ -94,20 +96,16 @@ function EmailCodeForm({
       <p className="text-sm text-soft">
         We emailed a code to <b className="text-cream">{email.trim()}</b>. Type it here — check spam if it’s not there in a minute.
       </p>
-      <label className="text-sm font-bold">
-        Code
-        <input
-          autoFocus
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
-          placeholder="123456"
-          className={`${inputClass} py-3 text-center font-display text-2xl font-extrabold tracking-[0.4em] placeholder:text-muted/40`}
-        />
-      </label>
+      <CodeBoxes
+        value={code}
+        onChange={(next) => {
+          setCode(next)
+          // The last digit checks the code straight away — no need to tap "Log in".
+          if (next.length === CODE_LENGTH && !busy) void run(() => verify(email, next))
+        }}
+      />
       {error && <ErrorNote text={error} />}
-      <button disabled={busy || code.length < 6} className={goldButton}>
+      <button disabled={busy || code.length < CODE_LENGTH} className={goldButton}>
         {busy ? 'Checking…' : submitLabel}
       </button>
       <div className="flex justify-between text-xs font-semibold">
@@ -126,6 +124,45 @@ function EmailCodeForm({
         </button>
       </div>
     </form>
+  )
+}
+
+/**
+ * Six boxes, one per digit. Underneath it's ONE invisible input stretched over the boxes,
+ * so pasting, the keyboard's "code from Mail" suggestion and backspace all just work.
+ */
+function CodeBoxes({ value, onChange }: { value: string; onChange: (code: string) => void }) {
+  const [focused, setFocused] = useState(true)
+  return (
+    <label className="block text-sm font-bold">
+      Code
+      <span className="relative mt-1 grid grid-cols-6 gap-2">
+        {Array.from({ length: CODE_LENGTH }, (_, i) => {
+          const active = focused && (i === value.length || (i === CODE_LENGTH - 1 && value.length === CODE_LENGTH))
+          return (
+            <span
+              key={i}
+              className={`flex aspect-[4/5] items-center justify-center rounded-xl border bg-night/50 font-display text-2xl font-extrabold transition ${
+                active ? 'border-gold ring-4 ring-gold/10' : value[i] ? 'border-muted' : 'border-line'
+              }`}
+            >
+              {value[i] ?? (active ? <span className="h-6 w-0.5 animate-pulse bg-gold" /> : '')}
+            </span>
+          )
+        })}
+        <input
+          autoFocus
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          aria-label={`${CODE_LENGTH}-digit code`}
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH))}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent opacity-0 outline-none selection:bg-transparent"
+        />
+      </span>
+    </label>
   )
 }
 
