@@ -294,6 +294,11 @@ export async function removeTitle(clubId: string, titleId: string): Promise<void
   if (rows.length === 0) throw new Error('Only the person who added it (or the host) can remove it.')
 }
 
+/** Take a title off your own list (your status, stars and review for it are deleted). */
+export async function deleteEntry(userId: string, titleId: string): Promise<void> {
+  ok(await db().from('entries').delete().eq('user_id', userId).eq('title_id', titleId))
+}
+
 export async function saveEntry(entry: Entry): Promise<void> {
   ok(
     await db().from('entries').upsert({

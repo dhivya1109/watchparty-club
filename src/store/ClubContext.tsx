@@ -3,6 +3,7 @@ import {
   addTitle,
   emptyClub,
   getEntry,
+  removeEntry,
   removeTitle,
   updateEntry,
   type ClubData,
@@ -78,7 +79,10 @@ interface ClubStore {
   leaveClub: () => Promise<void>
 
   add: (result: SearchResult) => void
+  /** Remove a title from the whole club (whoever added it, or the host) */
   remove: (titleId: string) => void
+  /** Take a title off MY list only — it stays on the club shelf */
+  removeFromMyList: (titleId: string) => void
   update: (titleId: string, change: EntryChange) => void
 }
 
@@ -351,6 +355,14 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         optimistic(
           (d) => removeTitle(d, titleId),
           () => cloud.removeTitle(activeId, titleId),
+        )
+      },
+
+      removeFromMyList: (titleId) => {
+        if (!userId) return
+        optimistic(
+          (d) => removeEntry(d, userId, titleId),
+          () => cloud.deleteEntry(userId, titleId),
         )
       },
 

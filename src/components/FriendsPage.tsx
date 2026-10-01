@@ -4,7 +4,9 @@ import { genreTaste } from '../lib/picker'
 import { personStats, tasteMatches } from '../lib/stats'
 import { inviteLink } from '../lib/cloud'
 import { useClub } from '../store/ClubContext'
+import { LENGTH_UNIT } from '../types'
 import { Avatar } from './Avatar'
+import { TitleSheet } from './ClubPage'
 import { ProfileForm } from './ProfileForm'
 import { useToast } from './Toast'
 import { EmptyState, Panel, Poster } from './ui'
@@ -224,6 +226,8 @@ const SHELF_HEADINGS: Record<Status, string> = {
 function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () => void; onGoSearch: () => void }) {
   const { data, me, updateProfile } = useClub()
   const [editing, setEditing] = useState(false)
+  /** The title whose details are open (tap a poster) */
+  const [openId, setOpenId] = useState<string | null>(null)
   const isMe = member.id === me.id
   const shelf = shelfOf(data, member.id)
   const stats = personStats(data, member)
@@ -326,12 +330,12 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
             <Panel title={`⭐ ${firstName} recommends to you`} note={`Things ${firstName} rated 8+ that you haven’t watched yet`} className="mt-6">
               <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
                 {recs.map(({ title, entry }) => (
-                  <div key={title.id} className="w-32 shrink-0">
-                    <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-2xl shadow-lg" />
+                  <button key={title.id} onClick={() => setOpenId(title.id)} className="group w-32 shrink-0 text-left">
+                    <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-2xl shadow-lg transition duration-300 group-hover:-translate-y-1" />
                     <p className="mt-2 line-clamp-2 text-sm font-bold leading-tight">{title.title}</p>
-                    <p className="text-xs font-bold text-accent">★ {entry.rating}/10</p>
+                    <p className="text-xs font-bold text-star">★ {entry.rating}/10</p>
                     {entry.review && <p className="mt-0.5 line-clamp-2 text-xs italic text-muted">“{entry.review}”</p>}
-                  </div>
+                  </button>
                 ))}
               </div>
             </Panel>
@@ -344,7 +348,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
               </h3>
               <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-7">
                 {shelf[s].map(({ title, entry }) => (
-                  <ShelfItem key={title.id} title={title} entry={entry} />
+                  <ShelfItem key={title.id} title={title} entry={entry} onOpen={() => setOpenId(title.id)} />
                 ))}
               </div>
             </section>
@@ -373,19 +377,23 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
           )}
         </>
       )}
+
+      {openId && <TitleSheet titleId={openId} person={member} onClose={() => setOpenId(null)} />}
     </div>
   )
 }
 
-function ShelfItem({ title, entry }: { title: ClubTitle; entry: Entry }) {
+/** A poster with its status underneath — tap for the full details. */
+function ShelfItem({ title, entry, onOpen }: { title: ClubTitle; entry: Entry; onOpen: () => void }) {
   const status = STATUSES.find((s) => s.value === entry.status)!
   const progress = title.length && entry.status === 'watching' ? Math.round((entry.progress / title.length) * 100) : null
+  const steps = title.type !== 'movie' && entry.progress > 0 ? `${entry.progress}${title.length ? `/${title.length}` : ''} ${LENGTH_UNIT[title.type]}` : null
   return (
-    <div title={`${title.title} — ${status.label}`}>
+    <button onClick={onOpen} className="group block w-full text-left" aria-label={`${title.title} — ${status.label}. Open details`}>
       <div className="relative">
-        <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-xl shadow-md" />
+        <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-xl shadow-md transition duration-300 group-hover:-translate-y-1" />
         {entry.rating !== null && (
-          <span className="absolute right-1 top-1 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-bold text-accent backdrop-blur">
+          <span className="absolute right-1 top-1 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-bold text-star backdrop-blur">
             ★ {entry.rating}
           </span>
         )}
@@ -396,7 +404,10 @@ function ShelfItem({ title, entry }: { title: ClubTitle; entry: Entry }) {
         )}
       </div>
       <p className="mt-1.5 line-clamp-2 text-xs font-semibold leading-tight">{title.title}</p>
-    </div>
+      <p className="mt-0.5 truncate text-[11px] text-muted">
+        {status.emoji} {steps ?? status.label}
+      </p>
+    </button>
   )
 }
 

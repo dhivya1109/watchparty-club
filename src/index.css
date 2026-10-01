@@ -9,30 +9,30 @@
   --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* 🎬 Premiere (default): midnight blue, red-carpet crimson, yellow stars */
-  --color-night: #0b1120;
-  --color-surface: #121a2e;
-  --color-raised: #1b2540;
-  --color-line: #2b3756;
+  /* 🌙 Midnight (default): clean deep blue-grey, one soft blue highlight */
+  --color-night: #0d1117;
+  --color-surface: #151b24;
+  --color-raised: #1e2632;
+  --color-line: #2d3744;
 
   /* Text */
-  --color-cream: #f3f6fc;
-  --color-soft: #c5cee0;
-  --color-muted: #8f9bb4;
+  --color-cream: #edf1f7;
+  --color-soft: #b6c0ce;
+  --color-muted: #8693a5;
 
   /* The main colour ("gold" is its token name): buttons, highlights, active tabs */
-  --color-gold: #d22a46;
-  --color-gold-deep: #a8182f;
-  --color-marquee-1: #ffc2cb; /* top of the headline text gradient */
+  --color-gold: #7aa7ff;
+  --color-gold-deep: #5584e8;
+  --color-marquee-1: #cfe0ff; /* top of the headline text gradient */
   /* Main-colour TEXT on dark/light backgrounds (lighter/darker than the buttons so it stays readable) */
-  --color-accent: #ff7b8c;
-  --color-coral: #ff6b6b;
+  --color-accent: #93b8ff;
+  --color-coral: #ff7b72;
   /* Text ON a main-colour button */
-  --color-on-gold: #ffffff;
+  --color-on-gold: #0a1222;
   /* Dark text on bright badges (lime ticks, wheel slices) — the same in every theme */
   --color-ink: #0c0a10;
   /* Rating stars */
-  --color-star: #ffd23f;
+  --color-star: #f5c451;
 
   /* One colour per type (always shown next to its emoji + name) */
   --color-movie: #ff7a66;
@@ -47,9 +47,9 @@
  */
 :root {
   color-scheme: dark;
-  --spot-1: rgb(210 42 70 / 0.16);
-  --spot-2: rgb(76 201 240 / 0.10);
-  --grain: 0.04;
+  --spot-1: rgb(122 167 255 / 0.10);
+  --spot-2: rgb(122 167 255 / 0.05);
+  --grain: 0.03;
 }
 
 /* 🖤 Noir — plain black, silver-white accents, a touch of red */
@@ -99,25 +99,30 @@
   --grain: 0.035;
 }
 
-/* 🌃 Drive-in — neon signs over a dark teal night: mint, hot pink, neon yellow stars */
-:root[data-theme="drivein"] {
-  --color-night: #071416;
-  --color-surface: #0d1f22;
-  --color-raised: #152c30;
-  --color-line: #224045;
-  --color-cream: #ecfffb;
-  --color-soft: #b8d8d3;
-  --color-muted: #82a5a0;
-  --color-gold: #2ee6c5;
-  --color-gold-deep: #12b89c;
-  --color-marquee-1: #c4fff3;
-  --color-accent: #5ff0d6;
-  --color-coral: #ff4f8b;
-  --color-on-gold: #04201b;
-  --color-star: #ffe45c;
-  --spot-1: rgb(46 230 197 / 0.12);
-  --spot-2: rgb(255 79 139 / 0.12);
-  --grain: 0.05;
+/* 🌿 Sage — light mode, cool and calm: off-white with a muted green */
+:root[data-theme="sage"] {
+  color-scheme: light;
+  --color-night: #eef3ef;
+  --color-surface: #fbfdfb;
+  --color-raised: #e2ebe4;
+  --color-line: #cddbd1;
+  --color-cream: #14201a;
+  --color-soft: #3a4a40;
+  --color-muted: #5b6b61;
+  --color-gold: #2e7d5b;
+  --color-gold-deep: #1f6247;
+  --color-marquee-1: #3f9a72;
+  --color-accent: #236b4c;
+  --color-coral: #c5412f;
+  --color-on-gold: #ffffff;
+  --color-star: #a86b00;
+  --color-movie: #c2412e;
+  --color-series: #08739a;
+  --color-anime: #c23a84;
+  --color-book: #3f7a08;
+  --spot-1: rgb(46 125 91 / 0.10);
+  --spot-2: rgb(46 125 91 / 0.05);
+  --grain: 0.025;
 }
 
 /* Phones: don't let the browser auto-enlarge text (it does so differently on each phone) */

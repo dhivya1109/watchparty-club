@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SearchResult } from '../types'
-import { addTitle, emptyClub, getEntry, removeTitle, updateEntry } from './club'
+import { addTitle, emptyClub, getEntry, removeEntry, removeTitle, updateEntry } from './club'
 
 const frieren: SearchResult = {
   id: 'anime:154587',
@@ -27,6 +27,14 @@ describe('adding and removing titles', () => {
   it('removes a title and its entries', () => {
     const club = removeTitle(addTitle(emptyClub, frieren, 'me', NOW), frieren.id)
     expect(club).toEqual(emptyClub)
+  })
+
+  it('takes a title off one member’s list but keeps it on the shelf and on friends’ lists', () => {
+    const both = updateEntry(addTitle(emptyClub, frieren, 'me', NOW), 'friend', frieren.id, { status: 'watching' })
+    const club = removeEntry(both, 'me', frieren.id)
+    expect(club.titles[frieren.id]).toBeDefined()
+    expect(getEntry(club, 'me', frieren.id)).toBeUndefined()
+    expect(getEntry(club, 'friend', frieren.id)?.status).toBe('watching')
   })
 })
 

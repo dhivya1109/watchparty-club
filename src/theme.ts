@@ -3,13 +3,13 @@
  * (look for :root[data-theme="…"]); this file only lists them and remembers the choice.
  */
 
-export type ThemeId = 'premiere' | 'noir' | 'matinee' | 'drivein'
+export type ThemeId = 'midnight' | 'noir' | 'matinee' | 'sage'
 
 export const THEMES: { id: ThemeId; emoji: string; name: string; description: string; swatch: string[] }[] = [
-  { id: 'premiere', emoji: '🎬', name: 'Premiere', description: 'Midnight blue & red carpet', swatch: ['#0b1120', '#1b2540', '#d22a46', '#ffd23f'] },
+  { id: 'midnight', emoji: '🌙', name: 'Midnight', description: 'Calm dark blue-grey', swatch: ['#0d1117', '#1e2632', '#7aa7ff', '#f5c451'] },
   { id: 'noir', emoji: '🖤', name: 'Noir', description: 'Plain black, silver screen', swatch: ['#000000', '#171717', '#f2f2f2', '#ff3b3b'] },
   { id: 'matinee', emoji: '☀️', name: 'Matinee', description: 'Light mode, paper tickets', swatch: ['#f5eee2', '#fffaf2', '#f0a500', '#d9412f'] },
-  { id: 'drivein', emoji: '🌃', name: 'Drive-in', description: 'Neon signs, teal night', swatch: ['#071416', '#152c30', '#2ee6c5', '#ff4f8b'] },
+  { id: 'sage', emoji: '🌿', name: 'Sage', description: 'Light mode, soft green', swatch: ['#eef3ef', '#fbfdfb', '#2e7d5b', '#c5412f'] },
 ]
 
 const STORAGE_KEY = 'watchparty-club:theme'
@@ -21,7 +21,7 @@ export function loadTheme(): ThemeId {
   } catch {
     // Storage blocked — fall through to the default
   }
-  return 'premiere'
+  return 'midnight'
 }
 
 /** Switch the whole app to a theme, and remember it on this device. */

@@ -98,7 +98,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
       <p className="mt-2 text-sm text-soft">
         {view === 'club'
           ? 'Everyone’s picks, person by person. Swipe a row; tap a poster for details.'
-          : 'What you’re tracking. Tap a poster to update it.'}
+          : 'What you’re tracking. Tap a poster to update it or remove it.'}
       </p>
 
       {view === 'mine' && (
@@ -275,10 +275,34 @@ function PosterTile({
   )
 }
 
+/** "Priya · ▶️ In progress · 12 / 28 episodes · ★ 8" — a friend's own status, above the ticket. */
+function PersonStatus({ member, entry, title }: { member: Member; entry: Entry; title: ClubTitle }) {
+  const st = STATUSES.find((s) => s.value === entry.status)!
+  const showProgress = title.type !== 'movie' && entry.progress > 0
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-2xl border border-line bg-surface px-4 py-3 text-sm">
+      <Avatar member={member} size={26} />
+      <b className="text-cream">{member.name}</b>
+      <span className="rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-accent">
+        {st.emoji} {st.label}
+      </span>
+      {showProgress && (
+        <span className="text-soft">
+          {entry.progress}
+          {title.length ? ` / ${title.length}` : ''} {LENGTH_UNIT[title.type]}
+        </span>
+      )}
+      {entry.rating !== null && <span className="font-semibold text-star">★ {entry.rating}/10</span>}
+    </div>
+  )
+}
+
 /** The full ticket for one title, in a sheet that slides up. */
-function TitleSheet({ titleId, onClose }: { titleId: string; onClose: () => void }) {
+export function TitleSheet({ titleId, onClose, person }: { titleId: string; onClose: () => void; person?: Member }) {
   const { data, me } = useClub()
   const title = data.titles[titleId]
+  // Opened from a friend's profile: show where THEY are with it first
+  const theirs = person && person.id !== me.id ? getEntry(data, person.id, titleId) : undefined
 
   // Removed (by you, or live by someone else)? Close the sheet.
   useEffect(() => {
@@ -303,6 +327,7 @@ function TitleSheet({ titleId, onClose }: { titleId: string; onClose: () => void
             </button>
           </div>
           <div className="min-h-0 overflow-y-auto overscroll-contain rounded-[2rem]">
+            {person && theirs && <PersonStatus member={person} entry={theirs} title={title} />}
             <ClubCard title={title} entry={getEntry(data, me.id, title.id)} />
           </div>
         </div>
@@ -312,7 +337,7 @@ function TitleSheet({ titleId, onClose }: { titleId: string; onClose: () => void
 }
 
 function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
-  const { data, me, amHost, update, remove } = useClub()
+  const { data, me, amHost, update, remove, removeFromMyList } = useClub()
   const [celebration, setCelebration] = useState<{ kind: CelebrationKind; id: number } | null>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -356,6 +381,8 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
   }
 
   const clubReviews = others.filter((o) => o.entry!.review)
+  // Same rule as the database: whoever added it, or the host, can remove it from the club
+  const canRemoveFromClub = title.addedBy === me.id || amHost
 
   return (
     // The outer box shakes or glows; the inner "ticket" keeps its notched shape.
@@ -403,17 +430,6 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
               {[title.year, title.subtitle].filter(Boolean).join(' · ')}
             </p>
           </div>
-          {/* Same rule as the database: whoever added it, or the host, can remove it */}
-          {(title.addedBy === me.id || amHost) && (
-            <button
-              onClick={() => confirm(`Remove “${title.title}” from the club?`) && remove(title.id)}
-              title="Remove from club"
-              aria-label="Remove from club"
-              className="rounded-full p-1 text-muted transition hover:bg-coral/15 hover:text-coral"
-            >
-              ✕
-            </button>
-          )}
         </div>
 
       </div>
@@ -543,6 +559,31 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
           </div>
         )}
       </div>
+      )}
+
+      {/* Remove: from my list only, or (whoever added it / the host) from the whole club */}
+      {(onMyList || canRemoveFromClub) && (
+        <div className="flex flex-wrap gap-2 border-t border-dashed border-line px-4 py-3">
+          {onMyList && (
+            <button
+              onClick={() =>
+                confirm(`Take “${title.title}” off your list? Your status, stars and review for it will be deleted. It stays on the club shelf.`) &&
+                removeFromMyList(title.id)
+              }
+              className="flex-1 whitespace-nowrap rounded-full border border-line px-3 py-2 text-sm font-semibold text-soft transition hover:border-muted hover:text-cream"
+            >
+              ➖ Remove from my list
+            </button>
+          )}
+          {canRemoveFromClub && (
+            <button
+              onClick={() => confirm(`Remove “${title.title}” from the club for everyone?`) && remove(title.id)}
+              className="flex-1 whitespace-nowrap rounded-full border border-coral/40 px-3 py-2 text-sm font-semibold text-coral transition hover:bg-coral/10"
+            >
+              🗑️ Remove from club
+            </button>
+          )}
+        </div>
       )}
     </article>
 

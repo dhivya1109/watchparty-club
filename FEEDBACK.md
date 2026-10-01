@@ -17,6 +17,15 @@
 | # | What happened | Fix | Status |
 |---|---|---|---|
 | 1 | Log in should use a code from email, not a password or a link | Email → 6-digit code → profile (new people) → app | ✅ (needs email sender set up in Supabase) |
-| 2 | "Added to the club" card and light effects after adding feel noisy | Removed the card, sparkles, flying poster and button shine — the button simply turns into ✓ On the shelf | ✅ |
+| 2 | Sparkles after "Add to club" feel noisy | Only the sparkles removed (round 3 brought back the card, flying poster and button shine) | ✅ |
 | 3 | Not clear how to set my own status on a friend's pick | Full-width "Your status" buttons with labels; a Friends list shows everyone's status | ✅ |
 | 4 | "Your picks" cards should feel alive (like the District app) | Soft light sweep + tilt towards your finger | ✅ |
+
+## Round 3 — 2026-10-01
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | No way to take something off my list, and removing from the club was hidden | "➖ Remove from my list" and "🗑️ Remove from club" buttons at the bottom of every title's details | ✅ |
+| 2 | Profile posters only show names, nothing happens on tap | Each poster shows its status/progress; tap opens the details (with that friend's status on top) | ✅ |
+| 3 | Add to club should be like before, just without sparkles | Restored the "Added" card, flying poster and button shine; sparkles stay gone | ✅ |
+| 4 | Premiere & Drive-in themes feel cluttered | Replaced with two clean themes like Noir/Matinee: 🌙 Midnight (dark) and 🌿 Sage (light) | ✅ |

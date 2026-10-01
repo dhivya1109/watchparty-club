@@ -163,6 +163,11 @@ export function removeTitle(data: ClubData, titleId: string): ClubData {
   return { ...data, titles, entries: data.entries.filter((e) => e.titleId !== titleId) }
 }
 
+/** Take a title off one member's list (it stays on the club shelf). */
+export function removeEntry(data: ClubData, memberId: string, titleId: string): ClubData {
+  return { ...data, entries: data.entries.filter((e) => !(e.memberId === memberId && e.titleId === titleId)) }
+}
+
 export function getEntry(data: ClubData, memberId: string, titleId: string): Entry | undefined {
   return data.entries.find((e) => e.memberId === memberId && e.titleId === titleId)
 }
