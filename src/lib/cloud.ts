@@ -149,6 +149,8 @@ export async function signOut(): Promise<void> {
 /** Supabase's error messages are written for developers — translate the common ones. */
 function friendly(message: string): string {
   const m = message.toLowerCase()
+  if (m.includes('504') || m.includes('timeout') || m.includes('error sending'))
+    return 'We couldn’t send the email just now (the email service didn’t answer). Please try again in a minute.'
   if (m.includes('signups not allowed') && m.includes('email')) return 'New accounts are switched off in Supabase (Authentication → Sign In / Providers → Email).'
   if (m.includes('already been registered') || m.includes('already registered'))
     return 'That email already has an account. Log out, then log in with it instead.'
