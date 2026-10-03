@@ -271,6 +271,7 @@ function PosterTile({
         )}
       </div>
       <p className="mt-1.5 line-clamp-2 text-xs font-semibold leading-tight">{title.title}</p>
+      {title.genres?.length > 0 && <p className="mt-0.5 truncate text-[11px] text-muted">{title.genres.slice(0, 2).join(' · ')}</p>}
     </button>
   )
 }
@@ -433,6 +434,16 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
             <p className="line-clamp-1 text-xs text-muted">
               {[title.year, title.subtitle].filter(Boolean).join(' · ')}
             </p>
+            {/* Genres: plain labels (not buttons) */}
+            {title.genres?.length > 0 && (
+              <p className="mt-2 flex flex-wrap gap-1">
+                {title.genres.slice(0, 3).map((g) => (
+                  <span key={g} className="rounded-full bg-night/50 px-2 py-0.5 text-[10px] font-medium text-soft">
+                    {g}
+                  </span>
+                ))}
+              </p>
+            )}
           </div>
         </div>
 
