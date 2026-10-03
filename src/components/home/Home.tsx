@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Clappy, Poppy, Reel, Stubby } from './Characters'
 
 export type HomeTarget = 'club' | 'tonight' | 'stats'
@@ -90,58 +91,84 @@ const WORLD_CINEMA = [
   'French New Wave', 'Telenovelas', 'British TV', 'C-Drama', 'Turkish Dizi', 'Italian Neorealism', 'Bestsellers', 'Manga',
 ]
 
-/** A film strip of the world's film industries, scrolling forever. */
+/** One frame of film: the sprocket holes repeat every 18px (see .film-strip in index.css). */
+const FRAME = 18
+
+/**
+ * A film strip of the world's film industries, scrolling right to left forever.
+ * The tape itself (with its sprocket holes) moves, not just the words.
+ * The names are shown twice; each copy is rounded up to whole frames, so when the
+ * strip jumps back to the start the holes line up exactly and the loop is seamless.
+ */
 export function WorldCinemaStrip() {
-  const items = [...WORLD_CINEMA, ...WORLD_CINEMA] // twice, so the loop is seamless
+  const measure = useRef<HTMLDivElement>(null)
+  const [copyWidth, setCopyWidth] = useState<number>()
+
+  useEffect(() => {
+    const el = measure.current
+    if (!el) return
+    const update = () => setCopyWidth(Math.ceil(el.scrollWidth / FRAME) * FRAME)
+    update()
+    const observer = new ResizeObserver(update) // e.g. when the fonts finish loading
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div className="film-strip relative mt-10 -rotate-1 overflow-hidden py-4 shadow-xl" aria-label="World cinema: all welcome">
-      <div className="flex w-max gap-6 whitespace-nowrap" style={{ animation: 'ticker 40s linear infinite' }}>
-        {items.map((name, i) => (
-          <span key={i} className="flex items-center gap-6 font-display text-lg font-extrabold uppercase tracking-wide text-[#fff4d6]">
-            {name}
-            <span className="text-[#ffc53d]">✦</span>
-          </span>
+    <div className="relative mt-10 -rotate-1 overflow-hidden shadow-xl" aria-label="World cinema: all welcome">
+      <div className="film-strip flex w-max py-4" style={{ animation: 'ticker 40s linear infinite' }}>
+        {[0, 1].map((copy) => (
+          <div key={copy} className="shrink-0" style={{ width: copyWidth }} aria-hidden={copy === 1}>
+            <div ref={copy === 0 ? measure : undefined} className="flex w-max gap-6 whitespace-nowrap pl-6">
+              {WORLD_CINEMA.map((name) => (
+                <span key={name} className="flex items-center gap-6 font-display text-lg font-extrabold uppercase tracking-wide text-[#fff4d6]">
+                  {name}
+                  <span className="text-[#ffc53d]">✦</span>
+                </span>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>
   )
 }
 
-const FEATURES: { emoji: string; title: string; text: string; cta?: string; target?: HomeTarget }[] = [
-  { emoji: '🔍', title: 'Discover everything', text: 'Movies, series, anime and books from four databases — searched all at once.' },
+const FEATURES: { emoji: string; title: string; text: string; cta: string; target: HomeTarget | 'search' }[] = [
+  { emoji: '🔍', title: 'Discover everything', text: 'Movies, series, anime and books from four databases — searched all at once.', cta: 'Start searching', target: 'search' },
   { emoji: '🎟️', title: 'Keep your tickets', text: 'Track what you want to watch, what’s playing, and what you finished.', cta: 'Open my club', target: 'club' },
   { emoji: '✍️', title: 'Rate & review', text: 'Stars and honest reviews, so friends know if it’s worth their night.', cta: 'Write a review', target: 'club' },
   { emoji: '🎡', title: 'Can’t decide?', text: 'The wheel picks what everyone here will probably love.', cta: 'Spin now', target: 'tonight' },
 ]
 
-/** "Now showing" — what the app does, as a row of cinema tickets. */
-export function NowShowing({ onNavigate }: { onNavigate: (page: HomeTarget) => void }) {
+/** "Now showing" — what the app does, as a row of cinema tickets. Each whole ticket is a button. */
+export function NowShowing({ onNavigate, onSearch }: { onNavigate: (page: HomeTarget) => void; onSearch: () => void }) {
   return (
     <section className="mt-14">
       <SectionTitle kicker="The programme" title="What’s playing at the club" />
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((f, i) => (
-          <article
+          <button
             key={f.title}
-            className="ticket group flex overflow-hidden rounded-3xl border border-line bg-surface transition duration-300 hover:-translate-y-1 hover:border-gold/60"
+            onClick={() => (f.target === 'search' ? onSearch() : onNavigate(f.target))}
+            className="ticket group flex overflow-hidden rounded-3xl border border-line bg-surface text-left transition duration-300 hover:-translate-y-1 hover:border-gold/60 hover:shadow-xl active:scale-[0.98]"
           >
             {/* Ticket stub */}
-            <div className="flex w-10 shrink-0 items-center justify-center border-r-2 border-dashed border-line bg-gold/10">
+            <span className="flex w-10 shrink-0 items-center justify-center self-stretch border-r-2 border-dashed border-line bg-gold/10">
               <span className="-rotate-90 whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.3em] text-accent">
                 Admit one · No. 00{i + 1}
               </span>
-            </div>
-            <div className="flex flex-1 flex-col p-4 pl-5">
-              <div className="text-4xl transition duration-300 group-hover:scale-110 group-hover:-rotate-6">{f.emoji}</div>
-              <h3 className="mt-3 text-lg font-extrabold">{f.title}</h3>
-              <p className="mt-1 flex-1 text-sm text-soft">{f.text}</p>
-              {f.cta && f.target && (
-                <button onClick={() => onNavigate(f.target!)} className="mt-3 w-fit text-sm font-bold text-accent hover:underline">
-                  {f.cta} →
-                </button>
-              )}
-            </div>
-          </article>
+            </span>
+            <span className="flex flex-1 flex-col p-4 pl-5">
+              <span className="text-4xl">{f.emoji}</span>
+              <span className="mt-3 font-display text-lg font-extrabold">{f.title}</span>
+              <span className="mt-1 flex-1 text-sm text-soft">{f.text}</span>
+              {/* Looks like a button, because the whole ticket is one */}
+              <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/50 px-3.5 py-1.5 text-sm font-bold text-accent transition group-hover:border-gold group-hover:bg-gold group-hover:text-on-gold">
+                {f.cta} <span className="transition group-hover:translate-x-0.5">→</span>
+              </span>
+            </span>
+          </button>
         ))}
       </div>
     </section>
@@ -149,28 +176,27 @@ export function NowShowing({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 }
 
 const STEPS = [
-  { emoji: '👥', title: 'Gather your crew', text: 'Add your friends from the member menu at the top.' },
-  { emoji: '➕', title: 'Fill the shelf', text: 'Search anything and tap the gold + to add it.' },
-  { emoji: '🍿', title: 'Watch together', text: 'Rate, review, and spin the wheel for movie night.' },
+  { emoji: '👥', title: 'Gather your crew', text: 'Invite friends to your club from the 👥 Friends tab.' },
+  { emoji: '➕', title: 'Add to the club', text: 'Search anything and tap “Add to club” — it lands on the club shelf for everyone.' },
+  { emoji: '⭐', title: 'Track, rate, review', text: 'Mark your progress, give stars, and spin the wheel for movie night.' },
 ]
 
+/** How it works — information only, so nothing here looks like a button. */
 export function HowItWorks() {
   return (
     <section className="mt-14">
       <SectionTitle kicker="Tonight’s schedule" title="How it works" />
-      <ol className="relative mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {/* Dashed line joining the steps (bigger screens) */}
-        <div className="absolute left-[16%] right-[16%] top-9 hidden border-t-2 border-dashed border-line sm:block" />
+      <ol className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
         {STEPS.map((s, i) => (
-          <li key={s.title} className="relative flex flex-col items-center rounded-3xl p-4 text-center">
-            <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-2 border-gold/50 bg-surface text-3xl shadow-lg shadow-gold/10">
+          <li key={s.title} className="flex gap-3 sm:flex-col sm:gap-2">
+            <span className="text-3xl leading-none" aria-hidden="true">
               {s.emoji}
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gold font-display text-xs font-extrabold text-on-gold">
-                {i + 1}
-              </span>
-            </div>
-            <h3 className="mt-3 text-lg font-extrabold">{s.title}</h3>
-            <p className="mt-1 max-w-xs text-sm text-soft">{s.text}</p>
+            </span>
+            <span>
+              <span className="block text-xs font-bold uppercase tracking-wider text-muted">Step {i + 1}</span>
+              <span className="block font-display text-lg font-extrabold">{s.title}</span>
+              <span className="mt-0.5 block text-sm text-soft">{s.text}</span>
+            </span>
           </li>
         ))}
       </ol>

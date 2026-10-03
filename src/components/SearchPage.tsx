@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SEARCHERS } from '../api/search'
 import { flyToClub } from '../effects/flyToClub'
-import { AddedTray, ClubExplainer } from './AddToClub'
+import { AddedTray } from './AddToClub'
 import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
@@ -54,6 +54,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
     else {
       setSearchMode(false)
       setQuery('')
+      setTab('all')
     }
   }
 
@@ -61,6 +62,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
     const onBack = () => {
       setSearchMode(false)
       setQuery('')
+      setTab('all')
     }
     window.addEventListener('popstate', onBack)
     return () => window.removeEventListener('popstate', onBack)
@@ -132,15 +134,16 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
         </div>
       </div>
 
-      <PillRow className="mt-4">
-        {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
-          <Pill key={m.type} active={tab === m.type} onClick={() => setTab(m.type)}>
-            {m.emoji} {m.label}
-          </Pill>
-        ))}
-      </PillRow>
-
-      <ClubExplainer />
+      {/* Narrow down by type — only once there's something to narrow down */}
+      {searchMode && searching && (
+        <PillRow className="mt-4">
+          {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
+            <Pill key={m.type} active={tab === m.type} onClick={() => setTab(m.type)}>
+              {m.emoji} {m.label}
+            </Pill>
+          ))}
+        </PillRow>
+      )}
 
       {searchMode && !searching ? (
         <p className="mt-10 text-center text-sm text-muted">
@@ -170,7 +173,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
           </div>
 
           <WorldCinemaStrip />
-          <NowShowing onNavigate={onNavigate} />
+          <NowShowing onNavigate={onNavigate} onSearch={() => inputRef.current?.focus()} />
           <HowItWorks />
         </div>
       ) : (

@@ -282,11 +282,12 @@ h1, h2, h3 {
 }
 
 /* Film-strip edges: sprocket holes top and bottom */
+/* Film tape: dark stock with sprocket holes along both edges, one hole every 18px (one "frame") */
 @utility film-strip {
   background:
-    radial-gradient(circle at 50% 50%, var(--color-night) 3px, transparent 3.5px) 0 4px / 18px 10px repeat-x,
-    radial-gradient(circle at 50% 50%, var(--color-night) 3px, transparent 3.5px) 0 calc(100% - 4px) / 18px 10px repeat-x,
-    var(--color-ink);
+    radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.22) 3px, transparent 3.5px) 0 4px / 18px 10px repeat-x,
+    radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.22) 3px, transparent 3.5px) 0 calc(100% - 4px) / 18px 10px repeat-x,
+    #16141a;
 }
 
 /* ---------- Toasts & badges ---------- */

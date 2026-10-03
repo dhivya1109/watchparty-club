@@ -38,3 +38,12 @@
 | 2 | Midnight & Sage look generic/AI-made; Matinee's yellow is harsh | 🎦 Screening Room (warm cinema dark) and 📝 Script (screenplay paper, typewriter headings); Matinee yellow → soft honey | ✅ |
 | 3 | Ticket border cut off at the corners in the details pop-up | Pop-up corners now match the ticket; the side notches get an outline | ✅ |
 | 4 | Spin button left-aligned, too close to the wheel | Centred, with more space above it | ✅ |
+
+## Round 5 — 2026-10-03
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | "How your club works" repeats "How it works", and its icons look clickable | Box removed; its message moved into "How it works", now plain text with no button-like icons | ✅ |
+| 2 | Type chips under the search bar force a choice before typing | Chips only appear once results are showing | ✅ |
+| 3 | Only the words in the reel move | The whole film tape (with sprocket holes) runs right to left, seamlessly | ✅ |
+| 4 | "Discover everything" goes nowhere; unclear what's clickable | Every ticket is one big button with a button-style action; Discover → search bar | ✅ |
