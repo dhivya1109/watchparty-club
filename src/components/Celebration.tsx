@@ -40,7 +40,7 @@ export function Celebration({ kind }: { kind: CelebrationKind }) {
   const r = REACTIONS[kind]
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-3xl" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-2xl" aria-hidden="true">
       {r.beam && (
         <div
           className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-gold/35 to-transparent"

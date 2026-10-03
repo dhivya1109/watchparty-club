@@ -1,3 +1,4 @@
+import { Clapperboard, Crown, Link, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useClub } from '../store/ClubContext'
 import { Portal } from './ui'
@@ -32,13 +33,13 @@ export function CreateOrJoin({ onDone }: { onDone?: () => void }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <form
-        className="flex flex-col rounded-3xl border border-gold/50 bg-gradient-to-br from-gold/10 to-surface p-5"
+        className="flex flex-col rounded-2xl border border-gold/50 bg-surface p-5"
         onSubmit={(e) => {
           e.preventDefault()
           if (name.trim()) void run('create', () => createClub(name, importLocal && localTitleCount > 0))
         }}
       >
-        <div className="text-3xl">👑</div>
+        <Crown size={28} strokeWidth={1.75} aria-hidden="true" className="text-accent" />
         <h3 className="mt-2 text-xl font-extrabold">Start a new club</h3>
         <p className="mt-1 text-sm text-soft">You’ll be the host — you get a link to invite friends, family or anyone.</p>
         <input
@@ -58,20 +59,20 @@ export function CreateOrJoin({ onDone }: { onDone?: () => void }) {
         )}
         <button
           disabled={!name.trim() || busy !== null}
-          className="mt-4 rounded-full bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40"
+          className="mt-4 rounded-full bg-gold py-2.5 font-display font-bold text-on-gold transition hover:brightness-110 disabled:opacity-40"
         >
-          {busy === 'create' ? 'Creating…' : 'Create club 🍿'}
+          {busy === 'create' ? 'Creating…' : 'Create club'}
         </button>
       </form>
 
       <form
-        className="flex flex-col rounded-3xl border border-line bg-surface p-5"
+        className="flex flex-col rounded-2xl border border-line bg-surface p-5"
         onSubmit={(e) => {
           e.preventDefault()
           if (link.trim()) void run('join', () => joinClub(link))
         }}
       >
-        <div className="text-3xl">🔗</div>
+        <Link size={28} strokeWidth={1.75} aria-hidden="true" className="text-accent" />
         <h3 className="mt-2 text-xl font-extrabold">Join a friend’s club</h3>
         <p className="mt-1 text-sm text-soft">
           Got an invite link? Just open it — or paste it (or its code) here.
@@ -90,7 +91,7 @@ export function CreateOrJoin({ onDone }: { onDone?: () => void }) {
         </button>
       </form>
 
-      {error && <p className="rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral md:col-span-2">⚠️ {error}</p>}
+      {error && <p className="rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral md:col-span-2">{error}</p>}
     </div>
   )
 }
@@ -100,8 +101,8 @@ export function NoClubScreen() {
   const { me } = useClub()
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <p className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-accent">Welcome, {me.name}</p>
-      <h2 className="mt-2 text-center text-3xl font-extrabold sm:text-4xl">Pick your first club 🎬</h2>
+      <p className="text-center text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Welcome, {me.name}</p>
+      <h2 className="mt-2 text-center text-3xl font-extrabold sm:text-4xl">Pick your first club</h2>
       <p className="mx-auto mt-2 max-w-lg text-center text-soft">
         A club is a group of people sharing one shelf — your friends, your college gang, your family. You can be in as
         many as you like.
@@ -126,7 +127,7 @@ export function ClubSwitcher() {
         className="flex max-w-[11rem] items-center gap-1 rounded-full border border-line bg-surface/80 px-2.5 py-0.5 text-xs font-semibold text-soft transition hover:border-gold hover:text-cream sm:max-w-[16rem]"
         aria-label={`Current club: ${activeClub.name}. You're in ${clubs.length} ${clubs.length === 1 ? 'club' : 'clubs'} — open your clubs`}
       >
-        <span>🎬</span>
+        <Clapperboard size={13} aria-hidden="true" className="shrink-0" />
         <span className="truncate">{activeClub.name}</span>
         {clubs.length > 1 && <span className="shrink-0 rounded-full bg-raised px-1.5 text-[10px] text-muted">{clubs.length}</span>}
         <span className="text-muted">▾</span>
@@ -151,13 +152,13 @@ export function ClubsSheet({ onClose }: { onClose: () => void }) {
       <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="clubs-title">
         {/* Tapping the dark area closes the sheet */}
         <div className="absolute inset-0" onClick={onClose} />
-        <div className="animate-pop relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] border border-line bg-surface shadow-2xl">
+        <div className="animate-pop relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl">
           {/* Title + actions: pinned at the top, however many clubs there are */}
           <div className="border-b border-line p-5 pb-4">
             <div className="flex items-center justify-between gap-3">
               {mode === 'list' ? (
                 <h2 id="clubs-title" className="text-2xl font-extrabold">
-                  🎬 Your clubs <span className="text-muted">· {clubs.length}</span>
+                  Your clubs <span className="text-muted">· {clubs.length}</span>
                 </h2>
               ) : (
                 <button onClick={() => setMode('list')} className="text-sm font-semibold text-soft hover:text-cream">
@@ -173,7 +174,7 @@ export function ClubsSheet({ onClose }: { onClose: () => void }) {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMode('add')}
-                    className="rounded-2xl bg-gradient-to-b from-gold to-gold-deep py-2.5 font-display font-bold text-on-gold shadow-md shadow-gold/20 transition hover:brightness-110"
+                    className="rounded-2xl bg-gold py-2.5 font-display font-bold text-on-gold transition hover:brightness-110"
                   >
                     ＋ New club
                   </button>
@@ -181,13 +182,13 @@ export function ClubsSheet({ onClose }: { onClose: () => void }) {
                     onClick={() => setMode('add')}
                     className="rounded-2xl border-2 border-gold/60 py-2.5 font-display font-bold text-accent transition hover:bg-gold/10"
                   >
-                    🔗 Join a club
+                    Join a club
                   </button>
                 </div>
                 {clubs.length > 5 && (
                   <label className="relative mt-3 block">
                     <span className="sr-only">Search your clubs</span>
-                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm">🔍</span>
+                    <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
@@ -229,7 +230,7 @@ export function ClubsSheet({ onClose }: { onClose: () => void }) {
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate font-bold">{c.name}</span>
-                          <span className="block text-xs text-muted">{c.role === 'host' ? '👑 You’re the host' : '🙂 Member'}</span>
+                          <span className="block text-xs text-muted">{c.role === 'host' ? 'You’re the host' : 'Member'}</span>
                         </span>
                         {current && <span className="shrink-0 rounded-full bg-gold px-2 py-0.5 text-[11px] font-bold text-on-gold">Open</span>}
                       </button>

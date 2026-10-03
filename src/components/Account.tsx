@@ -6,7 +6,7 @@ import { Portal } from './ui'
 const inputClass =
   'mt-1 w-full rounded-xl border border-line bg-night/50 px-3 py-2.5 font-normal outline-none placeholder:text-muted focus:border-gold focus:ring-4 focus:ring-gold/10'
 const goldButton =
-  'rounded-full bg-gradient-to-b from-gold to-gold-deep py-3 font-display text-lg font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 disabled:opacity-40'
+  'rounded-full bg-gold py-3 font-display text-lg font-bold text-on-gold transition hover:brightness-110 disabled:opacity-40'
 /** Digits in the emailed code (Supabase → Sign In / Providers → Email → Email OTP Length). */
 const CODE_LENGTH = 6
 /** Supabase only allows a new code once a minute. */
@@ -81,7 +81,7 @@ function EmailCodeForm({
       </label>
       {error && <ErrorNote text={error} />}
       <button disabled={busy || !email.includes('@')} className={goldButton}>
-        {busy ? 'Sending…' : 'Send me a code ✉️'}
+        {busy ? 'Sending…' : 'Send me a code'}
       </button>
       <p className="text-center text-xs text-muted">We’ll email you a short code. No password needed.</p>
     </form>
@@ -167,7 +167,7 @@ function CodeBoxes({ value, onChange }: { value: string; onChange: (code: string
 }
 
 function ErrorNote({ text }: { text: string }) {
-  return <p className="rounded-xl bg-coral/10 px-3 py-2 text-sm text-coral">⚠️ {text}</p>
+  return <p className="rounded-xl bg-coral/10 px-3 py-2 text-sm text-coral">{text}</p>
 }
 
 /**
@@ -187,7 +187,7 @@ export function AuthScreen() {
           </div>
           {pendingInvite ? (
             <>
-              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-accent">🎟️ You’re invited</p>
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-accent">You’re invited</p>
               <h1 className="mt-1 text-[clamp(1.5rem,7vw,2rem)] font-extrabold leading-tight">
                 {invitePreview ? (
                   <>
@@ -203,7 +203,7 @@ export function AuthScreen() {
             </>
           ) : (
             <>
-              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-accent">Welcome to</p>
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Welcome to</p>
               <h1 className="text-3xl font-extrabold">
                 WatchParty <span className="text-marquee">Club</span>
               </h1>
@@ -212,9 +212,9 @@ export function AuthScreen() {
           )}
         </div>
 
-        <div className="mt-6 rounded-[2rem] border border-line bg-surface p-5 shadow-2xl sm:p-6">
+        <div className="mt-6 rounded-2xl border border-line bg-surface p-5 shadow-2xl sm:p-6">
           <h2 className="mb-4 text-xl font-extrabold">Log in or sign up</h2>
-          <EmailCodeForm send={sendLoginCode} verify={verifyLoginCode} submitLabel="Log in 🍿" />
+          <EmailCodeForm send={sendLoginCode} verify={verifyLoginCode} submitLabel="Log in" />
         </div>
       </div>
     </main>
@@ -227,11 +227,11 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
   return (
     <Portal>
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="account-title">
-        <div className="animate-pop max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[2rem] border border-line bg-surface p-6 shadow-2xl">
+        <div className="animate-pop max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-surface p-6 shadow-2xl">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 id="account-title" className="text-2xl font-extrabold">
-                💾 Save your account
+                Save your account
               </h2>
               <p className="mt-1 text-sm text-soft">
                 Right now your account only lives in this browser. Add your email to keep it and log in on any device.
@@ -248,7 +248,7 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
                 await confirmSaveCode(email, code)
                 onClose()
               }}
-              submitLabel="Save my account 💾"
+              submitLabel="Save my account"
             />
           </div>
         </div>

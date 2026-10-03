@@ -1,3 +1,4 @@
+import { ChartColumn, FerrisWheel, Popcorn, Search, Ticket, Users, type LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthScreen } from './components/Account'
 import { ClubPage } from './components/ClubPage'
@@ -47,7 +48,7 @@ function App() {
 
   // Before a club is open: loading → log in → your profile → pick your first club
   if (status === 'loading') return <Splash text="Getting the popcorn ready…" />
-  if (status === 'error') return <Splash text={error ?? 'Something went wrong.'} emoji="⚠️" />
+  if (status === 'error') return <Splash text={error ?? 'Something went wrong.'} />
   if (status === 'auth') return <AuthScreen />
   if (status === 'setup') return (
     <>
@@ -59,7 +60,9 @@ function App() {
     <div className="min-h-screen">
       <header className="border-b border-line/70 px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg">🍿</span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold text-on-gold">
+            <Popcorn size={20} strokeWidth={2.2} aria-hidden="true" />
+          </span>
           <span className="font-display text-lg font-extrabold">
             WatchParty <span className="text-marquee">Club</span>
           </span>
@@ -67,18 +70,17 @@ function App() {
             <ThemeMenu />
           </span>
         </div>
-        <div className="marquee-lights mt-3 opacity-70" />
       </header>
       <NoClubScreen />
     </div>
   )
 
-  const tabs: { page: Page; emoji: string; label: string; count?: number }[] = [
-    { page: 'search', emoji: '🔍', label: 'Discover' },
-    { page: 'club', emoji: '🎟️', label: 'Club', count: clubCount },
-    { page: 'tonight', emoji: '🎡', label: 'Tonight' },
-    { page: 'friends', emoji: '👥', label: 'Friends' },
-    { page: 'stats', emoji: '📊', label: 'Stats' },
+  const tabs: { page: Page; icon: LucideIcon; label: string; count?: number }[] = [
+    { page: 'search', icon: Search, label: 'Discover' },
+    { page: 'club', icon: Ticket, label: 'Club', count: clubCount },
+    { page: 'tonight', icon: FerrisWheel, label: 'Tonight' },
+    { page: 'friends', icon: Users, label: 'Friends' },
+    { page: 'stats', icon: ChartColumn, label: 'Stats' },
   ]
 
   return (
@@ -89,9 +91,9 @@ function App() {
             <button
               onClick={() => go('search')}
               aria-label="Home"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg shadow-lg shadow-gold/20 sm:h-10 sm:w-10 sm:text-xl"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gold text-on-gold sm:h-10 sm:w-10"
             >
-              🍿
+              <Popcorn size={20} strokeWidth={2.2} aria-hidden="true" />
             </button>
             <div className="min-w-0">
               <button onClick={() => go('search')} className="block whitespace-nowrap font-display text-[clamp(1rem,4.8vw,1.5rem)] font-extrabold leading-none tracking-tight">
@@ -118,10 +120,10 @@ function App() {
                 data-club-tab={t.page === 'club' ? '' : undefined}
                 onClick={() => go(t.page)}
                 className={`relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition lg:flex-row lg:gap-1.5 lg:rounded-full lg:px-3.5 lg:text-sm ${
-                  page === t.page ? 'bg-gold text-on-gold shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
+                  page === t.page ? 'bg-gold text-on-gold' : 'text-soft hover:bg-raised hover:text-cream'
                 } ${t.page === 'club' && catches > 0 ? 'animate-catch' : ''}`}
               >
-                <span className="text-base leading-none lg:text-sm">{t.emoji}</span>
+                <t.icon size={18} strokeWidth={2} aria-hidden="true" className="lg:h-4 lg:w-4" />
                 <span className="whitespace-nowrap">{t.label}</span>
                 {/* The count "bumps" whenever something is added, so you can see where it went */}
                 {t.count ? (
@@ -138,8 +140,6 @@ function App() {
             ))}
           </nav>
         </div>
-        {/* Marquee light bulbs along the bottom of the header */}
-        <div className="marquee-lights opacity-70" />
       </header>
 
       {/* Search stays mounted (just hidden) so your search is still there when you come back. */}
@@ -158,17 +158,19 @@ function App() {
       )}
 
       <footer className="mx-auto max-w-6xl px-4 pb-24 pt-6 text-center text-xs text-muted">
-        ☁️ Synced live with everyone in {data.name ?? 'your club'}.
+        Synced live with everyone in {data.name ?? 'your club'}.
       </footer>
     </div>
   )
 }
 
 /** A full-screen message: while loading, on errors, and behind the welcome screen. */
-function Splash({ text, emoji }: { text: string; emoji?: string }) {
+function Splash({ text }: { text: string }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      {emoji ? <div className="text-5xl">{emoji}</div> : <div className="h-28 w-24"><Poppy /></div>}
+      <div className="h-28 w-24">
+        <Poppy />
+      </div>
       {text && <p className="max-w-md text-soft">{text}</p>}
     </div>
   )

@@ -1,3 +1,5 @@
+import { TypeIcon } from './icons'
+import { FerrisWheel } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { rankTitles, sliceAtAngle, wheelSlices, type Suggestion } from '../lib/picker'
 import { useClub } from '../store/ClubContext'
@@ -33,10 +35,10 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
   if (Object.keys(data.titles).length === 0) {
     return (
       <EmptyState
-        emoji="🎡"
+        icon={FerrisWheel}
         title="Nothing on the wheel yet"
         text="Add a few titles to the club first — then come back and spin!"
-        action="🔍 Start discovering"
+        action="Start discovering"
         onAction={onGoSearch}
       />
     )
@@ -45,13 +47,13 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Movie night</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">Movie night</p>
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">What are we watching tonight?</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div className="flex flex-col gap-5">
-          <Panel title="👥 Who’s here?">
+          <Panel title="Who’s here?">
             <div className="flex flex-wrap gap-2">
               {data.members.map((m) => {
                 const here = !absent.includes(m.id)
@@ -73,9 +75,9 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
             </div>
           </Panel>
 
-          <Panel title="🎭 In the mood for…">
+          <Panel title="In the mood for…">
             <PillRow edge={5}>
-              {[{ type: 'all' as const, emoji: '✨', label: 'Anything' }, ...MEDIA_TYPES].map((m) => (
+              {[{ type: 'all' as const, label: 'Anything' }, ...MEDIA_TYPES].map((m) => (
                 <Pill
                   key={m.type}
                   active={type === m.type}
@@ -84,12 +86,15 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
                     setGenre('')
                   }}
                 >
-                  {m.emoji} {m.label}
+                  <span className="flex items-center gap-1.5">
+                    {m.type !== 'all' && <TypeIcon type={m.type} size={14} />}
+                    {m.label}
+                  </span>
                 </Pill>
               ))}
             </PillRow>
             <Select label="Genre" value={genre} onChange={setGenre} className="mt-3">
-              <option value="">🎭 Any genre</option>
+              <option value="">Any genre</option>
               {genres.map((g) => (
                 <option key={g}>{g}</option>
               ))}
@@ -108,7 +113,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
         ) : (
           // Never just disappear: say why there's nothing to spin, and how to fix it.
           <Panel className="flex flex-col items-center gap-3 py-10 text-center">
-            <div className="text-5xl opacity-60">🎡</div>
+            <FerrisWheel size={44} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
             <h3 className="text-xl font-extrabold">Nothing to spin yet</h3>
             <p className="max-w-xs text-sm text-soft">
               {present.length === 0
@@ -129,7 +134,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
               </button>
             ) : present.length > 0 ? (
               <button onClick={onGoSearch} className="rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10">
-                🔍 Add something new
+                Add something new
               </button>
             ) : null}
           </Panel>
@@ -146,7 +151,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
 /** 🏆 The three best-scoring titles for the people here, with the reasons. */
 function TopPicks({ present, suggestions }: { present: number; suggestions: Suggestion[] }) {
   return (
-    <Panel title="🏆 Top picks" note="Scored by who wants it, their favourite genres, and what’s already started">
+    <Panel title="Top picks" note="Scored by who wants it, their favourite genres, and what’s already started">
       {present === 0 ? (
         <p className="text-muted">Pick at least one person.</p>
       ) : suggestions.length === 0 ? (
@@ -161,7 +166,7 @@ function TopPicks({ present, suggestions }: { present: number; suggestions: Sugg
               <Poster src={s.title.image} type={s.title.type} className="aspect-[2/3] w-12 shrink-0 rounded-lg" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{['🥇', '🥈', '🥉'][i]}</span>
+                  <span className="font-display text-lg font-bold tabular-nums text-muted">#{i + 1}</span>
                   <h3 className="truncate font-bold">{s.title.title}</h3>
                   <span className="ml-auto shrink-0 rounded-full bg-raised px-2 py-0.5 text-[11px] tabular-nums text-soft">
                     {s.score} pts
@@ -287,26 +292,23 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
 
           {/* Centre cap */}
           <circle cx={CENTER} cy={CENTER} r="24" className="fill-night stroke-gold" strokeWidth="3" />
-          <text x={CENTER} y={CENTER} textAnchor="middle" dominantBaseline="central" className="text-lg">
-            🍿
-          </text>
+          <circle cx={CENTER} cy={CENTER} r="6" className="fill-gold" />
           {/* Pointer */}
           <polygon points="146,2 174,2 160,34" className="fill-gold stroke-night" strokeWidth="3" strokeLinejoin="round" />
         </svg>
       </div>
 
       <GoldButton onClick={spin} disabled={spinning} className="mt-4 px-10 py-3.5 text-lg">
-        {spinning ? '🎡 Spinning…' : winner ? '🎡 Spin again' : '🎡 Spin the wheel!'}
+        {spinning ? 'Spinning…' : winner ? 'Spin again' : 'Spin the wheel!'}
       </GoldButton>
 
       {winner && (
-        <div className="animate-pop relative w-full overflow-hidden rounded-3xl border border-gold/60 bg-gradient-to-br from-gold/15 via-surface to-coral/10 p-4 shadow-2xl shadow-gold/20">
-          <div className="marquee-lights absolute inset-x-0 top-0" />
+        <div className="animate-pop relative w-full overflow-hidden rounded-2xl border border-gold/60 bg-surface p-4">
           <div className="flex items-center gap-4 pt-2">
             <Poster src={winner.title.image} type={winner.title.type} className="aspect-[2/3] w-20 shrink-0 rounded-xl shadow-xl" />
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent">Tonight’s feature presentation</p>
-              <p className="mt-1 font-display text-2xl font-extrabold leading-tight sm:text-3xl">🎉 {winner.title.title}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Tonight’s feature presentation</p>
+              <p className="mt-1 font-display text-2xl font-extrabold leading-tight sm:text-3xl">{winner.title.title}</p>
               <TypeBadge type={winner.title.type} className="mt-2" />
             </div>
           </div>

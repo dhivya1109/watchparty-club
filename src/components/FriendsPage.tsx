@@ -1,3 +1,6 @@
+import { Crown, UserPlus } from 'lucide-react'
+import { StatusIcon } from './icons'
+import { Ticket } from 'lucide-react'
 import { useState } from 'react'
 import { recommendations, shelfOf, STATUSES, type ClubTitle, type Entry, type Member, type Status } from '../lib/club'
 import { genreTaste } from '../lib/picker'
@@ -45,7 +48,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">The crew</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">The crew</p>
       {editingName ? (
         <form
           className="mt-1 flex flex-wrap items-center gap-2"
@@ -70,14 +73,14 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
           {data.name || 'Our club'}
           {amHost && (
             <button onClick={() => setEditingName(true)} className="rounded-full border border-line px-3 py-1 font-sans text-xs font-semibold text-soft hover:border-gold hover:text-accent">
-              ✏️ Rename
+              Rename
             </button>
           )}
         </h2>
       )}
       <p className="mt-1 text-sm text-soft">
         {data.members.length} {data.members.length === 1 ? 'member' : 'members'}
-        {host && ` · 👑 Host: ${host.name}`}
+        {host && ` · Host: ${host.name}`}
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -85,7 +88,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
           const s = personStats(data, m)
           const match = m.id === me.id ? null : matchWithMe(m.id)
           return (
-            <article key={m.id} className="animate-pop flex flex-col rounded-3xl border border-line bg-surface p-4 transition hover:border-muted">
+            <article key={m.id} className="animate-pop flex flex-col rounded-2xl border border-line bg-surface p-4 transition hover:border-muted">
               <div className="flex items-start gap-3">
                 <Avatar member={m} size={56} />
                 <div className="min-w-0 flex-1">
@@ -104,7 +107,7 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
               </div>
               {m.bio && <p className="mt-3 text-sm italic text-soft">“{m.bio}”</p>}
               <p className="mt-3 text-xs text-muted">
-                ✅ {s.completed} finished · ⭐ {s.ratingsGiven} rated
+                {s.completed} finished · {s.ratingsGiven} rated
                 {s.averageGiven !== null && ` · avg ${s.averageGiven}`}
               </p>
               <div className="mt-4 flex items-center gap-2">
@@ -135,10 +138,10 @@ function Everyone({ onOpenProfile }: { onOpenProfile: (id: string) => void }) {
       <Panel title="ℹ️ How roles work" className="mt-6">
         <ul className="grid grid-cols-1 gap-3 text-sm text-soft sm:grid-cols-2">
           <li>
-            <b className="text-cream">👑 Host</b> — started the club. Shares the invite link, removes people, renames the club.
+            <b className="text-cream">Host</b> — started the club. Shares the invite link, removes people, renames the club.
           </li>
           <li>
-            <b className="text-cream">🙂 Member</b> — adds titles, tracks progress, rates, reviews and spins the wheel.
+            <b className="text-cream">Member</b> — adds titles, tracks progress, rates, reviews and spins the wheel.
           </li>
         </ul>
       </Panel>
@@ -167,8 +170,8 @@ function InviteCard() {
   const canShare = typeof navigator.share === 'function'
 
   return (
-    <article className="flex flex-col rounded-3xl border-2 border-dashed border-gold/50 bg-gold/5 p-4">
-      <div className="text-3xl">➕</div>
+    <article className="flex flex-col rounded-2xl border-2 border-dashed border-gold/50 bg-gold/5 p-4">
+      <UserPlus size={28} strokeWidth={1.75} aria-hidden="true" className="text-accent" />
       <h3 className="mt-2 text-lg font-extrabold">Invite friends</h3>
       {amHost ? (
         <>
@@ -179,21 +182,21 @@ function InviteCard() {
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(link)
-                  toast({ title: 'Invite link copied 📋', text: 'Paste it in WhatsApp, Instagram, anywhere.', emoji: '🔗' })
+                  toast({ title: 'Invite link copied', text: 'Paste it in WhatsApp, Instagram, anywhere.' })
                 } catch {
-                  toast({ title: 'Couldn’t copy', text: 'Select the link above and copy it by hand.', emoji: '⚠️' })
+                  toast({ title: 'Couldn’t copy', text: 'Select the link above and copy it by hand.' })
                 }
               }}
               className="flex-1 rounded-xl bg-gold py-2 text-sm font-bold text-on-gold transition hover:brightness-110"
             >
-              📋 Copy link
+              Copy link
             </button>
             {canShare && (
               <button
-                onClick={() => void navigator.share({ title: `Join ${data.name ?? 'my club'} on WatchParty Club`, text: 'Come track what we watch together 🍿', url: link }).catch(() => {})}
+                onClick={() => void navigator.share({ title: `Join ${data.name ?? 'my club'} on WatchParty Club`, text: 'Come track what we watch together', url: link }).catch(() => {})}
                 className="flex-1 rounded-xl border border-gold py-2 text-sm font-bold text-accent transition hover:bg-gold/10"
               >
-                📤 Share
+                Share
               </button>
             )}
           </div>
@@ -207,9 +210,11 @@ function InviteCard() {
 
 function RoleBadge({ member }: { member: Member }) {
   return member.role === 'host' ? (
-    <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-bold text-accent">👑 Host</span>
+    <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-bold text-accent">
+      <Crown size={12} aria-hidden="true" /> Host
+    </span>
   ) : (
-    <span className="rounded-full bg-raised px-2 py-0.5 text-[11px] font-semibold text-soft">🙂 Member</span>
+    <span className="rounded-full bg-raised px-2 py-0.5 text-[11px] font-semibold text-soft">Member</span>
   )
 }
 
@@ -218,9 +223,9 @@ function RoleBadge({ member }: { member: Member }) {
 const SHELF_ORDER: Status[] = ['watching', 'want', 'completed', 'dropped']
 const SHELF_HEADINGS: Record<Status, string> = {
   watching: '▶️ Watching now',
-  want: '📌 Wants to watch',
-  completed: '✅ Finished',
-  dropped: '💤 Dropped',
+  want: 'Wants to watch',
+  completed: 'Finished',
+  dropped: 'Dropped',
 }
 
 function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () => void; onGoSearch: () => void }) {
@@ -251,11 +256,11 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
       </button>
 
       {/* Profile header */}
-      <section className="mt-4 overflow-hidden rounded-[2rem] border border-line bg-gradient-to-br from-surface to-raised/60">
+      <section className="mt-4 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="h-20 sm:h-24" style={{ background: `linear-gradient(120deg, ${member.color}, transparent)` }} />
         <div className="-mt-10 px-5 pb-5 sm:px-8">
           {editing ? (
-            <div className="rounded-3xl border border-line bg-surface p-5">
+            <div className="rounded-2xl border border-line bg-surface p-5">
               <ProfileForm
                 initial={member}
                 submitLabel="Save profile"
@@ -280,7 +285,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
               </div>
               {isMe ? (
                 <button onClick={() => setEditing(true)} className="rounded-full border border-line px-4 py-2 text-sm font-bold hover:border-gold hover:text-accent">
-                  ✏️ Edit profile
+                  Edit profile
                 </button>
               ) : (
                 match?.match != null && (
@@ -297,7 +302,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
             <>
               {loves.length > 0 && (
                 <div className="mt-4 flex flex-wrap items-center gap-1.5 text-sm">
-                  <span className="text-soft">❤️ Loves</span>
+                  <span className="text-soft">Loves</span>
                   {loves.map((g) => (
                     <span key={g} className="rounded-full bg-coral/15 px-2.5 py-0.5 text-xs font-semibold text-coral">
                       {g}
@@ -318,16 +323,16 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
 
       {nothingYet ? (
         <EmptyState
-          emoji="🎟️"
+          icon={Ticket}
           title={isMe ? 'Your list is empty' : `${firstName} hasn’t added anything yet`}
           text={isMe ? 'Add something you’ve watched or want to watch.' : 'Once they track, rate or review something, it shows up here.'}
-          action="🔍 Discover titles"
+          action="Discover titles"
           onAction={onGoSearch}
         />
       ) : (
         <>
           {recs.length > 0 && (
-            <Panel title={`⭐ ${firstName} recommends to you`} note={`Things ${firstName} rated 8+ that you haven’t watched yet`} className="mt-6">
+            <Panel title={`${firstName} recommends to you`} note={`Things ${firstName} rated 8+ that you haven’t watched yet`} className="mt-6">
               <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
                 {recs.map(({ title, entry }) => (
                   <button key={title.id} onClick={() => setOpenId(title.id)} className="group w-32 shrink-0 text-left">
@@ -357,7 +362,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
           {reviews.length > 0 && (
             <section className="mt-8">
               <h3 className="text-xl font-extrabold">
-                ✍️ {isMe ? 'Your reviews' : `${firstName}’s reviews`} <span className="text-sm font-medium text-muted">· {reviews.length}</span>
+                {isMe ? 'Your reviews' : `${firstName}’s reviews`} <span className="text-sm font-medium text-muted">· {reviews.length}</span>
               </h3>
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {reviews.map(({ title, entry }) => (
@@ -399,13 +404,13 @@ function ShelfItem({ title, entry, onOpen }: { title: ClubTitle; entry: Entry; o
         )}
         {progress !== null && (
           <div className="absolute inset-x-1.5 bottom-1.5 h-1.5 overflow-hidden rounded-full bg-night/70">
-            <div className="h-full rounded-full bg-gradient-to-r from-gold to-coral" style={{ width: `${progress}%` }} />
+            <div className="h-full rounded-full bg-gold" style={{ width: `${progress}%` }} />
           </div>
         )}
       </div>
       <p className="mt-1.5 line-clamp-2 text-xs font-semibold leading-tight">{title.title}</p>
-      <p className="mt-0.5 truncate text-[11px] text-muted">
-        {status.emoji} {steps ?? status.label}
+      <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted">
+        <StatusIcon status={status.value} size={12} className="shrink-0" /> {steps ?? status.label}
       </p>
     </button>
   )

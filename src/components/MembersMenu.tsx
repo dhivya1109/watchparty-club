@@ -32,20 +32,20 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
           <Portal>
             <div className="fixed inset-0 z-10" onClick={close} />
           </Portal>
-          <div className="animate-pop absolute right-0 z-30 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-surface p-4 shadow-2xl shadow-black/40">
+          <div className="animate-pop absolute right-0 z-30 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-surface p-4 shadow-2xl shadow-black/40">
             <div className="flex items-center gap-3">
               <Avatar member={me} size={44} />
               <div className="min-w-0">
                 <p className="truncate font-display text-lg font-bold">{me.name}</p>
                 <p className="truncate text-xs text-muted">
-                  {me.role === 'host' ? '👑 Host of ' : '🙂 Member of '}
+                  {me.role === 'host' ? 'Host of ' : 'Member of '}
                   {activeClub?.name ?? 'your club'}
                 </p>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <MenuButton onClick={() => { close(); onOpenProfile(me.id) }}>👤 My profile</MenuButton>
-              <MenuButton onClick={() => { close(); onOpenFriends() }}>👥 Friends</MenuButton>
+              <MenuButton onClick={() => { close(); onOpenProfile(me.id) }}>My profile</MenuButton>
+              <MenuButton onClick={() => { close(); onOpenFriends() }}>Friends</MenuButton>
             </div>
             <button
               onClick={() => {
@@ -54,7 +54,7 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
               }}
               className="mt-2 flex w-full items-center justify-between rounded-xl border border-line px-3 py-2 text-sm font-semibold transition hover:border-gold hover:text-accent"
             >
-              <span className="whitespace-nowrap">🎬 Your clubs</span>
+              <span className="whitespace-nowrap">Your clubs</span>
               <span className="whitespace-nowrap text-xs text-muted">
                 {clubs.length} {clubs.length === 1 ? 'club' : 'clubs'} →
               </span>
@@ -67,12 +67,12 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
                 }}
                 className="mt-3 w-full rounded-2xl border-2 border-gold/60 bg-gold/10 p-3 text-left transition hover:bg-gold/20"
               >
-                <span className="block font-display font-bold">💾 Save my account</span>
+                <span className="block font-display font-bold">Save my account</span>
                 <span className="block text-xs text-soft">Right now it only lives in this browser. Add your email to use it on any device.</span>
               </button>
             ) : (
               <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl bg-night/40 px-3 py-2 text-xs">
-                <span className="min-w-0 truncate text-soft">✉️ {account.email}</span>
+                <span className="min-w-0 truncate text-soft">{account.email}</span>
                 <button
                   onClick={() => {
                     if (confirm('Sign out on this device? Sign back in any time with your email.')) {

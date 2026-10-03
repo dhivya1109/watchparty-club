@@ -1,3 +1,5 @@
+import { Check, Search as SearchIcon } from 'lucide-react'
+import { TypeIcon } from './icons'
 import { useEffect, useRef, useState } from 'react'
 import { SEARCHERS } from '../api/search'
 import { flyToClub } from '../effects/flyToClub'
@@ -107,7 +109,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
           </button>
         )}
         <div className="relative min-w-0 flex-1">
-          <span className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-xl">🔍</span>
+          <SearchIcon size={20} aria-hidden="true" className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-muted" />
           <input
             ref={inputRef}
             value={query}
@@ -139,9 +141,12 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       {/* Narrow down by type — only once there's something to narrow down */}
       {searchMode && searching && (
         <PillRow className="mt-4">
-          {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
+          {[{ type: 'all' as const, label: 'All' }, ...MEDIA_TYPES].map((m) => (
             <Pill key={m.type} active={tab === m.type} onClick={() => setTab(m.type)}>
-              {m.emoji} {m.label}
+              <span className="flex items-center gap-1.5">
+                {m.type !== 'all' && <TypeIcon type={m.type} size={14} />}
+                {m.label}
+              </span>
             </Pill>
           ))}
         </PillRow>
@@ -166,7 +171,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
                   }}
                   className={`group rounded-2xl border border-line bg-surface p-4 text-left transition hover:-translate-y-1 hover:shadow-xl ${TYPE_STYLE[idea.type].hover}`}
                 >
-                  <div className="text-3xl transition group-hover:scale-110">{meta.emoji}</div>
+                  <TypeIcon type={idea.type} size={26} strokeWidth={1.75} className={TYPE_STYLE[idea.type].text} />
                   <div className={`mt-3 text-xs font-semibold ${TYPE_STYLE[idea.type].text}`}>{meta.label}</div>
                   <div className="font-display font-bold">{idea.query}</div>
                 </button>
@@ -219,7 +224,7 @@ function ResultSection({
       {showHeading && (
         <h2 className="mb-4 flex items-center gap-2.5 text-xl font-bold">
           <span className={`h-2.5 w-2.5 rounded-full ${TYPE_STYLE[type].dot}`} />
-          {meta.emoji} {meta.label}
+          <TypeIcon type={type} size={20} /> {meta.label}
           {state?.status === 'done' && state.results.length > 0 && (
             <span className="text-sm font-medium text-muted">{Math.min(limit, state.results.length)} found</span>
           )}
@@ -238,7 +243,7 @@ function ResultSection({
           ))}
         </CardGrid>
       ) : state.status === 'error' ? (
-        <p className="rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral">⚠️ {state.error}</p>
+        <p className="rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral">{state.error}</p>
       ) : state.results.length === 0 ? (
         <p className="text-muted">Nothing found here.</p>
       ) : (
@@ -318,7 +323,7 @@ function ResultCard({
               className="flex w-full flex-col items-center rounded-xl border-2 border-book/70 bg-book/15 px-1 py-1.5 text-book transition hover:bg-book/25 active:scale-95"
             >
               <span className="flex items-center gap-1.5">
-                <span className="animate-pop flex h-5 w-5 items-center justify-center rounded-full bg-book text-xs font-black text-ink">✓</span>
+                <Check size={16} strokeWidth={3} aria-hidden="true" />
                 <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">On the shelf</span>
               </span>
               <span className="text-[10px] font-semibold opacity-80">Open the club shelf →</span>
@@ -327,7 +332,7 @@ function ResultCard({
             <button
               onClick={addToClub}
               aria-label={`Add ${result.title} to the club`}
-              className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gradient-to-b from-gold to-gold-deep px-1 py-1.5 text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+              className="group/add relative flex w-full flex-col items-center overflow-hidden rounded-xl bg-gold px-1 py-1.5 text-on-gold transition hover:brightness-110 active:scale-95"
             >
               <span className="flex items-center gap-1.5">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink/15 text-base font-black leading-none transition duration-300 group-hover/add:rotate-90">

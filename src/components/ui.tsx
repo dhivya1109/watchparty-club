@@ -1,3 +1,5 @@
+import type { LucideIcon } from 'lucide-react'
+import { TypeIcon } from './icons'
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { MEDIA_TYPES, TYPE_STYLE, type MediaType } from '../types'
@@ -70,7 +72,7 @@ export function Pill({
       onClick={onClick}
       className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
         active
-          ? 'border-gold bg-gold text-on-gold shadow-lg shadow-gold/20'
+          ? 'border-gold bg-gold text-on-gold'
           : 'border-line bg-raised/60 text-soft hover:border-muted hover:text-cream'
       }`}
     >
@@ -79,7 +81,7 @@ export function Pill({
   )
 }
 
-/** "🎬 Movie" label with the type's colour dot. */
+/** "Movie" label with the type's icon, in the type's colour. */
 export function TypeBadge({ type, className = '' }: { type: MediaType; className?: string }) {
   const meta = MEDIA_TYPES.find((m) => m.type === type)!
   const style = TYPE_STYLE[type]
@@ -87,22 +89,21 @@ export function TypeBadge({ type, className = '' }: { type: MediaType; className
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${style.bg} ${style.text} ${className}`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+      <TypeIcon type={type} size={12} strokeWidth={2.4} />
       {meta.label.replace(/s$/, '')}
     </span>
   )
 }
 
-/** A poster image, or the type's emoji when there is no image. */
+/** A poster image, or the type's icon when there is no image. */
 export function Poster({ src, type, className = '' }: { src?: string; type: MediaType; className?: string }) {
-  const emoji = MEDIA_TYPES.find((m) => m.type === type)!.emoji
   return (
     <div className={`relative overflow-hidden bg-raised ${className}`}>
       {src ? (
         <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full items-center justify-center bg-gradient-to-br from-raised to-surface text-4xl">
-          {emoji}
+        <div className="flex h-full items-center justify-center bg-raised text-muted">
+          <TypeIcon type={type} size={36} strokeWidth={1.5} />
         </div>
       )}
     </div>
@@ -111,13 +112,13 @@ export function Poster({ src, type, className = '' }: { src?: string; type: Medi
 
 /** Big friendly message for empty pages, with one clear next step. */
 export function EmptyState({
-  emoji,
+  icon: Icon,
   title,
   text,
   action,
   onAction,
 }: {
-  emoji: string
+  icon: LucideIcon
   title: string
   text: string
   action: string
@@ -125,8 +126,8 @@ export function EmptyState({
 }) {
   return (
     <div className="animate-pop mx-auto max-w-md px-4 py-20 text-center">
-      <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-raised text-5xl ring-1 ring-line shadow-2xl shadow-gold/10">
-        {emoji}
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-raised text-muted ring-1 ring-line">
+        <Icon size={34} strokeWidth={1.6} aria-hidden="true" />
       </div>
       <h2 className="mt-6 text-2xl font-bold">{title}</h2>
       <p className="mt-2 text-soft">{text}</p>
@@ -153,7 +154,7 @@ export function GoldButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-full bg-gradient-to-b from-gold to-gold-deep px-6 py-2.5 font-display font-bold text-on-gold shadow-lg shadow-gold/25 transition hover:brightness-110 active:scale-[0.97] disabled:opacity-50 ${className}`}
+      className={`rounded-full bg-gold px-6 py-2.5 font-display font-bold text-on-gold transition hover:brightness-110 active:scale-[0.97] disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -163,7 +164,7 @@ export function GoldButton({
 /** A rounded panel on the surface colour. */
 export function Panel({ title, note, children, className = '' }: { title?: ReactNode; note?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-3xl border border-line bg-surface/80 p-5 backdrop-blur ${className}`}>
+    <section className={`rounded-2xl border border-line bg-surface/80 p-5 backdrop-blur ${className}`}>
       {title && <h2 className="text-lg font-bold">{title}</h2>}
       {note && <p className="text-xs text-muted">{note}</p>}
       <div className={title || note ? 'mt-4' : ''}>{children}</div>

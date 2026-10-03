@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {toast.image ? (
               <img src={toast.image} alt="" className="h-14 w-10 shrink-0 rounded-lg object-cover" />
             ) : (
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-raised text-2xl">{toast.emoji ?? '✨'}</span>
+              <span className="h-10 w-1 shrink-0 rounded-full bg-gold" aria-hidden="true" />
             )}
             <div className="min-w-0 flex-1">
               <p className="font-display font-bold leading-tight">{toast.title}</p>

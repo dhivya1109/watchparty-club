@@ -6,8 +6,9 @@
  * so changing a value here restyles every page at once.
  */
 @theme {
-  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  /* Headings: a condensed face like cinema signage and poster credits. Text: its regular-width sibling. */
+  --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
 
   /* 🎦 Screening Room (default): a cinema before the film — warm charcoal, soft cream, brick-red seats */
   --color-night: #16130f;
@@ -161,9 +162,7 @@ body {
   overflow-x: clip;
   /* Soft spotlights from the top of the "theatre" */
   background-image:
-    radial-gradient(ellipse 60% 40% at 10% -5%, var(--spot-1), transparent),
-    radial-gradient(ellipse 50% 35% at 95% 0%, var(--spot-2), transparent);
-  background-attachment: fixed;
+    none;
   transition: background-color 0.4s, color 0.4s;
 }
 
@@ -212,12 +211,9 @@ h1, h2, h3 {
   }
 }
 
-/* Gold gradient text for the logo and big numbers */
+/* The highlight colour for a word in a headline (solid — no gradient) */
 @utility text-marquee {
-  background: linear-gradient(180deg, var(--color-marquee-1), var(--color-accent) 45%, var(--color-gold-deep));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-accent);
 }
 
 /* Rows you can swipe sideways, without a visible scrollbar */
@@ -233,13 +229,14 @@ h1, h2, h3 {
   50% { opacity: 0.2; }
 }
 
+/* Things appearing: a quick, quiet fade — no bounce */
 @keyframes pop-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @utility animate-pop {
-  animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: pop-in 0.2s ease-out both;
 }
 
 /* ---------- Mascots & home page (see components/home) ---------- */

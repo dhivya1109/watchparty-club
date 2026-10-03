@@ -105,7 +105,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const fail = useCallback(
-    (err: unknown) => toast({ title: 'Something went wrong', text: err instanceof Error ? err.message : String(err), emoji: '⚠️' }),
+    (err: unknown) => toast({ title: 'Something went wrong', text: err instanceof Error ? err.message : String(err) }),
     [toast],
   )
 
@@ -134,7 +134,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         const club = await cloud.joinClub(code)
         await loadClubs(uid, club.id)
         setJoinedCount((n) => n + 1)
-        toast({ title: `Welcome to ${club.name}! 🎉`, text: 'This is the club shelf — everything your friends picked.', emoji: '🎟️' })
+        toast({ title: `Welcome to ${club.name}!`, text: 'This is the club shelf — everything your friends picked.' })
       } catch (err) {
         fail(err)
         await loadClubs(uid)
@@ -266,7 +266,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       confirmSaveCode: async (email, code) => {
         await cloud.confirmSaveCode(email, code)
         setAccount(await cloud.getAccount())
-        toast({ title: 'Account saved 💾', text: `Log in with ${email.trim()} on any device to get your clubs back.`, emoji: '✉️' })
+        toast({ title: 'Account saved', text: `Log in with ${email.trim()} on any device to get your clubs back.` })
       },
       signOut: async () => {
         await cloud.signOut()
@@ -304,14 +304,14 @@ export function ClubProvider({ children }: { children: ReactNode }) {
           write(IMPORTED_KEY, 'yes')
         }
         await loadClubs(userId, club.id)
-        toast({ title: `${club.name} is ready 👑`, text: 'You’re the host. Invite friends from the 👥 Friends tab.', emoji: '🎉' })
+        toast({ title: `${club.name} is ready`, text: 'You’re the host. Invite friends from the Friends tab.' })
       },
 
       joinClub: async (linkOrCode) => {
         if (!userId) return
         const club = await cloud.joinClub(linkOrCode)
         await loadClubs(userId, club.id)
-        toast({ title: `You joined ${club.name}! 🎉`, emoji: '🎟️' })
+        toast({ title: `You joined ${club.name}!` })
       },
 
       switchClub: (clubId) => setActiveId(clubId),

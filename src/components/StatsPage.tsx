@@ -1,3 +1,6 @@
+import { BookOpen, CircleCheck, Clock, Flame, Star, Swords, Ticket, type LucideIcon } from 'lucide-react'
+import { TypeIcon } from './icons'
+import { ChartColumn } from 'lucide-react'
 import type { ReactNode } from 'react'
 import {
   clubTotals,
@@ -22,10 +25,10 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
   if (totals.titles === 0) {
     return (
       <EmptyState
-        emoji="📊"
+        icon={ChartColumn}
         title="No stats yet"
         text="Add and rate a few titles — your club’s stats will appear here."
-        action="🔍 Start discovering"
+        action="Start discovering"
         onAction={onGoSearch}
       />
     )
@@ -41,31 +44,31 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Box office</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">Box office</p>
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">The club in numbers</h2>
       </div>
 
       {/* Headline numbers */}
       {/* 2 columns on phones (the 5th tile spans both, so no gap), all 5 in a row from tablets up */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Tile emoji="🎟️" value={totals.titles} label="Titles in the club" />
-        <Tile emoji="✅" value={totals.completed} label="Times completed" />
-        <Tile emoji="⏱️" value={`≈${totals.watchHours}`} label="Hours watched" />
-        <Tile emoji="📖" value={totals.pagesRead.toLocaleString()} label="Pages read" />
-        <Tile emoji="⭐" value={totals.averageRating ?? '—'} label="Average rating" className="col-span-2 sm:col-span-1" />
+        <Tile icon={Ticket} value={totals.titles} label="Titles in the club" />
+        <Tile icon={CircleCheck} value={totals.completed} label="Times completed" />
+        <Tile icon={Clock} value={`≈${totals.watchHours}`} label="Hours watched" />
+        <Tile icon={BookOpen} value={totals.pagesRead.toLocaleString()} label="Pages read" />
+        <Tile icon={Star} value={totals.averageRating ?? '—'} label="Average rating" className="col-span-2 sm:col-span-1" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <HighlightCard emoji="🔥" heading="Most loved" item={loved} empty="Needs 2+ people rating the same title.">
+        <HighlightCard icon={Flame} heading="Most loved" item={loved} empty="Needs 2+ people rating the same title.">
           {loved && `Group average ${loved.average}/10`}
         </HighlightCard>
-        <HighlightCard emoji="💀" heading="Most divisive" item={divisive} empty="No big disagreements… yet.">
+        <HighlightCard icon={Swords} heading="Most divisive" item={divisive} empty="No big disagreements… yet.">
           {divisive && `Ratings from ${Math.min(...divisive.ratings)} to ${Math.max(...divisive.ratings)}`}
         </HighlightCard>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel title="🎭 Genres in your club" note="Number of titles · group rating">
+        <Panel title="Genres in your club" note="Number of titles · group rating">
           <BarList
             rows={genres.map((g) => ({
               key: g.genre,
@@ -79,7 +82,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
           />
         </Panel>
 
-        <Panel title="🤝 Taste match" note="How closely each pair’s ratings agree">
+        <Panel title="Taste match" note="How closely each pair’s ratings agree">
           {matches.length === 0 ? (
             <p className="text-sm text-muted">Add friends in the member menu (top right) to compare tastes.</p>
           ) : (
@@ -112,20 +115,20 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_2fr]">
-        <Panel title="🗂️ By type">
+        <Panel title="By type">
           <div className="grid grid-cols-2 gap-2">
             {MEDIA_TYPES.map((t) => (
               <div key={t.type} className={`rounded-2xl px-3 py-2.5 ${TYPE_STYLE[t.type].bg}`}>
                 <div className="font-display text-2xl font-extrabold tabular-nums">{types[t.type]}</div>
-                <div className={`text-xs font-semibold ${TYPE_STYLE[t.type].text}`}>
-                  {t.emoji} {t.label}
+                <div className={`flex items-center gap-1 text-xs font-semibold ${TYPE_STYLE[t.type].text}`}>
+                  <TypeIcon type={t.type} size={13} /> {t.label}
                 </div>
               </div>
             ))}
           </div>
         </Panel>
 
-        <Panel title="👥 Per person">
+        <Panel title="Per person">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted">
@@ -166,10 +169,10 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
   )
 }
 
-function Tile({ emoji, value, label, className = '' }: { emoji: string; value: ReactNode; label: string; className?: string }) {
+function Tile({ icon: Icon, value, label, className = '' }: { icon: LucideIcon; value: ReactNode; label: string; className?: string }) {
   return (
     <div className={`relative overflow-hidden rounded-2xl border border-line bg-surface p-4 ${className}`}>
-      <span className="absolute -right-1 -top-2 text-5xl opacity-10">{emoji}</span>
+      <Icon size={18} aria-hidden="true" className="mb-2 text-muted" />
       <div className="text-marquee font-display text-3xl font-extrabold tabular-nums">{value}</div>
       <div className="text-sm text-soft">{label}</div>
     </div>
@@ -177,28 +180,30 @@ function Tile({ emoji, value, label, className = '' }: { emoji: string; value: R
 }
 
 function HighlightCard({
-  emoji,
+  icon: Icon,
   heading,
   item,
   empty,
   children,
 }: {
-  emoji: string
+  icon: LucideIcon
   heading: string
   item: Highlight | null
   empty: string
   children: ReactNode
 }) {
   return (
-    <section className="flex items-center gap-4 rounded-3xl border border-line bg-gradient-to-br from-surface to-raised/70 p-3.5">
+    <section className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-3.5">
       {item ? (
         <Poster src={item.title.image} type={item.title.type} className="aspect-[2/3] w-16 shrink-0 rounded-xl shadow-lg" />
       ) : (
-        <div className="flex aspect-[2/3] w-16 shrink-0 items-center justify-center rounded-xl bg-raised text-3xl">{emoji}</div>
+        <div className="flex aspect-[2/3] w-16 shrink-0 items-center justify-center rounded-xl bg-raised text-muted">
+          <Icon size={24} strokeWidth={1.75} aria-hidden="true" />
+        </div>
       )}
       <div className="min-w-0">
-        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
-          {emoji} {heading}
+        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-accent">
+          <Icon size={13} aria-hidden="true" /> {heading}
         </div>
         {item ? (
           <>
@@ -243,7 +248,7 @@ function BarList({ rows, max, stacked = false }: { rows: BarRow[]; max?: number;
           <span className={`truncate text-soft ${stacked ? 'col-span-2' : ''}`}>{r.label}</span>
           <span className="h-2.5 rounded-full bg-night/70">
             <span
-              className="block h-full rounded-full bg-gradient-to-r from-gold-deep to-gold"
+              className="block h-full rounded-full bg-gold"
               style={{ width: `${(r.value / top) * 100}%`, minWidth: r.value > 0 ? 6 : 0 }}
             />
           </span>

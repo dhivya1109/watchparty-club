@@ -56,3 +56,9 @@
 | 2 | Flashing lights on the "Added" card | Removed | ✅ |
 | 3 | Want a Discord-style blue theme | 💬 Group Chat: cool greys, blurple, yellow stars | ✅ |
 | 4 | ✕ sits outside the details card | Moved inside the ticket's top-right corner | ✅ |
+
+## Round 7 — 2026-10-03
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | Icons, buttons and overall look feel like a typical AI template | Emojis-as-icons → one line-icon set (Lucide); flat solid buttons (no gradients/glow); Barlow Condensed + Barlow fonts (cinema signage) instead of Bricolage + DM Sans; solid headline colour; calmer labels; tighter corners; quiet fade instead of pop-ins; no glowing backgrounds | ✅ |

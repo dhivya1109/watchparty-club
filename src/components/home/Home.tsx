@@ -1,3 +1,4 @@
+import { FerrisWheel, PenLine, Plus, Search, Star, Ticket, Users, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Clappy, Poppy, Reel, Stubby } from './Characters'
 
@@ -9,22 +10,15 @@ export type HomeTarget = 'club' | 'tonight' | 'stats'
  */
 export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNavigate: (page: HomeTarget) => void }) {
   return (
-    <section className="animate-pop relative mt-6 overflow-hidden rounded-[2rem] border border-line bg-gradient-to-b from-surface to-night px-4 pb-0 pt-8 sm:px-10 sm:pt-10">
-      {/* Projector beam, shining from the back of the room up to the screen */}
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 top-6 mx-auto w-full max-w-3xl bg-gradient-to-t from-gold/25 via-gold/10 to-transparent"
-        style={{ clipPath: 'polygon(46% 100%, 54% 100%, 100% 0, 0 0)', animation: 'flicker 3.5s infinite' }}
-      />
+    <section className="animate-pop relative mt-6 overflow-hidden rounded-2xl border border-line bg-surface px-4 pb-0 pt-8 sm:px-10 sm:pt-10">
 
       {/* The curved IMAX screen */}
       <div className="relative mx-auto max-w-4xl [perspective:900px]">
         <div
-          className="relative overflow-hidden border-2 border-gold/40 bg-gradient-to-br from-raised via-surface to-raised px-5 py-8 text-center shadow-[0_0_80px_-10px] shadow-gold/40 sm:px-12 sm:py-12"
+          className="relative overflow-hidden border-2 border-gold/40 bg-raised px-5 py-8 text-center sm:px-12 sm:py-12"
           style={{ borderRadius: '50% / 9%', transform: 'rotateX(6deg)' }}
         >
-          {/* Screen sheen */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent" />
-          <p className="relative text-[11px] font-bold uppercase tracking-[0.35em] text-accent">★ Now showing ★</p>
+          <p className="relative text-xs font-semibold uppercase tracking-[0.12em] text-muted">Now showing</p>
           <h2 className="relative mx-auto mt-3 max-w-2xl text-[clamp(2rem,9vw,3.75rem)] font-extrabold leading-[1.02] tracking-tight">
             Your friends’ own <span className="text-marquee">cinema</span>
           </h2>
@@ -35,17 +29,22 @@ export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNav
           <div className="relative mt-6 flex flex-wrap justify-center gap-3">
             <button
               onClick={onStart}
-              className="rounded-full bg-gradient-to-b from-gold to-gold-deep px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base text-on-gold shadow-lg shadow-gold/30 transition hover:brightness-110 active:scale-95"
+              className="rounded-full bg-gold px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base text-on-gold transition hover:brightness-110 active:scale-95"
             >
               {/* Shorter words on the smallest phones, so the button stays on one line */}
-              <span className="min-[380px]:hidden">🔍 Find something</span>
-              <span className="max-[379px]:hidden">🔍 Find something to watch</span>
+              <span className="flex items-center gap-2">
+                <Search size={18} aria-hidden="true" />
+                <span className="min-[380px]:hidden">Find something</span>
+                <span className="max-[379px]:hidden">Find something to watch</span>
+              </span>
             </button>
             <button
               onClick={() => onNavigate('tonight')}
               className="rounded-full border border-line bg-night/40 px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base backdrop-blur transition hover:border-gold hover:text-accent"
             >
-              🎡 Spin the wheel
+              <span className="flex items-center gap-2">
+                <FerrisWheel size={18} aria-hidden="true" /> Spin the wheel
+              </span>
             </button>
           </div>
         </div>
@@ -59,7 +58,7 @@ export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNav
             className="absolute -top-10 left-1/2 z-10 w-max -translate-x-1/4 rounded-2xl rounded-bl-sm border border-line bg-surface px-3 py-1.5 text-xs font-semibold shadow-lg sm:-top-12 sm:text-sm"
             style={{ animation: 'bubble 6s ease-in-out infinite', transformOrigin: 'bottom left' }}
           >
-            What’s on tonight? 🍿
+            What’s on tonight?
           </div>
           <Poppy />
         </div>
@@ -134,11 +133,11 @@ export function WorldCinemaStrip() {
   )
 }
 
-const FEATURES: { emoji: string; title: string; text: string; cta: string; target: HomeTarget | 'search' }[] = [
-  { emoji: '🔍', title: 'Discover everything', text: 'Movies, series, anime and books from four databases — searched all at once.', cta: 'Start searching', target: 'search' },
-  { emoji: '🎟️', title: 'Keep your tickets', text: 'Track what you want to watch, what’s playing, and what you finished.', cta: 'Open my club', target: 'club' },
-  { emoji: '✍️', title: 'Rate & review', text: 'Stars and honest reviews, so friends know if it’s worth their night.', cta: 'Write a review', target: 'club' },
-  { emoji: '🎡', title: 'Can’t decide?', text: 'The wheel picks what everyone here will probably love.', cta: 'Spin now', target: 'tonight' },
+const FEATURES: { icon: LucideIcon; title: string; text: string; cta: string; target: HomeTarget | 'search' }[] = [
+  { icon: Search, title: 'Discover everything', text: 'Movies, series, anime and books from four databases — searched all at once.', cta: 'Start searching', target: 'search' },
+  { icon: Ticket, title: 'Keep your tickets', text: 'Track what you want to watch, what’s playing, and what you finished.', cta: 'Open my club', target: 'club' },
+  { icon: PenLine, title: 'Rate & review', text: 'Stars and honest reviews, so friends know if it’s worth their night.', cta: 'Write a review', target: 'club' },
+  { icon: FerrisWheel, title: 'Can’t decide?', text: 'The wheel picks what everyone here will probably love.', cta: 'Spin now', target: 'tonight' },
 ]
 
 /** "Now showing" — what the app does, as a row of cinema tickets. Each whole ticket is a button. */
@@ -151,16 +150,16 @@ export function NowShowing({ onNavigate, onSearch }: { onNavigate: (page: HomeTa
           <button
             key={f.title}
             onClick={() => (f.target === 'search' ? onSearch() : onNavigate(f.target))}
-            className="ticket group flex overflow-hidden rounded-3xl border border-line bg-surface text-left transition duration-300 hover:-translate-y-1 hover:border-gold/60 hover:shadow-xl active:scale-[0.98]"
+            className="ticket group flex overflow-hidden rounded-2xl border border-line bg-surface text-left transition duration-300 hover:-translate-y-1 hover:border-gold/60 hover:shadow-xl active:scale-[0.98]"
           >
             {/* Ticket stub */}
             <span className="flex w-10 shrink-0 items-center justify-center self-stretch border-r-2 border-dashed border-line bg-gold/10">
-              <span className="-rotate-90 whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.3em] text-accent">
+              <span className="-rotate-90 whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.12em] text-accent">
                 Admit one · No. 00{i + 1}
               </span>
             </span>
             <span className="flex flex-1 flex-col p-4 pl-5">
-              <span className="text-4xl">{f.emoji}</span>
+              <f.icon size={28} strokeWidth={1.75} aria-hidden="true" className="text-accent" />
               <span className="mt-3 font-display text-lg font-extrabold">{f.title}</span>
               <span className="mt-1 flex-1 text-sm text-soft">{f.text}</span>
               {/* Looks like a button, because the whole ticket is one */}
@@ -176,9 +175,9 @@ export function NowShowing({ onNavigate, onSearch }: { onNavigate: (page: HomeTa
 }
 
 const STEPS = [
-  { emoji: '👥', title: 'Gather your crew', text: 'Invite friends to your club from the 👥 Friends tab.' },
-  { emoji: '➕', title: 'Add to the club', text: 'Search anything and tap “Add to club” — it lands on the club shelf for everyone.' },
-  { emoji: '⭐', title: 'Track, rate, review', text: 'Mark your progress, give stars, and spin the wheel for movie night.' },
+  { icon: Users, title: 'Gather your crew', text: 'Invite friends to your club from the Friends tab.' },
+  { icon: Plus, title: 'Add to the club', text: 'Search anything and tap “Add to club” — it lands on the club shelf for everyone.' },
+  { icon: Star, title: 'Track, rate, review', text: 'Mark your progress, give stars, and spin the wheel for movie night.' },
 ]
 
 /** How it works — information only, so nothing here looks like a button. */
@@ -189,9 +188,7 @@ export function HowItWorks() {
       <ol className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
         {STEPS.map((s, i) => (
           <li key={s.title} className="flex gap-3 sm:flex-col sm:gap-2">
-            <span className="text-3xl leading-none" aria-hidden="true">
-              {s.emoji}
-            </span>
+            <s.icon size={26} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-muted" />
             <span>
               <span className="block text-xs font-bold uppercase tracking-wider text-muted">Step {i + 1}</span>
               <span className="block font-display text-lg font-extrabold">{s.title}</span>
@@ -207,7 +204,7 @@ export function HowItWorks() {
 function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
   return (
     <div className="text-center">
-      <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-accent">{kicker}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">{kicker}</p>
       <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h2>
     </div>
   )

@@ -1,3 +1,5 @@
+import { MessageSquare, Minus, PenLine, Ticket, Trash2, User, type LucideIcon } from 'lucide-react'
+import { StatusIcon, TypeIcon } from './icons'
 import { useEffect, useRef, useState } from 'react'
 import {
   addedBy,
@@ -42,10 +44,10 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
   if (all.length === 0) {
     return (
       <EmptyState
-        emoji="🎟️"
+        icon={Ticket}
         title="The club shelf is empty"
         text={`Be the first! Find something you’ve watched or want to watch, and add it to ${clubName}.`}
-        action="🔍 Start discovering"
+        action="Start discovering"
         onAction={onGoSearch}
       />
     )
@@ -70,14 +72,14 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
 
   const myItems = sorted(mine).filter((i) => statusFilter === 'all' || i.entry?.status === statusFilter)
   const countByStatus = (s: Status) => mine.filter((i) => i.entry?.status === s).length
-  const views: { value: ShelfView; emoji: string; label: string; count: number }[] = [
-    { value: 'club', emoji: '🎟️', label: 'Club shelf', count: all.length },
-    { value: 'mine', emoji: '👤', label: 'My list', count: mine.length },
+  const views: { value: ShelfView; icon: LucideIcon; label: string; count: number }[] = [
+    { value: 'club', icon: Ticket, label: 'Club shelf', count: all.length },
+    { value: 'mine', icon: User, label: 'My list', count: mine.length },
   ]
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">🎬 {clubName}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">{clubName}</p>
 
       {/* The two views, as a big switch */}
       <div className="mt-3 grid grid-cols-2 gap-1 rounded-2xl border border-line bg-surface p-1" role="tablist">
@@ -88,10 +90,13 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
             aria-selected={view === v.value}
             onClick={() => setView(v.value)}
             className={`rounded-xl px-2 py-2.5 font-display text-[clamp(0.95rem,4vw,1.15rem)] font-extrabold transition ${
-              view === v.value ? 'bg-gold text-on-gold shadow-md shadow-gold/25' : 'text-soft hover:bg-raised hover:text-cream'
+              view === v.value ? 'bg-gold text-on-gold' : 'text-soft hover:bg-raised hover:text-cream'
             }`}
           >
-            {v.emoji} {v.label} <span className={view === v.value ? 'opacity-70' : 'text-muted'}>· {v.count}</span>
+            <span className="flex items-center justify-center gap-2">
+              <v.icon size={18} aria-hidden="true" />
+              {v.label} <span className={view === v.value ? 'opacity-70' : 'text-muted'}>· {v.count}</span>
+            </span>
           </button>
         ))}
       </div>
@@ -111,12 +116,12 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
                 onClick={() => setStatusFilter(active ? 'all' : s.value)}
                 aria-pressed={active}
                 className={`rounded-2xl border px-1 py-2.5 text-center transition ${
-                  active ? 'border-gold bg-gold/10 shadow-lg shadow-gold/10' : 'border-line bg-surface hover:border-muted'
+                  active ? 'border-gold bg-gold/10' : 'border-line bg-surface hover:border-muted'
                 }`}
               >
                 <div className={`font-display text-2xl font-extrabold tabular-nums ${active ? 'text-marquee' : ''}`}>{countByStatus(s.value)}</div>
-                <div className="truncate text-[11px] text-soft">
-                  {s.emoji} {s.label}
+                <div className="flex items-center justify-center gap-1 truncate text-[11px] text-soft">
+                  <StatusIcon status={s.value} size={12} /> {s.label}
                 </div>
               </button>
             )
@@ -126,9 +131,12 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
 
       {/* Filters: one swipeable row of types, and the sort order */}
       <PillRow className="mt-5">
-        {[{ type: 'all' as const, emoji: '✨', label: 'All' }, ...MEDIA_TYPES].map((m) => (
+        {[{ type: 'all' as const, label: 'All' }, ...MEDIA_TYPES].map((m) => (
           <Pill key={m.type} active={typeFilter === m.type} onClick={() => setTypeFilter(m.type)}>
-            {m.emoji} {m.label}
+            <span className="flex items-center gap-1.5">
+              {m.type !== 'all' && <TypeIcon type={m.type} size={14} />}
+              {m.label}
+            </span>
           </Pill>
         ))}
       </PillRow>
@@ -148,7 +156,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
             {groups.map((g) => (
               <section key={g.key}>
                 <h3 className="flex items-center gap-2 text-lg font-extrabold">
-                  {g.member ? <Avatar member={g.member} size={26} /> : <span>🎟️</span>}
+                  {g.member ? <Avatar member={g.member} size={26} /> : <Ticket size={22} aria-hidden="true" className="text-muted" />}
                   <span className="truncate">
                     {g.member?.id === me.id ? 'Your picks' : g.member ? `${g.member.name}’s picks` : 'Picks from past members'}
                   </span>
@@ -174,7 +182,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
             onClick={() => setView('club')}
             className="mt-4 rounded-full border-2 border-gold/60 px-5 py-2 font-display font-bold text-accent hover:bg-gold/10"
           >
-            🎟️ Open the club shelf
+            Open the club shelf
           </button>
         </div>
       ) : myItems.length === 0 ? (
@@ -250,8 +258,8 @@ function PosterTile({
           </span>
         )}
         {status && (
-          <span title={status.label} className="absolute left-1.5 top-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-xs backdrop-blur">
-            {status.emoji}
+          <span title={status.label} className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-night/85 text-cream backdrop-blur">
+            <StatusIcon status={status.value} size={13} strokeWidth={2.4} />
           </span>
         )}
         {avg !== null && (
@@ -265,8 +273,8 @@ function PosterTile({
           </span>
         )}
         {reviews > 0 && (
-          <span className="absolute bottom-1.5 right-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-semibold text-soft backdrop-blur">
-            💬 {reviews}
+          <span className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-semibold text-soft backdrop-blur">
+            <MessageSquare size={11} aria-hidden="true" /> {reviews}
           </span>
         )}
       </div>
@@ -284,8 +292,8 @@ function PersonStatus({ member, entry, title }: { member: Member; entry: Entry; 
     <div className="mx-4 mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-2xl bg-night/40 px-3 py-2.5 text-sm">
       <Avatar member={member} size={26} />
       <b className="text-cream">{member.name}</b>
-      <span className="rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-accent">
-        {st.emoji} {st.label}
+      <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-accent">
+        <StatusIcon status={st.value} size={13} /> {st.label}
       </span>
       {showProgress && (
         <span className="text-soft">
@@ -316,7 +324,7 @@ export function TitleSheet({ titleId, onClose, person }: { titleId: string; onCl
       <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-2 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title.title}>
         <div className="absolute inset-0" onClick={onClose} />
         <div className="animate-pop relative flex max-h-[90vh] w-full max-w-xl flex-col">
-          <div className="min-h-0 overflow-y-auto overscroll-contain rounded-3xl">
+          <div className="min-h-0 overflow-y-auto overscroll-contain rounded-2xl">
             <ClubCard
               title={title}
               entry={getEntry(data, me.id, title.id)}
@@ -382,14 +390,14 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
   return (
     // The outer box shakes or glows; the inner "ticket" keeps its notched shape.
     <div
-      className={`relative rounded-3xl ${
+      className={`relative rounded-2xl ${
         celebration?.kind === 'bad' ? 'animate-shake' : celebration?.kind === 'loved' ? 'animate-glow' : ''
       }`}
     >
-    <article className="ticket animate-pop flex h-full flex-col rounded-3xl border border-line bg-gradient-to-br from-surface to-raised/60 transition hover:border-muted">
+    <article className="ticket animate-pop flex h-full flex-col rounded-2xl border border-line bg-surface transition hover:border-muted">
     {/* Whose pick is this, and is it on my list? */}
     <div className="flex items-center gap-2 border-b border-dashed border-line px-4 py-2 text-xs">
-      {picker ? <Avatar member={picker} size={22} /> : <span className="text-base">🎟️</span>}
+      {picker ? <Avatar member={picker} size={22} /> : <Ticket size={18} aria-hidden="true" className="text-muted" />}
       <span className="min-w-0 truncate text-soft">
         {picker?.id === me.id ? (
           <b className="text-cream">Your pick</b>
@@ -469,7 +477,7 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
                     active ? 'border-gold bg-gold/15 text-cream' : 'border-line bg-night/40 text-muted hover:border-muted hover:text-cream'
                   }`}
                 >
-                  <span className={`text-base leading-none ${active ? '' : 'opacity-70'}`}>{s.emoji}</span>
+                  <StatusIcon status={s.value} size={17} className={active ? 'text-accent' : ''} />
                   <span className="whitespace-nowrap text-[11px] font-semibold">{s.label}</span>
                 </button>
               )
@@ -493,7 +501,7 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
             {title.length ? (
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-night/60">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-gold to-coral transition-all duration-500"
+                  className="h-full rounded-full bg-gold transition-all duration-500"
                   style={{ width: `${percent}%` }}
                 />
               </div>
@@ -519,8 +527,8 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
                     <li key={member.id} className="flex max-w-full items-center gap-1.5 rounded-full bg-night/40 py-0.5 pl-0.5 pr-2.5 text-xs">
                       <Avatar member={member} size={20} />
                       <span className="truncate font-semibold text-cream">{member.name}</span>
-                      <span className="shrink-0 text-soft">
-                        {st.emoji} {st.label}
+                      <span className="inline-flex shrink-0 items-center gap-1 text-soft">
+                        <StatusIcon status={st.value} size={12} /> {st.label}
                       </span>
                       {e!.rating !== null && <span className="shrink-0 font-semibold text-star">★ {e!.rating}</span>}
                     </li>
@@ -549,7 +557,7 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
         ) : entry?.review ? (
           <div>
             <div className="flex items-center justify-between text-[11px] font-medium text-soft">
-              <span>✍️ Your review</span>
+              <span>Your review</span>
               <button onClick={openReview} className="font-semibold text-accent hover:underline">
                 Edit
               </button>
@@ -559,13 +567,15 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
         ) : onMyList && status === 'completed' ? (
           // Finished it? You *can* review it — a quiet link, never a pop-up.
           <button onClick={openReview} className="w-fit text-sm font-medium text-muted transition hover:text-accent">
-            ✍️ Add a review <span className="text-xs">(optional)</span>
+            <span className="flex items-center gap-1.5">
+              <PenLine size={14} aria-hidden="true" /> Add a review <span className="text-xs">(optional)</span>
+            </span>
           </button>
         ) : null}
 
         {clubReviews.length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-soft">💬 What the club says</p>
+            <p className="text-[11px] font-medium text-soft">What the club says</p>
             <div className="mt-1.5 flex flex-col gap-2">
               {clubReviews.map(({ member, entry: e }) => (
                 <ReviewQuote key={member.id} text={e!.review!} rating={e!.rating} member={member} />
@@ -587,7 +597,9 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
               }
               className="flex-1 whitespace-nowrap rounded-full border border-line px-3 py-2 text-sm font-semibold text-soft transition hover:border-muted hover:text-cream"
             >
-              ➖ Remove from my list
+              <span className="flex items-center justify-center gap-1.5">
+                <Minus size={15} aria-hidden="true" /> Remove from my list
+              </span>
             </button>
           )}
           {canRemoveFromClub && (
@@ -595,7 +607,9 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
               onClick={() => confirm(`Remove “${title.title}” from the club for everyone?`) && remove(title.id)}
               className="flex-1 whitespace-nowrap rounded-full border border-coral/40 px-3 py-2 text-sm font-semibold text-coral transition hover:bg-coral/10"
             >
-              🗑️ Remove from club
+              <span className="flex items-center justify-center gap-1.5">
+                <Trash2 size={15} aria-hidden="true" /> Remove from club
+              </span>
             </button>
           )}
         </div>
@@ -623,7 +637,7 @@ function ReviewEditor({
   return (
     <div className="animate-pop">
       <label className="text-sm font-bold">
-        ✍️ {prompt}
+        {prompt}
         <textarea
           autoFocus
           value={draft}

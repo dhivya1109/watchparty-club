@@ -1,3 +1,4 @@
+import { Palette } from 'lucide-react'
 import { useState } from 'react'
 import { applyTheme, loadTheme, THEMES, type ThemeId } from '../theme'
 import { Portal } from './ui'
@@ -18,9 +19,9 @@ export function ThemeMenu() {
         onClick={() => setOpen(!open)}
         aria-label="Change theme"
         title="Change theme"
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-base transition hover:border-gold"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-soft transition hover:border-gold hover:text-cream"
       >
-        🎨
+        <Palette size={17} aria-hidden="true" />
       </button>
 
       {open && (
@@ -28,8 +29,8 @@ export function ThemeMenu() {
           <Portal>
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           </Portal>
-          <div className="animate-pop absolute right-0 z-30 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-surface p-4 shadow-2xl shadow-black/40">
-            <h3 className="text-lg font-bold">🎨 Choose your cinema</h3>
+          <div className="animate-pop absolute right-0 z-30 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-surface p-4 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-bold">Choose your cinema</h3>
             <p className="text-xs text-muted">Saved on this device.</p>
             <div className="mt-3 flex flex-col gap-2">
               {THEMES.map((t) => (
@@ -52,7 +53,7 @@ export function ThemeMenu() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-display font-bold">
-                      {t.emoji} {t.name}
+                      {t.name}
                     </span>
                     <span className="block text-xs text-muted">{t.description}</span>
                   </span>
