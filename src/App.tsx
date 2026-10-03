@@ -1,4 +1,4 @@
-import { ChartColumn, FerrisWheel, Popcorn, Search, Ticket, Users, type LucideIcon } from 'lucide-react'
+import { ChartColumn, FerrisWheel, Search, Ticket, Users, type LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthScreen } from './components/Account'
 import { ClubPage } from './components/ClubPage'
@@ -60,12 +60,8 @@ function App() {
     <div className="min-h-screen">
       <header className="border-b border-line/70 px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold text-on-gold">
-            <Popcorn size={20} strokeWidth={2.2} aria-hidden="true" />
-          </span>
-          <span className="font-display text-lg font-extrabold">
-            WatchParty <span className="text-marquee">Club</span>
-          </span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg">🍿</span>
+          <span className="font-display text-lg font-semibold tracking-tight">WatchParty Club</span>
           <span className="ml-auto">
             <ThemeMenu />
           </span>
@@ -91,13 +87,13 @@ function App() {
             <button
               onClick={() => go('search')}
               aria-label="Home"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gold text-on-gold sm:h-10 sm:w-10"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-coral text-lg sm:h-10 sm:w-10 sm:text-xl"
             >
-              <Popcorn size={20} strokeWidth={2.2} aria-hidden="true" />
+              🍿
             </button>
             <div className="min-w-0">
-              <button onClick={() => go('search')} className="block whitespace-nowrap font-display text-[clamp(1rem,4.8vw,1.5rem)] font-extrabold leading-none tracking-tight">
-                WatchParty <span className="text-marquee">Club</span>
+              <button onClick={() => go('search')} className="block whitespace-nowrap font-display text-[clamp(1.05rem,4.8vw,1.4rem)] font-semibold leading-none tracking-tight">
+                WatchParty Club
               </button>
               {/* Which club is open — tap to switch, create or join another */}
               <div className="mt-1">

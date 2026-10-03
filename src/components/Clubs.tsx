@@ -33,7 +33,7 @@ export function CreateOrJoin({ onDone }: { onDone?: () => void }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <form
-        className="flex flex-col rounded-2xl border border-gold/50 bg-surface p-5"
+        className="flex flex-col rounded-2xl border border-gold/50 bg-gradient-to-br from-gold/10 to-surface p-5"
         onSubmit={(e) => {
           e.preventDefault()
           if (name.trim()) void run('create', () => createClub(name, importLocal && localTitleCount > 0))

@@ -6,9 +6,9 @@
  * so changing a value here restyles every page at once.
  */
 @theme {
-  /* Headings: a condensed face like cinema signage and poster credits. Text: its regular-width sibling. */
-  --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  /* Headings: a classic book serif. Text: Inter, clean and very readable on phones. */
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /* 🎦 Screening Room (default): a cinema before the film — warm charcoal, soft cream, brick-red seats */
   --color-night: #16130f;

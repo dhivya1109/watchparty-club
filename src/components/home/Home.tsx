@@ -10,12 +10,12 @@ export type HomeTarget = 'club' | 'tonight' | 'stats'
  */
 export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNavigate: (page: HomeTarget) => void }) {
   return (
-    <section className="animate-pop relative mt-6 overflow-hidden rounded-2xl border border-line bg-surface px-4 pb-0 pt-8 sm:px-10 sm:pt-10">
+    <section className="animate-pop relative mt-6 overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-surface to-night px-4 pb-0 pt-8 sm:px-10 sm:pt-10">
 
       {/* The curved IMAX screen */}
       <div className="relative mx-auto max-w-4xl [perspective:900px]">
         <div
-          className="relative overflow-hidden border-2 border-gold/40 bg-raised px-5 py-8 text-center sm:px-12 sm:py-12"
+          className="relative overflow-hidden border-2 border-gold/40 bg-gradient-to-br from-raised via-surface to-raised px-5 py-8 text-center sm:px-12 sm:py-12"
           style={{ borderRadius: '50% / 9%', transform: 'rotateX(6deg)' }}
         >
           <p className="relative text-xs font-semibold uppercase tracking-[0.12em] text-muted">Now showing</p>

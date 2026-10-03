@@ -256,7 +256,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
       </button>
 
       {/* Profile header */}
-      <section className="mt-4 overflow-hidden rounded-2xl border border-line bg-surface">
+      <section className="mt-4 overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface to-raised/60">
         <div className="h-20 sm:h-24" style={{ background: `linear-gradient(120deg, ${member.color}, transparent)` }} />
         <div className="-mt-10 px-5 pb-5 sm:px-8">
           {editing ? (

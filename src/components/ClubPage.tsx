@@ -394,7 +394,7 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
         celebration?.kind === 'bad' ? 'animate-shake' : celebration?.kind === 'loved' ? 'animate-glow' : ''
       }`}
     >
-    <article className="ticket animate-pop flex h-full flex-col rounded-2xl border border-line bg-surface transition hover:border-muted">
+    <article className="ticket animate-pop flex h-full flex-col rounded-2xl border border-line bg-gradient-to-br from-surface to-raised/60 transition hover:border-muted">
     {/* Whose pick is this, and is it on my list? */}
     <div className="flex items-center gap-2 border-b border-dashed border-line px-4 py-2 text-xs">
       {picker ? <Avatar member={picker} size={22} /> : <Ticket size={18} aria-hidden="true" className="text-muted" />}

@@ -303,7 +303,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
       </GoldButton>
 
       {winner && (
-        <div className="animate-pop relative w-full overflow-hidden rounded-2xl border border-gold/60 bg-surface p-4">
+        <div className="animate-pop relative w-full overflow-hidden rounded-2xl border border-gold/60 bg-gradient-to-br from-gold/15 via-surface to-coral/10 p-4">
           <div className="flex items-center gap-4 pt-2">
             <Poster src={winner.title.image} type={winner.title.type} className="aspect-[2/3] w-20 shrink-0 rounded-xl shadow-xl" />
             <div className="min-w-0">

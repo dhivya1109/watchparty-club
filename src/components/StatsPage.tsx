@@ -193,7 +193,7 @@ function HighlightCard({
   children: ReactNode
 }) {
   return (
-    <section className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-3.5">
+    <section className="flex items-center gap-4 rounded-2xl border border-line bg-gradient-to-br from-surface to-raised/70 p-3.5">
       {item ? (
         <Poster src={item.title.image} type={item.title.type} className="aspect-[2/3] w-16 shrink-0 rounded-xl shadow-lg" />
       ) : (
