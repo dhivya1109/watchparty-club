@@ -6,8 +6,8 @@
  * so changing a value here restyles every page at once.
  */
 @theme {
-  /* Headings: Playfair Display, a high-contrast serif with a classic movie-title feel. Text: Inter, clean on phones. */
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Headings: Lexend, wide and very clear. Text: Inter, clean on phones. */
+  --font-display: "Lexend", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /* 🎦 Screening Room (default): a cinema before the film — warm charcoal, soft cream, brick-red seats */
@@ -124,27 +124,6 @@
   --color-book: #3f7a08;
   --spot-1: rgb(27 26 23 / 0.04);
   --spot-2: rgb(176 48 42 / 0.04);
-  --grain: 0.03;
-}
-
-/* 💬 Group Chat — cool chat-app greys with a blurple highlight and a yellow star */
-:root[data-theme="chat"] {
-  --color-night: #1e1f22;
-  --color-surface: #2b2d31;
-  --color-raised: #313338;
-  --color-line: #3f4147;
-  --color-cream: #f2f3f5;
-  --color-soft: #c4c9ce;
-  --color-muted: #a3aab3;
-  --color-gold: #5865f2;
-  --color-gold-deep: #4752c4;
-  --color-marquee-1: #c9cdfb;
-  --color-accent: #a5acff;
-  --color-coral: #ff7a7d;
-  --color-on-gold: #ffffff;
-  --color-star: #fee75c;
-  --spot-1: rgb(88 101 242 / 0.14);
-  --spot-2: rgb(88 101 242 / 0.06);
   --grain: 0.03;
 }
 
