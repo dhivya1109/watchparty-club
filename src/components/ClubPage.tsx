@@ -1,4 +1,4 @@
-import { MessageSquare, Minus, PenLine, Ticket, Trash2, User, type LucideIcon } from 'lucide-react'
+import { Minus, PenLine, Ticket, Trash2, User, type LucideIcon } from 'lucide-react'
 import { StatusIcon, TypeIcon } from './icons'
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -258,8 +258,8 @@ function PosterTile({
           </span>
         )}
         {status && (
-          <span title={status.label} className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-night/85 text-cream backdrop-blur">
-            <StatusIcon status={status.value} size={13} strokeWidth={2.4} />
+          <span title={status.label} className="absolute left-1.5 top-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-xs backdrop-blur">
+            <StatusIcon status={status.value} size={12} />
           </span>
         )}
         {avg !== null && (
@@ -273,8 +273,8 @@ function PosterTile({
           </span>
         )}
         {reviews > 0 && (
-          <span className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-semibold text-soft backdrop-blur">
-            <MessageSquare size={11} aria-hidden="true" /> {reviews}
+          <span className="absolute bottom-1.5 right-1.5 rounded-full bg-night/85 px-1.5 py-0.5 text-[10px] font-semibold text-soft backdrop-blur">
+            💬 {reviews}
           </span>
         )}
       </div>
@@ -477,7 +477,7 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
                     active ? 'border-gold bg-gold/15 text-cream' : 'border-line bg-night/40 text-muted hover:border-muted hover:text-cream'
                   }`}
                 >
-                  <StatusIcon status={s.value} size={17} className={active ? 'text-accent' : ''} />
+                  <StatusIcon status={s.value} size={17} className={active ? '' : 'opacity-60 grayscale'} />
                   <span className="whitespace-nowrap text-[11px] font-semibold">{s.label}</span>
                 </button>
               )

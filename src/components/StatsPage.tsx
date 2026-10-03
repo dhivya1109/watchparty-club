@@ -51,11 +51,11 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
       {/* Headline numbers */}
       {/* 2 columns on phones (the 5th tile spans both, so no gap), all 5 in a row from tablets up */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Tile icon={Ticket} value={totals.titles} label="Titles in the club" />
-        <Tile icon={CircleCheck} value={totals.completed} label="Times completed" />
-        <Tile icon={Clock} value={`≈${totals.watchHours}`} label="Hours watched" />
-        <Tile icon={BookOpen} value={totals.pagesRead.toLocaleString()} label="Pages read" />
-        <Tile icon={Star} value={totals.averageRating ?? '—'} label="Average rating" className="col-span-2 sm:col-span-1" />
+        <Tile tone="gold" icon={Ticket} value={totals.titles} label="Titles in the club" />
+        <Tile tone="book" icon={CircleCheck} value={totals.completed} label="Times completed" />
+        <Tile tone="series" icon={Clock} value={`≈${totals.watchHours}`} label="Hours watched" />
+        <Tile tone="anime" icon={BookOpen} value={totals.pagesRead.toLocaleString()} label="Pages read" />
+        <Tile tone="star" icon={Star} value={totals.averageRating ?? '—'} label="Average rating" className="col-span-2 sm:col-span-1" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -169,11 +169,35 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
   )
 }
 
-function Tile({ icon: Icon, value, label, className = '' }: { icon: LucideIcon; value: ReactNode; label: string; className?: string }) {
+/** Each headline number gets its own colour, so the row doesn't read as one flat block. */
+const TONES = {
+  gold: { box: 'border-gold/30 bg-gold/10', icon: 'bg-gold/20 text-accent', value: 'text-accent' },
+  book: { box: 'border-book/30 bg-book/10', icon: 'bg-book/20 text-book', value: 'text-book' },
+  series: { box: 'border-series/30 bg-series/10', icon: 'bg-series/20 text-series', value: 'text-series' },
+  anime: { box: 'border-anime/30 bg-anime/10', icon: 'bg-anime/20 text-anime', value: 'text-anime' },
+  star: { box: 'border-star/30 bg-star/10', icon: 'bg-star/20 text-star', value: 'text-star' },
+}
+
+function Tile({
+  tone,
+  icon: Icon,
+  value,
+  label,
+  className = '',
+}: {
+  tone: keyof typeof TONES
+  icon: LucideIcon
+  value: ReactNode
+  label: string
+  className?: string
+}) {
+  const t = TONES[tone]
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-line bg-surface p-4 ${className}`}>
-      <Icon size={18} aria-hidden="true" className="mb-2 text-muted" />
-      <div className="text-marquee font-display text-3xl font-extrabold tabular-nums">{value}</div>
+    <div className={`relative overflow-hidden rounded-2xl border p-4 ${t.box} ${className}`}>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-full ${t.icon}`}>
+        <Icon size={18} aria-hidden="true" />
+      </span>
+      <div className={`mt-3 font-display text-3xl font-bold tabular-nums ${t.value}`}>{value}</div>
       <div className="text-sm text-soft">{label}</div>
     </div>
   )
