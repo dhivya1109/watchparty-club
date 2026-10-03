@@ -47,3 +47,12 @@
 | 2 | Type chips under the search bar force a choice before typing | Chips only appear once results are showing | ✅ |
 | 3 | Only the words in the reel move | The whole film tape (with sprocket holes) runs right to left, seamlessly | ✅ |
 | 4 | "Discover everything" goes nowhere; unclear what's clickable | Every ticket is one big button with a button-style action; Discover → search bar | ✅ |
+
+## Round 6 — 2026-10-03
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | "Added to the club" card shows on the home screen | Only shown while searching; cleared when you leave search | ✅ |
+| 2 | Flashing lights on the "Added" card | Removed | ✅ |
+| 3 | Want a Discord-style blue theme | 💬 Group Chat: cool greys, blurple, yellow stars | ✅ |
+| 4 | ✕ sits outside the details card | Moved inside the ticket's top-right corner | ✅ |

@@ -55,6 +55,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       setSearchMode(false)
       setQuery('')
       setTab('all')
+      setAddedIds([])
     }
   }
 
@@ -63,6 +64,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       setSearchMode(false)
       setQuery('')
       setTab('all')
+      setAddedIds([])
     }
     window.addEventListener('popstate', onBack)
     return () => window.removeEventListener('popstate', onBack)
@@ -190,7 +192,8 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
         ))
       )}
 
-      <AddedTray ids={addedIds} onOpenClub={() => onNavigate('club')} onClear={() => setAddedIds([])} />
+      {/* "Added to the club" — only while searching, never on the home screen */}
+      {searchMode && <AddedTray ids={addedIds} onOpenClub={() => onNavigate('club')} onClear={() => setAddedIds([])} />}
     </div>
   )
 }

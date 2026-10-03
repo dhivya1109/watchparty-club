@@ -20,7 +20,6 @@ export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenC
         key={added.length}
         className="animate-toast pointer-events-auto relative flex w-full max-w-lg items-center gap-3 overflow-hidden rounded-3xl border-2 border-book/60 bg-surface p-3 shadow-2xl shadow-black/60"
       >
-        <div className="marquee-lights absolute inset-x-0 top-0 opacity-60" />
         {/* A little fan of the posters you added */}
         <div className="relative h-16 shrink-0" style={{ width: 34 + shown.length * 14 }}>
           {shown.map((t, i) => (

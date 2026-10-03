@@ -280,7 +280,7 @@ function PersonStatus({ member, entry, title }: { member: Member; entry: Entry; 
   const st = STATUSES.find((s) => s.value === entry.status)!
   const showProgress = title.type !== 'movie' && entry.progress > 0
   return (
-    <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-2xl border border-line bg-surface px-4 py-3 text-sm">
+    <div className="mx-4 mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-2xl bg-night/40 px-3 py-2.5 text-sm">
       <Avatar member={member} size={26} />
       <b className="text-cream">{member.name}</b>
       <span className="rounded-full bg-gold/15 px-2 py-0.5 font-semibold text-accent">
@@ -315,20 +315,13 @@ export function TitleSheet({ titleId, onClose, person }: { titleId: string; onCl
       <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-2 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title.title}>
         <div className="absolute inset-0" onClick={onClose} />
         <div className="animate-pop relative flex max-h-[90vh] w-full max-w-xl flex-col">
-          {/* Handle + close, above the ticket so they never cover it */}
-          <div className="mb-2 flex items-center justify-center">
-            <span className="h-1.5 w-12 rounded-full bg-white/30" aria-hidden="true" />
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute right-1 top-0 -mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-night/80 text-muted backdrop-blur hover:text-cream"
-            >
-              ✕
-            </button>
-          </div>
           <div className="min-h-0 overflow-y-auto overscroll-contain rounded-3xl">
-            {person && theirs && <PersonStatus member={person} entry={theirs} title={title} />}
-            <ClubCard title={title} entry={getEntry(data, me.id, title.id)} />
+            <ClubCard
+              title={title}
+              entry={getEntry(data, me.id, title.id)}
+              onClose={onClose}
+              top={person && theirs ? <PersonStatus member={person} entry={theirs} title={title} /> : undefined}
+            />
           </div>
         </div>
       </div>
@@ -336,7 +329,8 @@ export function TitleSheet({ titleId, onClose, person }: { titleId: string; onCl
   )
 }
 
-function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
+/** One title's full ticket. In a pop-up it gets a ✕ in its top-right corner, and `top` shows under the header. */
+function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: Entry; onClose?: () => void; top?: React.ReactNode }) {
   const { data, me, amHost, update, remove, removeFromMyList } = useClub()
   const [celebration, setCelebration] = useState<{ kind: CelebrationKind; id: number } | null>(null)
   const [editing, setEditing] = useState(false)
@@ -411,7 +405,17 @@ function ClubCard({ title, entry }: { title: ClubTitle; entry?: Entry }) {
       >
         {onMyList ? '✓ On your list' : 'Not on your list'}
       </span>
+      {onClose && (
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="-my-1 -mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-muted transition hover:bg-raised hover:text-cream"
+        >
+          ✕
+        </button>
+      )}
     </div>
+    {top}
     {/* Top row: poster and title, side by side */}
     <div className="flex gap-3 p-3 pl-4 sm:gap-4">
       <div className="relative w-20 shrink-0 sm:w-28">
