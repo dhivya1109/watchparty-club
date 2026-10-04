@@ -99,7 +99,15 @@ const toMember = (p: ProfileRow, role: Role, joinedAt?: string): Member => ({
 
 export async function currentUserId(): Promise<string | null> {
   const { data } = await db().auth.getSession()
-  return data.session?.user.id ?? null
+  if (!data.session) return null
+  // Check with the server too: if this account was deleted (e.g. after a reset),
+  // forget the saved login so the person sees the log-in screen instead of errors.
+  const { data: user, error } = await db().auth.getUser()
+  if (error?.status === 401 || error?.status === 403 || (!error && !user.user)) {
+    await db().auth.signOut({ scope: 'local' })
+    return null
+  }
+  return data.session.user.id
 }
 
 // ---------- Accounts: email + a one-time code ----------

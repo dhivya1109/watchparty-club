@@ -9,7 +9,6 @@ import {
   mostDivisive,
   mostLoved,
   personStats,
-  tasteMatches,
   typeCounts,
   type Highlight,
 } from '../lib/stats'
@@ -36,7 +35,6 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
 
   const genres = genreStats(data)
   const types = typeCounts(data)
-  const matches = tasteMatches(data)
   const people = data.members.map((m) => personStats(data, m))
   const loved = mostLoved(data)
   const divisive = mostDivisive(data)
@@ -67,7 +65,7 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
         </HighlightCard>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div>
         <Panel title="Genres in your club" note="Number of titles · group rating">
           <BarList
             rows={genres.map((g) => ({
@@ -82,36 +80,6 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
           />
         </Panel>
 
-        <Panel title="Taste match" note="How closely each pair’s ratings agree">
-          {matches.length === 0 ? (
-            <p className="text-sm text-muted">Add friends in the member menu (top right) to compare tastes.</p>
-          ) : (
-            <BarList
-              stacked
-              max={100}
-              rows={matches.map((m) => ({
-                key: `${m.a.id}-${m.b.id}`,
-                label: (
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="flex -space-x-1.5">
-                      <Avatar member={m.a} size={22} />
-                      <Avatar member={m.b} size={22} />
-                    </span>
-                    <span className="truncate">
-                      {m.a.name} & {m.b.name}
-                    </span>
-                  </span>
-                ),
-                value: m.match ?? 0,
-                text: m.match === null ? 'not yet' : `${m.match}%`,
-                tooltip:
-                  m.match === null
-                    ? `${m.a.name} & ${m.b.name} haven't rated the same title yet`
-                    : `${m.a.name} & ${m.b.name}: ${m.match}% match on ${m.shared} title${m.shared === 1 ? '' : 's'} both rated`,
-              }))}
-            />
-          )}
-        </Panel>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_2fr]">
