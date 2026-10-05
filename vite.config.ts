@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
-import { searchTmdbMovies } from './api/movies.ts'
+import { handleMovies } from './api/movies.ts'
 
 /** Runs our /api server functions inside the local dev server (Vercel runs them online). */
 function devApi(tmdbKey: string | undefined): Plugin {
@@ -11,8 +11,7 @@ function devApi(tmdbKey: string | undefined): Plugin {
       server.middlewares.use('/api/movies', async (req, res) => {
         res.setHeader('Content-Type', 'application/json')
         try {
-          const query = new URL(req.url ?? '', 'http://localhost').searchParams.get('query')
-          const response = await searchTmdbMovies(query, tmdbKey)
+          const response = await handleMovies(new URL(req.url ?? '', 'http://localhost').searchParams, tmdbKey)
           res.statusCode = response.status
           res.end(await response.text())
         } catch {

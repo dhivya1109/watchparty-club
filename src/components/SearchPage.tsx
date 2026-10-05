@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { SEARCHERS } from '../api/search'
 import { flyToClub } from '../effects/flyToClub'
 import { AddedTray } from './AddToClub'
+import { Suggestions } from './Suggestions'
 import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { FOCUS_SEARCH_EVENT } from '../lib/events'
@@ -211,9 +212,23 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       )}
 
       {searchMode && !searching ? (
-        <p className="mt-10 text-center text-sm text-muted">
-          {query.trim().length === 1 ? 'Keep typing…' : 'Type a title — results show up right here, under the search bar.'}
-        </p>
+        <>
+          <p className="mt-4 text-sm text-muted">
+            {query.trim().length === 1 ? 'Keep typing…' : 'Type a title — or pick something below.'}
+          </p>
+          {/* Nothing typed yet: suggestions instead of an empty page */}
+          <Suggestions
+            renderCard={(r) => (
+              <ResultCard
+                result={r}
+                onOpenClub={() => onNavigate('club')}
+                justAdded={addedIds.includes(r.id)}
+                onAdded={(id) => setAddedIds((ids) => [...ids.filter((x) => x !== id), id])}
+                onUndone={(id) => setAddedIds((ids) => ids.filter((x) => x !== id))}
+              />
+            )}
+          />
+        </>
       ) : !searchMode ? (
         <div className="mt-10">
           <p className="text-center text-sm text-muted">Not sure where to start? Try one:</p>

@@ -1,5 +1,6 @@
 /**
- * Server function: GET /api/movies?query=...
+ * Server function: GET /api/movies?query=...   → movie search
+ *                  GET /api/movies?trending=movie | tv → this week's trending movies / series
  *
  * The browser calls this instead of TMDB, so the TMDB key stays on the server
  * and never appears in the website's code.
@@ -7,8 +8,29 @@
  */
 
 export async function GET(request: Request): Promise<Response> {
-  const query = new URL(request.url).searchParams.get('query')
-  return searchTmdbMovies(query, process.env.TMDB_API_KEY)
+  return handleMovies(new URL(request.url).searchParams, process.env.TMDB_API_KEY)
+}
+
+/** Shared by Vercel (above) and the local dev server (vite.config.ts). */
+export function handleMovies(params: URLSearchParams, apiKey: string | undefined): Promise<Response> {
+  const trending = params.get('trending')
+  if (trending === 'movie' || trending === 'tv') return trendingTmdb(trending, apiKey)
+  return searchTmdbMovies(params.get('query'), apiKey)
+}
+
+/** TMDB's "trending this week" list (20 titles). */
+async function trendingTmdb(kind: 'movie' | 'tv', apiKey: string | undefined): Promise<Response> {
+  if (!apiKey) return json(500, { error: 'Trending isn’t set up yet: the server has no TMDB key (TMDB_API_KEY).' })
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/trending/${kind}/week?api_key=${apiKey}`)
+    if (!res.ok) return json(502, { error: `The movie database answered with an error (${res.status}).` })
+    return new Response(await res.text(), {
+      // Trending changes slowly — let Vercel reuse it for 6 hours
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, s-maxage=21600' },
+    })
+  } catch {
+    return json(502, { error: 'Couldn’t reach the movie database just now.' })
+  }
 }
 
 export async function searchTmdbMovies(query: string | null, apiKey: string | undefined): Promise<Response> {

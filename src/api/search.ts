@@ -30,7 +30,11 @@ export async function searchMovies(query: string, signal?: AbortSignal): Promise
   const data: { results: TmdbMovie[] } = await getJson(`/api/movies?query=${encodeURIComponent(query)}`, signal)
   // De-duplicate (a movie can appear on two pages if TMDB's order shifts between requests)
   const unique = [...new Map(data.results.map((m) => [m.id, m])).values()]
-  return unique.map((m) => ({
+  return unique.map(toMovie)
+}
+
+function toMovie(m: TmdbMovie): SearchResult {
+  return {
     id: `movie:${m.id}`,
     type: 'movie',
     externalId: String(m.id),
@@ -40,7 +44,7 @@ export async function searchMovies(query: string, signal?: AbortSignal): Promise
     image: m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : undefined,
     genres: (m.genre_ids ?? []).map((g) => TMDB_GENRES[g]).filter(Boolean),
     rating: m.vote_count ? round1(m.vote_average) : undefined,
-  }))
+  }
 }
 
 // ---------- Series: TVmaze (no key) ----------
@@ -59,7 +63,11 @@ interface TvmazeShow {
 export async function searchSeries(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
   const url = `https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`
   const data: { show: TvmazeShow }[] = await getJson(url, signal)
-  return data.map(({ show }) => ({
+  return data.map(({ show }) => toSeries(show))
+}
+
+function toSeries(show: TvmazeShow): SearchResult {
+  return {
     id: `series:${show.id}`,
     type: 'series',
     externalId: String(show.id),
@@ -69,7 +77,7 @@ export async function searchSeries(query: string, signal?: AbortSignal): Promise
     image: show.image?.medium,
     genres: show.genres ?? [],
     rating: show.rating?.average ?? undefined,
-  }))
+  }
 }
 
 // ---------- Anime: AniList (no key, GraphQL) ----------
@@ -84,17 +92,19 @@ interface AnilistMedia {
   averageScore: number | null
 }
 
-const ANILIST_QUERY = `
-  query ($search: String) {
-    Page(perPage: 30) {
-      media(search: $search, type: ANIME, isAdult: false) {
+const ANILIST_FIELDS = `
         id
         title { romaji english }
         coverImage { large }
         startDate { year }
         episodes
         genres
-        averageScore
+        averageScore`
+
+const ANILIST_QUERY = `
+  query ($search: String) {
+    Page(perPage: 30) {
+      media(search: $search, type: ANIME, isAdult: false) {${ANILIST_FIELDS}
       }
     }
   }`
@@ -109,21 +119,23 @@ export async function searchAnime(query: string, signal?: AbortSignal): Promise<
       body: JSON.stringify({ query: ANILIST_QUERY, variables: { search: query } }),
     },
   )
-  return data.data.Page.media.map((a) => {
-    const title = a.title.english ?? a.title.romaji
-    return {
-      id: `anime:${a.id}`,
-      type: 'anime',
-      externalId: String(a.id),
-      title,
-      subtitle: title !== a.title.romaji ? a.title.romaji : undefined,
-      year: a.startDate.year ?? undefined,
-      image: a.coverImage.large,
-      genres: a.genres ?? [],
-      length: a.episodes ?? undefined,
-      rating: a.averageScore ? round1(a.averageScore / 10) : undefined,
-    }
-  })
+  return data.data.Page.media.map(toAnime)
+}
+
+function toAnime(a: AnilistMedia): SearchResult {
+  const title = a.title.english ?? a.title.romaji
+  return {
+    id: `anime:${a.id}`,
+    type: 'anime',
+    externalId: String(a.id),
+    title,
+    subtitle: title !== a.title.romaji ? a.title.romaji : undefined,
+    year: a.startDate.year ?? undefined,
+    image: a.coverImage.large,
+    genres: a.genres ?? [],
+    length: a.episodes ?? undefined,
+    rating: a.averageScore ? round1(a.averageScore / 10) : undefined,
+  }
 }
 
 // ---------- Books: Open Library (no key) ----------
@@ -143,7 +155,11 @@ export async function searchBooks(query: string, signal?: AbortSignal): Promise<
   const fields = 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages_median,ratings_average'
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=30&fields=${fields}`
   const data: { docs: OpenLibraryDoc[] } = await getJson(url, signal)
-  return data.docs.map((b) => ({
+  return data.docs.map(toBook)
+}
+
+function toBook(b: OpenLibraryDoc): SearchResult {
+  return {
     id: `book:${b.key}`,
     type: 'book',
     externalId: b.key,
@@ -156,7 +172,47 @@ export async function searchBooks(query: string, signal?: AbortSignal): Promise<
     length: b.number_of_pages_median,
     // Open Library rates out of 5 — double it so every source is out of 10
     rating: b.ratings_average ? round1(b.ratings_average * 2) : undefined,
-  }))
+  }
+}
+
+// ---------- Trending this week (the suggestions shown when you tap the search bar) ----------
+
+async function trendingMovies(signal?: AbortSignal): Promise<SearchResult[]> {
+  const data: { results: TmdbMovie[] } = await getJson('/api/movies?trending=movie', signal)
+  return data.results.map(toMovie)
+}
+
+/** TMDB knows what's trending; TVmaze is where the app's series live — so look each one up there. */
+async function trendingSeries(signal?: AbortSignal): Promise<SearchResult[]> {
+  const data: { results: { name: string }[] } = await getJson('/api/movies?trending=tv', signal)
+  const shows = await Promise.all(
+    data.results.slice(0, 12).map((t) =>
+      getJson<TvmazeShow>(`https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(t.name)}`, signal).catch(() => null),
+    ),
+  )
+  return shows.filter((s): s is TvmazeShow => s !== null).map(toSeries)
+}
+
+async function trendingAnime(signal?: AbortSignal): Promise<SearchResult[]> {
+  const query = `query { Page(perPage: 15) { media(type: ANIME, sort: TRENDING_DESC, isAdult: false) {${ANILIST_FIELDS} } } }`
+  const data: { data: { Page: { media: AnilistMedia[] } } } = await getJson('https://graphql.anilist.co', signal, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  })
+  return data.data.Page.media.map(toAnime)
+}
+
+async function trendingBooks(signal?: AbortSignal): Promise<SearchResult[]> {
+  const data: { works: OpenLibraryDoc[] } = await getJson('https://openlibrary.org/trending/weekly.json?limit=15', signal)
+  return data.works.map(toBook)
+}
+
+export const TRENDING: Record<MediaType, (s?: AbortSignal) => Promise<SearchResult[]>> = {
+  movie: trendingMovies,
+  series: trendingSeries,
+  anime: trendingAnime,
+  book: trendingBooks,
 }
 
 // ---------- Shared helpers ----------
