@@ -1,4 +1,4 @@
-import { ChartColumn, FerrisWheel, Search, Ticket, Users, type LucideIcon } from 'lucide-react'
+import { ChartColumn, ChevronLeft, ChevronRight, FerrisWheel, Search, Ticket, Users, type LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthScreen } from './components/Account'
 import { ClubPage } from './components/ClubPage'
@@ -17,22 +17,34 @@ import { useClub } from './store/ClubContext'
 
 export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
 
+/** One stop in your trail through the app: which page, whose profile, and how far down you'd scrolled. */
+interface Stop {
+  page: Page
+  profileId: string | null
+  scrollY: number
+}
+
+const PAGE_NAMES: Record<Page, string> = { search: 'Discover', club: 'Club', tonight: 'Tonight', friends: 'Friends', stats: 'Stats' }
+
 function App() {
   const { data, status, error, joinedCount } = useClub()
-  const [page, setPage] = useState<Page>('search')
-  /** Whose profile is open on the Friends page (null = the list of everyone) */
-  const [profileId, setProfileId] = useState<string | null>(null)
+  /**
+   * Where you've been, like a browser's history: ← Back and Next → move along it.
+   * Going somewhere new from the middle drops the "next" stops, just like a browser.
+   */
+  const [trail, setTrail] = useState<{ stops: Stop[]; at: number }>({ stops: [{ page: 'search', profileId: null, scrollY: 0 }], at: 0 })
+  const { page, profileId } = trail.stops[trail.at]
+  const canBack = trail.at > 0
+  const canNext = trail.at < trail.stops.length - 1
   /** Goes up each time a flying poster lands on the Club tab — replays its "catch" animation. */
   const [catches, setCatches] = useState(0)
   const clubCount = Object.keys(data.titles).length
 
   // Just joined a club from an invite? Go straight to its shelf.
   useEffect(() => {
-    if (joinedCount > 0) {
-      setPage('club')
-      setProfileId(null)
-      window.scrollTo({ top: 0 })
-    }
+    if (joinedCount > 0) go('club')
+    // go() is recreated every render; only joining should trigger this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joinedCount])
 
   useEffect(() => {
@@ -41,10 +53,26 @@ function App() {
     return () => window.removeEventListener(CLUB_CATCH_EVENT, onCatch)
   }, [])
 
+  /** Open a page (a new stop on the trail). Same page again = just back to its top. */
   const go = (next: Page, profile: string | null = null) => {
-    setPage(next)
-    setProfileId(profile)
+    if (next === page && profile === profileId) return window.scrollTo({ top: 0 })
+    setTrail(({ stops, at }) => {
+      const kept = stops.slice(0, at + 1)
+      kept[at] = { ...kept[at], scrollY: window.scrollY } // remember where you were
+      return { stops: [...kept, { page: next, profileId: profile, scrollY: 0 }], at: at + 1 }
+    })
     window.scrollTo({ top: 0 })
+  }
+
+  /** ← Back / Next →: step along the trail and return to where you'd scrolled. */
+  const step = (by: -1 | 1) => {
+    const to = trail.at + by
+    if (to < 0 || to >= trail.stops.length) return
+    const stops = [...trail.stops]
+    stops[trail.at] = { ...stops[trail.at], scrollY: window.scrollY }
+    setTrail({ stops, at: to })
+    // After the page has drawn, put the scroll back where it was
+    setTimeout(() => window.scrollTo({ top: stops[to].scrollY }), 30)
   }
 
   // Before a club is open: loading → log in → your profile → pick your first club
@@ -143,6 +171,12 @@ function App() {
         </div>
       </header>
 
+      {/* ← Back and Next → on every page */}
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 pt-3">
+        <TrailButton direction="back" disabled={!canBack} label={canBack ? PAGE_NAMES[trail.stops[trail.at - 1].page] : undefined} onClick={() => step(-1)} />
+        <TrailButton direction="next" disabled={!canNext} label={canNext ? PAGE_NAMES[trail.stops[trail.at + 1].page] : undefined} onClick={() => step(1)} />
+      </div>
+
       {/* Search stays mounted (just hidden) so your search is still there when you come back. */}
       <div hidden={page !== 'search'}>
         <SearchPage onNavigate={(p) => go(p)} />
@@ -162,6 +196,24 @@ function App() {
         Synced live with everyone in {data.name ?? 'your club'}.
       </footer>
     </div>
+  )
+}
+
+/** "← Back · Club" / "Next · Stats →" — greyed out when there's nowhere to go. */
+function TrailButton({ direction, disabled, label, onClick }: { direction: 'back' | 'next'; disabled: boolean; label?: string; onClick: () => void }) {
+  const back = direction === 'back'
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={back ? `Back${label ? ` to ${label}` : ''}` : `Next${label ? `: ${label}` : ''}`}
+      className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-soft transition hover:border-muted hover:text-cream disabled:cursor-default disabled:opacity-35 disabled:hover:border-line disabled:hover:text-soft"
+    >
+      {back && <ChevronLeft size={16} aria-hidden="true" />}
+      {back ? 'Back' : 'Next'}
+      {label && <span className="hidden font-normal text-muted sm:inline">· {label}</span>}
+      {!back && <ChevronRight size={16} aria-hidden="true" />}
+    </button>
   )
 }
 

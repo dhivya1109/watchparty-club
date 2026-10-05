@@ -41,6 +41,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const searchBarRef = useRef<HTMLDivElement>(null)
   /** Titles added during this visit — shown in the "Recently added" tray */
   const [addedIds, setAddedIds] = useState<string[]>([])
   const [sections, setSections] = useState<Partial<Record<MediaType, SectionState>>>({})
@@ -79,15 +80,21 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
     }
   }
 
-  // The Discover tab was tapped: cursor in the search bar (after the page is shown again)
+  // The Discover tab was tapped: the home screen, scrolled down to the search bar
   useEffect(() => {
     const focus = () => {
-      enterSearch()
-      setTimeout(() => inputRef.current?.focus())
+      if (searchMode) leaveSearch() // back to the home screen
+      // Once the home screen has drawn: scroll so the search bar sits just under the sticky header
+      setTimeout(() => {
+        const bar = searchBarRef.current
+        if (!bar) return
+        const header = document.querySelector('header')?.getBoundingClientRect().height ?? 0
+        window.scrollTo({ top: bar.getBoundingClientRect().top + window.scrollY - header - 12, behavior: 'smooth' })
+      }, 120)
     }
     window.addEventListener(FOCUS_SEARCH_EVENT, focus)
     return () => window.removeEventListener(FOCUS_SEARCH_EVENT, focus)
-    // enterSearch only depends on searchMode, so re-subscribe when that changes
+    // leaveSearch only depends on searchMode, so re-subscribe when that changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchMode])
 
@@ -130,7 +137,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
     <div className="mx-auto max-w-6xl px-4 pb-6">
       {!searchMode && <CinemaHero onNavigate={onNavigate} onStart={() => inputRef.current?.focus()} />}
 
-      <div className={`flex items-center gap-2 ${searchMode ? 'pt-5' : 'pt-8'}`}>
+      <div ref={searchBarRef} className={`flex items-center gap-2 ${searchMode ? 'pt-5' : 'pt-8'}`}>
         {searchMode && (
           <button
             onClick={leaveSearch}
