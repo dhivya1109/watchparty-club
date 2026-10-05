@@ -103,6 +103,8 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [joinedCount, setJoinedCount] = useState(0)
   const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: false })
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  /** Adds still being saved, by title id — so an instant Undo waits for the add to land first. */
+  const savingAdds = useRef(new Map<string, Promise<void>>())
 
   const fail = useCallback(
     (err: unknown) => toast({ title: 'Something went wrong', text: err instanceof Error ? err.message : String(err) }),
@@ -344,9 +346,11 @@ export function ClubProvider({ children }: { children: ReactNode }) {
 
       add: (result) => {
         if (!activeId || !userId) return
+        const saving = cloud.addTitle(activeId, userId, result)
+        savingAdds.current.set(result.id, saving)
         optimistic(
           (d) => addTitle(d, result, userId),
-          () => cloud.addTitle(activeId, userId, result),
+          () => saving.finally(() => savingAdds.current.delete(result.id)),
         )
       },
 
@@ -354,7 +358,11 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         if (!activeId) return
         optimistic(
           (d) => removeTitle(d, titleId),
-          () => cloud.removeTitle(activeId, titleId),
+          async () => {
+            // Undo right after adding: let the add finish saving, or there'd be nothing to remove yet.
+            await savingAdds.current.get(titleId)?.catch(() => {})
+            await cloud.removeTitle(activeId, titleId)
+          },
         )
       },
 

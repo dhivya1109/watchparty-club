@@ -6,6 +6,8 @@ import { flyToClub } from '../effects/flyToClub'
 import { AddedTray } from './AddToClub'
 import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
+import { FOCUS_SEARCH_EVENT } from '../lib/events'
+import { genreOptions, matchesGenre } from '../lib/genres'
 import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
 import { Pill, PillRow, Poster, Select, TypeBadge } from './ui'
@@ -15,7 +17,7 @@ type Sort = 'match' | 'rating' | 'newest'
 
 /** Apply the sort and genre filters to one section's results. */
 function refine(results: SearchResult[], sort: Sort, genre: string): SearchResult[] {
-  const list = genre ? results.filter((r) => r.genres.includes(genre)) : [...results]
+  const list = genre ? results.filter((r) => matchesGenre(r.genres, genre)) : [...results]
   if (sort === 'rating') list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
   if (sort === 'newest') list.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
   return list
@@ -47,11 +49,9 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
   const debouncedQuery = useDebounce(query.trim())
 
   const activeTypes: MediaType[] = tab === 'all' ? MEDIA_TYPES.map((m) => m.type) : [tab]
-  // Genres among what the search found (most common first), plus the chosen one so it never vanishes
-  const genreCounts = new Map<string, number>()
-  for (const t of activeTypes) for (const r of sections[t]?.results ?? []) for (const g of r.genres) genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1)
-  const genreOptions = [...genreCounts.entries()].sort((a, b) => b[1] - a[1]).map(([g]) => g).slice(0, 25)
-  if (genre && !genreOptions.includes(genre)) genreOptions.unshift(genre)
+  // The full genre list for the chosen type(s), each with how many results match it right now
+  const found = activeTypes.flatMap((t) => sections[t]?.results ?? [])
+  const genreList = genreOptions(activeTypes).map((g) => ({ name: g, count: found.filter((r) => matchesGenre(r.genres, g)).length }))
   const searching = debouncedQuery.length >= 2
   /**
    * Search mode starts as soon as you tap the search bar, and only ends with ← Back
@@ -78,6 +78,18 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       setGenre('')
     }
   }
+
+  // The Discover tab was tapped: cursor in the search bar (after the page is shown again)
+  useEffect(() => {
+    const focus = () => {
+      enterSearch()
+      setTimeout(() => inputRef.current?.focus())
+    }
+    window.addEventListener(FOCUS_SEARCH_EVENT, focus)
+    return () => window.removeEventListener(FOCUS_SEARCH_EVENT, focus)
+    // enterSearch only depends on searchMode, so re-subscribe when that changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchMode])
 
   useEffect(() => {
     const onBack = () => {
@@ -181,9 +193,10 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
           </Select>
           <Select label="Genre" value={genre} onChange={setGenre}>
             <option value="">All genres</option>
-            {genreOptions.map((g) => (
-              <option key={g} value={g}>
-                {g}
+            {genreList.map((g) => (
+              <option key={g.name} value={g.name}>
+                {g.name}
+                {g.count ? ` (${g.count})` : ''}
               </option>
             ))}
           </Select>

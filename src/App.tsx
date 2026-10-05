@@ -12,6 +12,7 @@ import { StatsPage } from './components/StatsPage'
 import { ThemeMenu } from './components/ThemeMenu'
 import { WelcomeDialog } from './components/WelcomeDialog'
 import { CLUB_CATCH_EVENT } from './effects/flyToClub'
+import { FOCUS_SEARCH_EVENT } from './lib/events'
 import { useClub } from './store/ClubContext'
 
 export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
@@ -114,7 +115,11 @@ function App() {
                 // A new key for the Club tab after each catch restarts its wiggle-and-glow animation.
                 key={t.page === 'club' ? `club-${catches}` : t.page}
                 data-club-tab={t.page === 'club' ? '' : undefined}
-                onClick={() => go(t.page)}
+                onClick={() => {
+                  go(t.page)
+                  // Discover jumps straight to the search bar, wherever you were
+                  if (t.page === 'search') window.dispatchEvent(new Event(FOCUS_SEARCH_EVENT))
+                }}
                 className={`relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition lg:flex-row lg:gap-1.5 lg:rounded-full lg:px-3.5 lg:text-sm ${
                   page === t.page ? 'bg-gold text-on-gold' : 'text-soft hover:bg-raised hover:text-cream'
                 } ${t.page === 'club' && catches > 0 ? 'animate-catch' : ''}`}
