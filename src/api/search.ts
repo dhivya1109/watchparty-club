@@ -21,12 +21,16 @@ interface TmdbMovie {
   original_title: string
   release_date?: string
   poster_path: string | null
-  genre_ids: number[]
+  genre_ids?: number[]
+  vote_average?: number
+  vote_count?: number
 }
 
 export async function searchMovies(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
   const data: { results: TmdbMovie[] } = await getJson(`/api/movies?query=${encodeURIComponent(query)}`, signal)
-  return data.results.slice(0, 12).map((m) => ({
+  // De-duplicate (a movie can appear on two pages if TMDB's order shifts between requests)
+  const unique = [...new Map(data.results.map((m) => [m.id, m])).values()]
+  return unique.map((m) => ({
     id: `movie:${m.id}`,
     type: 'movie',
     externalId: String(m.id),
@@ -34,7 +38,8 @@ export async function searchMovies(query: string, signal?: AbortSignal): Promise
     subtitle: m.original_title !== m.title ? m.original_title : undefined,
     year: parseYear(m.release_date),
     image: m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : undefined,
-    genres: m.genre_ids.map((g) => TMDB_GENRES[g]).filter(Boolean),
+    genres: (m.genre_ids ?? []).map((g) => TMDB_GENRES[g]).filter(Boolean),
+    rating: m.vote_count ? round1(m.vote_average) : undefined,
   }))
 }
 
@@ -48,12 +53,13 @@ interface TvmazeShow {
   image: { medium: string } | null
   network: { name: string } | null
   webChannel: { name: string } | null
+  rating: { average: number | null } | null
 }
 
 export async function searchSeries(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
   const url = `https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`
   const data: { show: TvmazeShow }[] = await getJson(url, signal)
-  return data.slice(0, 12).map(({ show }) => ({
+  return data.map(({ show }) => ({
     id: `series:${show.id}`,
     type: 'series',
     externalId: String(show.id),
@@ -61,7 +67,8 @@ export async function searchSeries(query: string, signal?: AbortSignal): Promise
     subtitle: show.network?.name ?? show.webChannel?.name,
     year: parseYear(show.premiered),
     image: show.image?.medium,
-    genres: show.genres,
+    genres: show.genres ?? [],
+    rating: show.rating?.average ?? undefined,
   }))
 }
 
@@ -74,11 +81,12 @@ interface AnilistMedia {
   startDate: { year: number | null }
   episodes: number | null
   genres: string[]
+  averageScore: number | null
 }
 
 const ANILIST_QUERY = `
   query ($search: String) {
-    Page(perPage: 12) {
+    Page(perPage: 30) {
       media(search: $search, type: ANIME, isAdult: false) {
         id
         title { romaji english }
@@ -86,6 +94,7 @@ const ANILIST_QUERY = `
         startDate { year }
         episodes
         genres
+        averageScore
       }
     }
   }`
@@ -110,8 +119,9 @@ export async function searchAnime(query: string, signal?: AbortSignal): Promise<
       subtitle: title !== a.title.romaji ? a.title.romaji : undefined,
       year: a.startDate.year ?? undefined,
       image: a.coverImage.large,
-      genres: a.genres,
+      genres: a.genres ?? [],
       length: a.episodes ?? undefined,
+      rating: a.averageScore ? round1(a.averageScore / 10) : undefined,
     }
   })
 }
@@ -126,11 +136,12 @@ interface OpenLibraryDoc {
   cover_i?: number
   subject?: string[]
   number_of_pages_median?: number
+  ratings_average?: number
 }
 
 export async function searchBooks(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
-  const fields = 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages_median'
-  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=12&fields=${fields}`
+  const fields = 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages_median,ratings_average'
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=30&fields=${fields}`
   const data: { docs: OpenLibraryDoc[] } = await getJson(url, signal)
   return data.docs.map((b) => ({
     id: `book:${b.key}`,
@@ -143,6 +154,8 @@ export async function searchBooks(query: string, signal?: AbortSignal): Promise<
     // Open Library "subjects" are messy (e.g. "series:Harry_Potter"), so keep a few simple ones
     genres: (b.subject ?? []).filter((s) => !s.includes(':') && s.length < 25).slice(0, 3),
     length: b.number_of_pages_median,
+    // Open Library rates out of 5 — double it so every source is out of 10
+    rating: b.ratings_average ? round1(b.ratings_average * 2) : undefined,
   }))
 }
 
@@ -163,6 +176,10 @@ async function getJson<T>(url: string, signal?: AbortSignal, init?: RequestInit)
     throw new Error(body.error ?? `The database answered with an error (${res.status}). Try again in a moment.`)
   }
   return res.json() as Promise<T>
+}
+
+function round1(n?: number): number | undefined {
+  return n === undefined ? undefined : Math.round(n * 10) / 10
 }
 
 function parseYear(date?: string | null): number | undefined {

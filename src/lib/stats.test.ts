@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MediaType, SearchResult } from '../types'
 import { addMember, addTitle, emptyClub, updateEntry, type ClubData } from './club'
-import { clubTotals, genreStats, mostDivisive, mostLoved, personStats, tasteMatches, typeCounts } from './stats'
+import { clubTotals, genreStats, mostDivisive, mostLoved, personStats, rankByCompleted, tasteMatches, typeCounts } from './stats'
 
 const NOW = '2026-09-30T12:00:00.000Z'
 
@@ -89,5 +89,26 @@ describe('highlights', () => {
   it('returns null when nothing has enough ratings', () => {
     expect(mostLoved(emptyClub)).toBeNull()
     expect(mostDivisive(emptyClub)).toBeNull()
+  })
+})
+
+describe('per-person ranking', () => {
+  const person = (name: string, completed: number, watchMinutes = 0) => ({
+    member: { id: name, name, color: '#000', role: 'member' as const },
+    completed,
+    watchMinutes,
+    pagesRead: 0,
+    ratingsGiven: 0,
+    averageGiven: null,
+  })
+
+  it('puts whoever completed the most at the top', () => {
+    const ranked = rankByCompleted([person('Asha', 2), person('Priya', 7), person('Dev', 4)])
+    expect(ranked.map((p) => p.member.name)).toEqual(['Priya', 'Dev', 'Asha'])
+  })
+
+  it('breaks ties by time spent, then by name', () => {
+    const ranked = rankByCompleted([person('Zoe', 3, 100), person('Ana', 3, 100), person('Max', 3, 500)])
+    expect(ranked.map((p) => p.member.name)).toEqual(['Max', 'Ana', 'Zoe'])
   })
 })

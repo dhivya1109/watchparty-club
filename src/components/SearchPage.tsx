@@ -8,9 +8,18 @@ import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget }
 import { useDebounce } from '../hooks/useDebounce'
 import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, TYPE_STYLE, type MediaType, type SearchResult } from '../types'
-import { Pill, PillRow, Poster, TypeBadge } from './ui'
+import { Pill, PillRow, Poster, Select, TypeBadge } from './ui'
 
 type Tab = MediaType | 'all'
+type Sort = 'match' | 'rating' | 'newest'
+
+/** Apply the sort and genre filters to one section's results. */
+function refine(results: SearchResult[], sort: Sort, genre: string): SearchResult[] {
+  const list = genre ? results.filter((r) => r.genres.includes(genre)) : [...results]
+  if (sort === 'rating') list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
+  if (sort === 'newest') list.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+  return list
+}
 
 interface SectionState {
   status: 'loading' | 'done' | 'error'
@@ -33,9 +42,16 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
   /** Titles added during this visit — shown in the "Recently added" tray */
   const [addedIds, setAddedIds] = useState<string[]>([])
   const [sections, setSections] = useState<Partial<Record<MediaType, SectionState>>>({})
+  const [sort, setSort] = useState<Sort>('match')
+  const [genre, setGenre] = useState('')
   const debouncedQuery = useDebounce(query.trim())
 
   const activeTypes: MediaType[] = tab === 'all' ? MEDIA_TYPES.map((m) => m.type) : [tab]
+  // Genres among what the search found (most common first), plus the chosen one so it never vanishes
+  const genreCounts = new Map<string, number>()
+  for (const t of activeTypes) for (const r of sections[t]?.results ?? []) for (const g of r.genres) genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1)
+  const genreOptions = [...genreCounts.entries()].sort((a, b) => b[1] - a[1]).map(([g]) => g).slice(0, 25)
+  if (genre && !genreOptions.includes(genre)) genreOptions.unshift(genre)
   const searching = debouncedQuery.length >= 2
   /**
    * Search mode starts as soon as you tap the search bar, and only ends with ← Back
@@ -58,6 +74,8 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       setQuery('')
       setTab('all')
       setAddedIds([])
+      setSort('match')
+      setGenre('')
     }
   }
 
@@ -67,6 +85,8 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
       setQuery('')
       setTab('all')
       setAddedIds([])
+      setSort('match')
+      setGenre('')
     }
     window.addEventListener('popstate', onBack)
     return () => window.removeEventListener('popstate', onBack)
@@ -151,6 +171,24 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
           ))}
         </PillRow>
       )}
+      {/* Sort and genre — work on whatever the search found */}
+      {searchMode && searching && (
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:max-w-md">
+          <Select label="Sort results" value={sort} onChange={(v) => setSort(v as Sort)}>
+            <option value="match">Best match</option>
+            <option value="rating">★ Top rated</option>
+            <option value="newest">Newest first</option>
+          </Select>
+          <Select label="Genre" value={genre} onChange={setGenre}>
+            <option value="">All genres</option>
+            {genreOptions.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
 
       {searchMode && !searching ? (
         <p className="mt-10 text-center text-sm text-muted">
@@ -189,10 +227,17 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
             key={type}
             type={type}
             state={sections[type]}
-            limit={tab === 'all' ? 6 : 12}
+            results={refine(sections[type]?.results ?? [], sort, genre)}
+            limit={tab === 'all' ? 6 : Infinity}
             showHeading={tab === 'all'}
+            onSeeAll={() => {
+              setTab(type)
+              window.scrollTo({ top: 0 })
+            }}
             onOpenClub={() => onNavigate('club')}
+            addedIds={addedIds}
             onAdded={(id) => setAddedIds((ids) => [...ids.filter((x) => x !== id), id])}
+            onUndone={(id) => setAddedIds((ids) => ids.filter((x) => x !== id))}
           />
         ))
       )}
@@ -206,17 +251,26 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 function ResultSection({
   type,
   state,
+  results,
   limit,
   showHeading,
+  onSeeAll,
   onOpenClub,
+  addedIds,
   onAdded,
+  onUndone,
 }: {
   type: MediaType
   state?: SectionState
+  /** This section's results after the sort and genre filters */
+  results: SearchResult[]
   limit: number
   showHeading: boolean
+  onSeeAll: () => void
   onOpenClub: () => void
+  addedIds: string[]
   onAdded: (id: string) => void
+  onUndone: (id: string) => void
 }) {
   const meta = MEDIA_TYPES.find((m) => m.type === type)!
   return (
@@ -225,8 +279,14 @@ function ResultSection({
         <h2 className="mb-4 flex items-center gap-2.5 text-xl font-bold">
           <span className={`h-2.5 w-2.5 rounded-full ${TYPE_STYLE[type].dot}`} />
           <TypeIcon type={type} size={20} /> {meta.label}
-          {state?.status === 'done' && state.results.length > 0 && (
-            <span className="text-sm font-medium text-muted">{Math.min(limit, state.results.length)} found</span>
+          {state?.status === 'done' && results.length > 0 && <span className="text-sm font-medium text-muted">{results.length} found</span>}
+          {state?.status === 'done' && results.length > limit && (
+            <button
+              onClick={onSeeAll}
+              className="ml-auto rounded-full border border-line px-3 py-1 text-sm font-semibold text-soft transition hover:border-gold hover:text-cream"
+            >
+              See all {results.length} →
+            </button>
           )}
         </h2>
       )}
@@ -244,12 +304,19 @@ function ResultSection({
         </CardGrid>
       ) : state.status === 'error' ? (
         <p className="rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral">{state.error}</p>
-      ) : state.results.length === 0 ? (
-        <p className="text-muted">Nothing found here.</p>
+      ) : results.length === 0 ? (
+        <p className="text-muted">{state.results.length > 0 ? 'Nothing here matches this genre.' : 'Nothing found here.'}</p>
       ) : (
         <CardGrid>
-          {state.results.slice(0, limit).map((r) => (
-            <ResultCard key={r.id} result={r} onOpenClub={onOpenClub} onAdded={onAdded} />
+          {results.slice(0, limit).map((r) => (
+            <ResultCard
+              key={r.id}
+              result={r}
+              onOpenClub={onOpenClub}
+              justAdded={addedIds.includes(r.id)}
+              onAdded={onAdded}
+              onUndone={onUndone}
+            />
           ))}
         </CardGrid>
       )}
@@ -264,13 +331,18 @@ function CardGrid({ children }: { children: React.ReactNode }) {
 function ResultCard({
   result,
   onOpenClub,
+  justAdded,
   onAdded,
+  onUndone,
 }: {
   result: SearchResult
   onOpenClub: () => void
+  /** Added during this search: offer an Undo right under the button */
+  justAdded: boolean
   onAdded: (id: string) => void
+  onUndone: (id: string) => void
 }) {
-  const { data, add } = useClub()
+  const { data, add, remove } = useClub()
   const inClub = Boolean(data.titles[result.id])
   const posterRef = useRef<HTMLDivElement>(null)
 
@@ -308,6 +380,7 @@ function ResultCard({
       <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-2 font-bold leading-tight">{result.title}</h3>
         {result.subtitle && <p className="mt-0.5 line-clamp-1 text-xs text-muted">{result.subtitle}</p>}
+        {result.rating !== undefined && <p className="mt-1 text-xs font-semibold text-star">★ {result.rating}/10</p>}
         <div className="mt-2 flex flex-wrap gap-1">
           {result.genres.slice(0, 2).map((g) => (
             <span key={g} className="rounded-full bg-raised px-2 py-0.5 text-[10px] text-soft">
@@ -340,9 +413,19 @@ function ResultCard({
                 </span>
                 <span className="whitespace-nowrap text-[13px] font-extrabold sm:text-sm">Add to club</span>
               </span>
-              <span className="text-[10px] font-semibold opacity-75">Share it · rate · review</span>
               {/* A soft light sweeps across now and then, inviting a tap */}
               <span className="animate-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-white/35" />
+            </button>
+          )}
+          {inClub && justAdded && (
+            <button
+              onClick={() => {
+                remove(result.id)
+                onUndone(result.id)
+              }}
+              className="mt-1.5 w-full text-center text-xs font-semibold text-muted transition hover:text-cream"
+            >
+              ↩ Undo
             </button>
           )}
         </div>

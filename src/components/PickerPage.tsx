@@ -22,12 +22,14 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
 
   const present = data.members.filter((m) => !absent.includes(m.id))
   const suggestions = rankTitles(data, { memberIds: present.map((m) => m.id), type, genre: genre || undefined })
+  // Genres of the chosen type — plus the chosen genre, so picking a type never clears it.
   const genres = [
-    ...new Set(
-      Object.values(data.titles)
+    ...new Set([
+      ...Object.values(data.titles)
         .filter((t) => type === 'all' || t.type === type)
         .flatMap((t) => t.genres),
-    ),
+      ...(genre ? [genre] : []),
+    ]),
   ].sort()
 
   const toggle = (id: string) => setAbsent((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]))
@@ -75,16 +77,13 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
             </div>
           </Panel>
 
-          <Panel title="In the mood for…">
+          <Panel title="In the mood for…" note="Pick a type, a genre, or both — in any order.">
             <PillRow edge={5}>
               {[{ type: 'all' as const, label: 'Anything' }, ...MEDIA_TYPES].map((m) => (
                 <Pill
                   key={m.type}
                   active={type === m.type}
-                  onClick={() => {
-                    setType(m.type)
-                    setGenre('')
-                  }}
+                  onClick={() => setType(m.type)}
                 >
                   <span className="flex items-center gap-1.5">
                     {m.type !== 'all' && <TypeIcon type={m.type} size={14} />}

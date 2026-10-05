@@ -12,7 +12,7 @@ import { Avatar } from './Avatar'
 import { TitleSheet } from './ClubPage'
 import { ProfileForm } from './ProfileForm'
 import { useToast } from './Toast'
-import { EmptyState, Panel, Poster } from './ui'
+import { EmptyState, Panel, Poster, ScrollRow } from './ui'
 
 /**
  * 👥 Friends: everyone in the club, and each person's profile.
@@ -333,7 +333,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
         <>
           {recs.length > 0 && (
             <Panel title={`${firstName} recommends to you`} note={`Things ${firstName} rated 8+ that you haven’t watched yet`} className="mt-6">
-              <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+              <ScrollRow className="-mx-1 gap-3 px-1 pb-1">
                 {recs.map(({ title, entry }) => (
                   <button key={title.id} onClick={() => setOpenId(title.id)} className="group w-32 shrink-0 text-left">
                     <Poster src={title.image} type={title.type} className="aspect-[2/3] rounded-2xl shadow-lg transition duration-300 group-hover:-translate-y-1" />
@@ -342,7 +342,7 @@ function Profile({ member, onBack, onGoSearch }: { member: Member; onBack: () =>
                     {entry.review && <p className="mt-0.5 line-clamp-2 text-xs italic text-muted">“{entry.review}”</p>}
                   </button>
                 ))}
-              </div>
+              </ScrollRow>
             </Panel>
           )}
 

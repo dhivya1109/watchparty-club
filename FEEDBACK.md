@@ -62,3 +62,15 @@
 | # | What happened | Fix | Status |
 |---|---|---|---|
 | 1 | Icons, buttons and overall look feel like a typical AI template | Emojis-as-icons → one line-icon set (Lucide); flat solid buttons (no gradients/glow); Barlow Condensed + Barlow fonts (cinema signage) instead of Bricolage + DM Sans; solid headline colour; calmer labels; tighter corners; quiet fade instead of pop-ins; no glowing backgrounds | ✅ |
+
+## Round 8 — 2026-10-05
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | Some movies never show up | Movies: up to 60 results (was 12); anime/books up to 30; "See all" per type | ✅ |
+| 2 | Undo is far away in the bottom card; "Share it · rate · review" under the button | Undo sits right under "On the shelf" for titles you just added; the extra line is gone | ✅ |
+| 3 | Swipe rows need a trackpad | ‹ › arrow buttons on bigger screens | ✅ |
+| 4 | +/− for episodes and pages is tedious | Draggable progress bar (+/− kept for one step); 100% = Completed | ✅ |
+| 5 | Review only offered after completing | Quiet "Add a review (optional)" link for every status | ✅ |
+| 6 | Picking a type clears the chosen genre on the wheel page | Type and genre are independent, any order | ✅ |
+| 8 | No filters on search; Per person table order | Sort (Best match / Top rated / Newest) + genre filter; Per person ranked by most completed | ✅ |

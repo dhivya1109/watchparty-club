@@ -1,6 +1,6 @@
-import type { LucideIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react'
 import { TypeIcon } from './icons'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { MEDIA_TYPES, TYPE_STYLE, type MediaType } from '../types'
 
@@ -78,6 +78,51 @@ export function Pill({
     >
       {children}
     </button>
+  )
+}
+
+/**
+ * A sideways row of posters. Phones swipe; on bigger screens (mouse, trackpad, monitor)
+ * round ‹ › buttons appear at the edges whenever there's more to see in that direction.
+ */
+export function ScrollRow({ children, className = '' }: { children: ReactNode; className?: string }) {
+  const row = useRef<HTMLDivElement>(null)
+  const [more, setMore] = useState({ left: false, right: false })
+
+  const check = () => {
+    const el = row.current
+    if (!el) return
+    const left = el.scrollLeft > 4
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+    setMore((m) => (m.left === left && m.right === right ? m : { left, right }))
+  }
+  // Re-check after every render (posters added or removed) and when the window resizes
+  useEffect(check)
+  useEffect(() => {
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  const scroll = (direction: 1 | -1) => row.current?.scrollBy({ left: direction * row.current.clientWidth * 0.8, behavior: 'smooth' })
+  const arrow =
+    'absolute top-[38%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/95 text-cream shadow-lg backdrop-blur transition hover:border-gold sm:flex'
+
+  return (
+    <div className="relative">
+      <div ref={row} onScroll={check} className={`no-scrollbar flex snap-x overflow-x-auto ${className}`}>
+        {children}
+      </div>
+      {more.left && (
+        <button onClick={() => scroll(-1)} aria-label="Scroll left" className={`${arrow} -left-1`}>
+          <ChevronLeft size={20} aria-hidden="true" />
+        </button>
+      )}
+      {more.right && (
+        <button onClick={() => scroll(1)} aria-label="Scroll right" className={`${arrow} -right-1`}>
+          <ChevronRight size={20} aria-hidden="true" />
+        </button>
+      )}
+    </div>
   )
 }
 

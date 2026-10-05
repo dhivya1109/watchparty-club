@@ -9,6 +9,7 @@ import {
   mostDivisive,
   mostLoved,
   personStats,
+  rankByCompleted,
   typeCounts,
   type Highlight,
 } from '../lib/stats'
@@ -35,7 +36,8 @@ export function StatsPage({ onGoSearch }: { onGoSearch: () => void }) {
 
   const genres = genreStats(data)
   const types = typeCounts(data)
-  const people = data.members.map((m) => personStats(data, m))
+  // Ranked: whoever completed the most is at the top
+  const people = rankByCompleted(data.members.map((m) => personStats(data, m)))
   const loved = mostLoved(data)
   const divisive = mostDivisive(data)
 

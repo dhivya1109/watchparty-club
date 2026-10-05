@@ -6,7 +6,7 @@ import { Poster } from './ui'
  * so you can see what's in your club — until you close it or open the club shelf.
  */
 export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenClub: () => void; onClear: () => void }) {
-  const { data, remove } = useClub()
+  const { data } = useClub()
   // Only titles that are still in the club (Undo removes them)
   const added = ids.map((id) => data.titles[id]).filter(Boolean)
   if (added.length === 0) return null
@@ -43,9 +43,6 @@ export function AddedTray({ ids, onOpenClub, onClear }: { ids: string[]; onOpenC
             {latest.title}
           </p>
           <div className="mt-1.5 flex items-center gap-3">
-            <button onClick={() => remove(latest.id)} className="text-xs font-semibold text-muted hover:text-cream">
-              Undo last
-            </button>
             <button onClick={onClear} className="text-xs font-semibold text-muted hover:text-cream">
               Close
             </button>

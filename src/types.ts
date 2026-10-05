@@ -14,6 +14,8 @@ export interface SearchResult {
   genres: string[]
   /** Episodes (series/anime), minutes (movie) or pages (book) */
   length?: number
+  /** The source's public rating, out of 10 (TMDB, TVmaze, AniList, Open Library) */
+  rating?: number
 }
 
 export const MEDIA_TYPES: { type: MediaType; emoji: string; label: string }[] = [

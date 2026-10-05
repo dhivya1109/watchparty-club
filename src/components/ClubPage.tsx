@@ -18,7 +18,7 @@ import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
 import { Celebration, CELEBRATION_MS, type CelebrationKind } from './Celebration'
-import { EmptyState, Pill, PillRow, Portal, Poster, Select, TypeBadge } from './ui'
+import { EmptyState, Pill, PillRow, Portal, Poster, ScrollRow, Select, TypeBadge } from './ui'
 
 type Sort = 'recent' | 'title' | 'rating'
 export type ShelfView = 'club' | 'mine'
@@ -161,15 +161,15 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
                     {g.member?.id === me.id ? 'Your picks' : g.member ? `${g.member.name}’s picks` : 'Picks from past members'}
                   </span>
                   <span className="shrink-0 text-sm font-medium text-muted">· {g.items.length}</span>
-                  {g.items.length > 3 && <span className="ml-auto shrink-0 text-xs font-medium text-muted">swipe →</span>}
+                  {g.items.length > 3 && <span className="ml-auto shrink-0 text-xs font-medium text-muted sm:hidden">swipe →</span>}
                 </h3>
-                <div className="no-scrollbar -mx-4 mt-1 flex snap-x gap-3 overflow-x-auto px-4 pb-2 pt-2">
+                <ScrollRow className="-mx-4 mt-1 gap-3 px-4 pb-2 pt-2">
                   {g.items.map(({ title }, i) => (
                     <div key={title.id} className="w-[7.25rem] shrink-0 snap-start sm:w-36">
                       <PosterTile title={title} onOpen={() => setOpenId(title.id)} shine={g.member?.id === me.id ? i : undefined} />
                     </div>
                   ))}
-                </div>
+                </ScrollRow>
               </section>
             ))}
           </div>
@@ -359,7 +359,6 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
   const progress = entry?.progress ?? 0
   const hasProgress = title.type !== 'movie'
   const unit = LENGTH_UNIT[title.type]
-  const percent = title.length ? Math.round((progress / title.length) * 100) : 0
 
   const celebrate = (kind: CelebrationKind) => {
     const id = ++reactionCount.current
@@ -487,26 +486,12 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
         </div>
 
         {hasProgress && (
-          <div>
-            <div className="flex items-center gap-2 text-sm">
-              <StepButton label="−" onClick={() => act({ progress: progress - 1 })} />
-              <span className="font-display font-bold tabular-nums">
-                {progress}
-                {title.length ? <span className="text-muted"> / {title.length}</span> : ''}
-              </span>
-              <span className="text-xs text-muted">{unit}</span>
-              <StepButton label="+" onClick={() => act({ progress: progress + 1 })} />
-              {title.length ? <span className="ml-auto text-xs font-semibold text-accent">{percent}%</span> : null}
-            </div>
-            {title.length ? (
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-night/60">
-                <div
-                  className="h-full rounded-full bg-gold transition-all duration-500"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-            ) : null}
-          </div>
+          <ProgressControl
+            progress={progress}
+            length={title.length}
+            unit={unit}
+            onChange={(value) => act({ progress: value })}
+          />
         )}
 
         <RatingPicker value={entry?.rating ?? null} onChange={(rating) => act({ rating })} />
@@ -540,8 +525,7 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
         )}
       </div>
 
-      {/* ---------- Reviews (only shown when there's something to show) ---------- */}
-      {(editing || entry?.review || (onMyList && status === 'completed') || clubReviews.length > 0) && (
+      {/* ---------- Reviews: always available, never required ---------- */}
       <div className="flex flex-col gap-3 border-t border-dashed border-line px-4 pb-4 pt-3">
         {editing ? (
           <ReviewEditor
@@ -564,8 +548,8 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
             </div>
             <ReviewQuote text={entry.review} rating={entry.rating} member={me} />
           </div>
-        ) : onMyList && status === 'completed' ? (
-          // Finished it? You *can* review it — a quiet link, never a pop-up.
+        ) : !editing ? (
+          // Any status, any time — a quiet link, never a pop-up or a requirement.
           <button onClick={openReview} className="w-fit text-sm font-medium text-muted transition hover:text-accent">
             <span className="flex items-center gap-1.5">
               <PenLine size={14} aria-hidden="true" /> Add a review <span className="text-xs">(optional)</span>
@@ -584,7 +568,6 @@ function ClubCard({ title, entry, onClose, top }: { title: ClubTitle; entry?: En
           </div>
         )}
       </div>
-      )}
 
       {/* Remove: from my list only, or (whoever added it / the host) from the whole club */}
       {(onMyList || canRemoveFromClub) && (
@@ -682,6 +665,65 @@ function ReviewQuote({ text, rating, member }: { text: string; rating: number | 
         <blockquote className="mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-soft">“{text}”</blockquote>
       </div>
     </figure>
+  )
+}
+
+/**
+ * How far you are: drag the bar (or use − / + for one step). Dragging to the end marks it
+ * Completed — the same rule as before (see applyChange in lib/club.ts).
+ * While dragging only the numbers move; it saves once, when you let go.
+ */
+function ProgressControl({
+  progress,
+  length,
+  unit,
+  onChange,
+}: {
+  progress: number
+  length?: number
+  unit: string
+  onChange: (value: number) => void
+}) {
+  const [dragging, setDragging] = useState<number | null>(null)
+  const shown = dragging ?? progress
+  const percent = length ? Math.round((shown / length) * 100) : 0
+  const commit = () => {
+    if (dragging !== null && dragging !== progress) onChange(dragging)
+    setDragging(null)
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 text-sm">
+        <span className="font-display font-bold tabular-nums">
+          {shown}
+          {length ? <span className="text-muted"> / {length}</span> : ''}
+        </span>
+        <span className="text-xs text-muted">{unit}</span>
+        {length ? <span className="ml-auto text-xs font-semibold text-accent">{percent}%</span> : null}
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <StepButton label="−" onClick={() => onChange(progress - 1)} />
+        {length ? (
+          <input
+            type="range"
+            min={0}
+            max={length}
+            step={1}
+            value={shown}
+            aria-label={`Progress: ${shown} of ${length} ${unit}`}
+            onChange={(e) => setDragging(Number(e.target.value))}
+            onPointerUp={commit}
+            onKeyUp={commit}
+            onBlur={commit}
+            className="h-2 min-w-0 flex-1 cursor-pointer accent-gold"
+          />
+        ) : (
+          <span className="flex-1 text-xs text-muted">Total unknown — use − / +</span>
+        )}
+        <StepButton label="+" onClick={() => onChange(progress + 1)} />
+      </div>
+    </div>
   )
 }
 

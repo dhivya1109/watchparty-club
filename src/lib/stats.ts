@@ -41,6 +41,16 @@ export function personStats(data: ClubData, member: Member): PersonStats {
   return { member, completed, watchMinutes, pagesRead, ratingsGiven: ratings.length, averageGiven: average(ratings) }
 }
 
+/** The "Per person" table order: most completed first; ties go to whoever spent more time, then by name. */
+export function rankByCompleted(people: PersonStats[]): PersonStats[] {
+  return [...people].sort(
+    (a, b) =>
+      b.completed - a.completed ||
+      b.watchMinutes + b.pagesRead - (a.watchMinutes + a.pagesRead) ||
+      a.member.name.localeCompare(b.member.name),
+  )
+}
+
 export interface ClubTotals {
   titles: number
   completed: number
