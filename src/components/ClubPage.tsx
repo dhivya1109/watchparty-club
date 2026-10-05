@@ -14,6 +14,7 @@ import {
   type Member,
   type Status,
 } from '../lib/club'
+import { genreOptions, matchesGenre } from '../lib/genres'
 import { useClub } from '../store/ClubContext'
 import { LENGTH_UNIT, MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
@@ -35,6 +36,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all')
   const [sort, setSort] = useState<Sort>('recent')
+  const [genreFilter, setGenreFilter] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
 
   const all = Object.values(data.titles).map((title) => ({ title, entry: getEntry(data, me.id, title.id) }))
@@ -53,9 +55,16 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
     )
   }
 
+  // Genres that are actually in this view (club shelf or my list, chosen type), with how many titles each
+  const inView = (view === 'club' ? all : mine).filter((i) => typeFilter === 'all' || i.title.type === typeFilter)
+  const clubGenres = genreOptions(typeFilter === 'all' ? MEDIA_TYPES.map((m) => m.type) : [typeFilter])
+    .map((name) => ({ name, count: inView.filter((i) => matchesGenre(i.title.genres ?? [], name)).length }))
+    .filter((g) => g.count > 0 || g.name === genreFilter)
+
   const sorted = (list: typeof all) =>
     list
       .filter((i) => typeFilter === 'all' || i.title.type === typeFilter)
+      .filter((i) => !genreFilter || matchesGenre(i.title.genres ?? [], genreFilter))
       .sort((a, b) => {
         if (sort === 'title') return a.title.title.localeCompare(b.title.title)
         if (sort === 'rating') return (b.entry?.rating ?? 0) - (a.entry?.rating ?? 0)
@@ -140,17 +149,25 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
           </Pill>
         ))}
       </PillRow>
-      <div className="mt-3 grid grid-cols-1 sm:max-w-xs">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:max-w-md">
         <Select label="Sort" value={sort} onChange={(v) => setSort(v as Sort)}>
           <option value="recent">↓ Newest first</option>
           <option value="title">A–Z</option>
           <option value="rating">★ My top rated</option>
         </Select>
+        <Select label="Genre" value={genreFilter} onChange={setGenreFilter}>
+          <option value="">All genres</option>
+          {clubGenres.map((g) => (
+            <option key={g.name} value={g.name}>
+              {g.name} ({g.count})
+            </option>
+          ))}
+        </Select>
       </div>
 
       {view === 'club' ? (
         groups.length === 0 ? (
-          <p className="mt-14 text-center text-muted">Nothing matches this type.</p>
+          <p className="mt-14 text-center text-muted">Nothing matches these filters.</p>
         ) : (
           <div className="mt-6 flex flex-col gap-7">
             {groups.map((g) => (
