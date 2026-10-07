@@ -6,8 +6,16 @@ import { ClubsSheet } from './Clubs'
 import { Portal } from './ui'
 
 /** Header avatar button: you, your role in this club, and shortcuts to your profile and friends. */
-export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (id: string) => void; onOpenFriends: () => void }) {
-  const { me, activeClub, account, signOut, clubs } = useClub()
+export function MembersMenu({
+  onOpenProfile,
+  onOpenFriends,
+  onOpenAdmin,
+}: {
+  onOpenProfile: (id: string) => void
+  onOpenFriends: () => void
+  onOpenAdmin: () => void
+}) {
+  const { me, activeClub, account, signOut, clubs, isAdmin } = useClub()
   const [open, setOpen] = useState(false)
   const [dialog, setDialog] = useState(false)
   const [clubsOpen, setClubsOpen] = useState(false)
@@ -46,6 +54,8 @@ export function MembersMenu({ onOpenProfile, onOpenFriends }: { onOpenProfile: (
             <div className="mt-3 grid grid-cols-2 gap-2">
               <MenuButton onClick={() => { close(); onOpenProfile(me.id) }}>My profile</MenuButton>
               <MenuButton onClick={() => { close(); onOpenFriends() }}>Friends</MenuButton>
+              {/* Only admins (see supabase/003_admin.sql) */}
+              {isAdmin && <MenuButton onClick={() => { close(); onOpenAdmin() }}>Admin</MenuButton>}
             </div>
             <button
               onClick={() => {

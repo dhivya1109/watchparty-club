@@ -74,3 +74,9 @@
 | 5 | Review only offered after completing | Quiet "Add a review (optional)" link for every status | ✅ |
 | 6 | Picking a type clears the chosen genre on the wheel page | Type and genre are independent, any order | ✅ |
 | 8 | No filters on search; Per person table order | Sort (Best match / Top rated / Newest) + genre filter; Per person ranked by most completed | ✅ |
+
+## Round 9 — 2026-10-07
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | Need an owner-only page to control clubs and clear the database | Admin page (menu → Admin): all clubs (rename, members, delete), all people (delete), clear content / clear everything. Enforced by the database (supabase/003_admin.sql) | ✅ (run 003_admin.sql) |

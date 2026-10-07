@@ -16,7 +16,8 @@ A shared shelf for everything your friends love — movies, TV series, anime and
    add your own email sender (e.g. Brevo's free SMTP — Supabase's built-in sender only emails your own team);
    and in Authentication → Emails → Templates make **Magic Link**, **Confirm signup** and **Change Email Address**
    show the code with `{{ .Token }}`. Keep anonymous sign-ins on only if you have older guest accounts. Then and run [`supabase/schema.sql`](supabase/schema.sql), then
-   [`supabase/002_invite_preview.sql`](supabase/002_invite_preview.sql), in its SQL Editor.
+   [`supabase/002_invite_preview.sql`](supabase/002_invite_preview.sql), in its SQL Editor. For the Admin page, put your
+   email at the bottom of [`supabase/003_admin.sql`](supabase/003_admin.sql) and run it too.
 3. Copy `.env.example` to `.env.local` and fill in your [TMDB API key](https://www.themoviedb.org/settings/api)
    and your Supabase project URL + publishable key.
 4. Then:

@@ -1,6 +1,7 @@
 import { ChartColumn, ChevronLeft, ChevronRight, FerrisWheel, Search, Ticket, Users, type LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthScreen } from './components/Account'
+import { AdminPage } from './components/AdminPage'
 import { ClubPage } from './components/ClubPage'
 import { ClubSwitcher, NoClubScreen } from './components/Clubs'
 import { Poppy } from './components/home/Characters'
@@ -15,7 +16,7 @@ import { CLUB_CATCH_EVENT } from './effects/flyToClub'
 import { FOCUS_SEARCH_EVENT } from './lib/events'
 import { useClub } from './store/ClubContext'
 
-export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats'
+export type Page = 'search' | 'club' | 'tonight' | 'friends' | 'stats' | 'admin'
 
 /** One stop in your trail through the app: which page, whose profile, and how far down you'd scrolled. */
 interface Stop {
@@ -24,10 +25,10 @@ interface Stop {
   scrollY: number
 }
 
-const PAGE_NAMES: Record<Page, string> = { search: 'Discover', club: 'Club', tonight: 'Tonight', friends: 'Friends', stats: 'Stats' }
+const PAGE_NAMES: Record<Page, string> = { search: 'Discover', club: 'Club', tonight: 'Tonight', friends: 'Friends', stats: 'Stats', admin: 'Admin' }
 
 function App() {
-  const { data, status, error, joinedCount } = useClub()
+  const { data, status, error, joinedCount, isAdmin } = useClub()
   /**
    * Where you've been, like a browser's history: ← Back and Next → move along it.
    * Going somewhere new from the middle drops the "next" stops, just like a browser.
@@ -133,7 +134,7 @@ function App() {
 
           <div className="flex shrink-0 items-center gap-2 lg:order-3">
             <ThemeMenu />
-            <MembersMenu onOpenProfile={(id) => go('friends', id)} onOpenFriends={() => go('friends')} />
+            <MembersMenu onOpenProfile={(id) => go('friends', id)} onOpenFriends={() => go('friends')} onOpenAdmin={() => go('admin')} />
           </div>
 
           {/* Phones & tablets: 5 equal buttons, icon above label. Wide screens: one pill-shaped bar. */}
@@ -189,6 +190,7 @@ function App() {
             <FriendsPage profileId={profileId} onOpenProfile={(id) => go('friends', id)} onGoSearch={() => go('search')} />
           )}
           {page === 'stats' && <StatsPage onGoSearch={() => go('search')} />}
+          {page === 'admin' && isAdmin && <AdminPage />}
         </main>
       )}
 

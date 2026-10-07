@@ -12,6 +12,7 @@ import {
   type MemberChange,
 } from '../lib/club'
 import * as cloud from '../lib/cloud'
+import { isAdmin as checkAdmin } from '../lib/admin'
 import type { ClubSummary } from '../lib/cloud'
 import type { SearchResult } from '../types'
 import { useToast } from '../components/Toast'
@@ -61,6 +62,10 @@ interface ClubStore {
 
   /** Is this a guest account (this browser only), or saved with an email? */
   account: cloud.Account
+  /** Can open the Admin page (listed in the "admins" table — see supabase/003_admin.sql) */
+  isAdmin: boolean
+  /** Reload my club list (after an admin renames or deletes clubs) */
+  refreshClubs: () => Promise<void>
   /** Log in (or create an account): step 1 emails a code, step 2 checks it */
   sendLoginCode: (email: string) => Promise<void>
   verifyLoginCode: (email: string, code: string) => Promise<void>
@@ -102,6 +107,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [invitePreview, setInvitePreview] = useState<cloud.InvitePreview | null>(null)
   const [joinedCount, setJoinedCount] = useState(0)
   const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: false })
+  const [isAdmin, setIsAdmin] = useState(false)
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   /** Adds still being saved, by title id — so an instant Undo waits for the add to land first. */
   const savingAdds = useRef(new Map<string, Promise<void>>())
@@ -150,6 +156,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     async (uid: string) => {
       setUserId(uid)
       setAccount(await cloud.getAccount())
+      void checkAdmin().then(setIsAdmin)
       const p = await cloud.fetchProfile(uid)
       setProfile(p)
       if (!p) return setStatus('setup')
@@ -257,6 +264,10 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       joinedCount,
       localTitleCount,
       account,
+      isAdmin,
+      refreshClubs: async () => {
+        if (userId) await loadClubs(userId, activeId ?? undefined)
+      },
 
       sendLoginCode: (email) => cloud.sendLoginCode(email),
       verifyLoginCode: async (email, code) => {
@@ -277,6 +288,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         setClubs([])
         setActiveId(null)
         setAccount({ email: null, isGuest: false })
+        setIsAdmin(false)
         setStatus('auth')
       },
 
@@ -386,7 +398,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         )
       },
     }),
-    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
+    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, isAdmin, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
   )
 
   return <ClubContext.Provider value={store}>{children}</ClubContext.Provider>
