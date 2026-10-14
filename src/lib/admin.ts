@@ -66,5 +66,7 @@ export const adminRenameClub = (clubId: string, name: string) => call<void>('adm
 export const adminDeleteClub = (clubId: string) => call<void>('admin_delete_club', { target: clubId })
 export const adminRemoveMember = (clubId: string, userId: string) =>
   call<void>('admin_remove_member', { target_club: clubId, target_user: userId })
+export const adminSetRole = (clubId: string, userId: string, role: 'host' | 'member') =>
+  call<void>('admin_set_role', { target_club: clubId, target_user: userId, new_role: role })
 export const adminDeleteUser = (userId: string) => call<void>('admin_delete_user', { target: userId })
 export const adminReset = (deleteAccounts: boolean) => call<void>('admin_reset', { delete_accounts: deleteAccounts })

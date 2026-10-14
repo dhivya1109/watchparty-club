@@ -113,6 +113,15 @@ begin
   delete from club_members where club_id = target_club and user_id = target_user;
 end $$;
 
+-- Make someone a host of a club (or a member again) — a club can have more than one host
+create or replace function public.admin_set_role(target_club uuid, target_user uuid, new_role text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  perform require_admin();
+  if new_role not in ('host', 'member') then raise exception 'Role must be host or member'; end if;
+  update club_members set role = new_role where club_id = target_club and user_id = target_user;
+end $$;
+
 -- Deletes an account and everything that's theirs — including clubs they created
 create or replace function public.admin_delete_user(target uuid) returns void
 language plpgsql security definer set search_path = public, auth as $$
@@ -138,12 +147,14 @@ end $$;
 revoke all on function
   public.require_admin(), public.admin_summary(), public.admin_clubs(), public.admin_club_members(uuid),
   public.admin_users(), public.admin_rename_club(uuid, text), public.admin_delete_club(uuid),
-  public.admin_remove_member(uuid, uuid), public.admin_delete_user(uuid), public.admin_reset(boolean)
+  public.admin_remove_member(uuid, uuid), public.admin_set_role(uuid, uuid, text), public.admin_delete_user(uuid),
+  public.admin_reset(boolean)
 from public, anon;
 grant execute on function
   public.is_admin(), public.admin_summary(), public.admin_clubs(), public.admin_club_members(uuid),
   public.admin_users(), public.admin_rename_club(uuid, text), public.admin_delete_club(uuid),
-  public.admin_remove_member(uuid, uuid), public.admin_delete_user(uuid), public.admin_reset(boolean)
+  public.admin_remove_member(uuid, uuid), public.admin_set_role(uuid, uuid, text), public.admin_delete_user(uuid),
+  public.admin_reset(boolean)
 to authenticated;
 
 -- ---------- Make yourself the admin -----------------------------------

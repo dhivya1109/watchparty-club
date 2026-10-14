@@ -7,6 +7,7 @@ import {
   adminDeleteUser,
   adminRemoveMember,
   adminRenameClub,
+  adminSetRole,
   adminReset,
   adminSummary,
   adminUsers,
@@ -138,6 +139,10 @@ export function AdminPage() {
                 onRemoveMember={(m) => {
                   if (confirm(`Remove ${m.name} from ${c.name}?`)) void run(() => adminRemoveMember(c.id, m.user_id), `${m.name} removed from ${c.name}`)
                 }}
+                onToggleHost={(m) => {
+                  const role = m.role === 'host' ? 'member' : 'host'
+                  void run(() => adminSetRole(c.id, m.user_id, role), role === 'host' ? `${m.name} is now a host of ${c.name}` : `${m.name} is now a member of ${c.name}`)
+                }}
               />
             ))}
           </ul>
@@ -218,12 +223,14 @@ function ClubRow({
   onRename,
   onDelete,
   onRemoveMember,
+  onToggleHost,
 }: {
   club: AdminClub
   busy: boolean
   onRename: () => void
   onDelete: () => void
   onRemoveMember: (member: AdminMember) => void
+  onToggleHost: (member: AdminMember) => void
 }) {
   const [open, setOpen] = useState(false)
   const [members, setMembers] = useState<AdminMember[] | null>(null)
@@ -264,7 +271,15 @@ function ClubRow({
               <li key={m.user_id} className="flex items-center gap-2 text-sm">
                 <Avatar member={{ id: m.user_id, name: m.name, color: m.color, emoji: m.emoji ?? undefined, role: m.role }} size={24} />
                 <span className="min-w-0 flex-1 truncate">{m.name}</span>
-                {m.role === 'host' && <Crown size={13} aria-label="Host" className="text-accent" />}
+                <button
+                  disabled={busy}
+                  onClick={() => onToggleHost(m)}
+                  aria-label={m.role === 'host' ? `Make ${m.name} a member` : `Make ${m.name} a host`}
+                  title={m.role === 'host' ? 'Host — tap to make a member' : 'Member — tap to make a host'}
+                  className={`rounded-full p-1.5 transition disabled:opacity-40 ${m.role === 'host' ? 'text-accent hover:bg-gold/10' : 'text-muted hover:bg-raised hover:text-cream'}`}
+                >
+                  <Crown size={15} aria-hidden="true" />
+                </button>
                 <button
                   disabled={busy}
                   onClick={() => onRemoveMember(m)}
