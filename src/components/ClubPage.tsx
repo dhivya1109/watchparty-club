@@ -222,7 +222,7 @@ export function ClubPage({ onGoSearch, initialView = 'club' }: { onGoSearch: () 
  * `shine` (your own picks): a soft light sweeps across now and then (staggered by position),
  * and the card tilts towards your finger or mouse, like a premium ticket.
  */
-function PosterTile({
+export function PosterTile({
   title,
   onOpen,
   showPicker = false,

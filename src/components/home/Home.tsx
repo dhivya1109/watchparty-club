@@ -3,22 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 
 export type HomeTarget = 'club' | 'tonight' | 'stats'
 
-/** The top of the home screen: a short, personal greeting — then straight to the search bar. */
-export function HomeGreeting({ name }: { name: string }) {
-  const [hour] = useState(() => new Date().getHours())
-  const part = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const first = name.trim().split(/\s+/)[0]
-  return (
-    <section className="pt-8">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-        {part}
-        {first ? `, ${first}` : ''}
-      </h1>
-      <p className="mt-1 text-soft">What are we watching tonight?</p>
-    </section>
-  )
-}
-
 const WORLD_CINEMA = [
   'Hollywood', 'Bollywood', 'Tollywood', 'Kollywood', 'Mollywood', 'K-Drama', 'Anime', 'Nollywood',
   'French New Wave', 'Telenovelas', 'British TV', 'C-Drama', 'Turkish Dizi', 'Italian Neorealism', 'Bestsellers', 'Manga',

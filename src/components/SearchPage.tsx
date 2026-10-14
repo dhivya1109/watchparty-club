@@ -5,7 +5,8 @@ import { SEARCHERS } from '../api/search'
 import { flyToClub } from '../effects/flyToClub'
 import { AddedTray } from './AddToClub'
 import { Suggestions } from './Suggestions'
-import { HomeGreeting, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
+import { HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
+import { ClubLatest, ContinueWatching, HomeHeader } from './home/HomeClub'
 import { useDebounce } from '../hooks/useDebounce'
 import { FOCUS_SEARCH_EVENT } from '../lib/events'
 import { genreOptions, matchesGenre } from '../lib/genres'
@@ -39,7 +40,7 @@ const IDEAS: { type: MediaType; query: string }[] = [
 ]
 
 export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => void }) {
-  const { me } = useClub()
+  const { data } = useClub()
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -137,7 +138,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-6">
-      {!searchMode && <HomeGreeting name={me.name} />}
+      {!searchMode && <HomeHeader />}
 
       <div ref={searchBarRef} className={`flex items-center gap-2 ${searchMode ? 'pt-5' : 'pt-8'}`}>
         {searchMode && (
@@ -231,8 +232,13 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
           />
         </>
       ) : !searchMode ? (
-        <div className="mt-10">
-          <p className="text-center text-sm text-muted">Not sure where to start? Try one:</p>
+        <div className="mt-2">
+          <ContinueWatching />
+          <ClubLatest />
+          {/* Ideas help while the club is still nearly empty */}
+          {Object.keys(data.titles).length < 4 && (
+          <>
+          <p className="mt-10 text-center text-sm text-muted">Not sure where to start? Try one:</p>
           <div className="mx-auto mt-4 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
             {IDEAS.map((idea) => {
               const meta = MEDIA_TYPES.find((m) => m.type === idea.type)!
@@ -252,6 +258,8 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
               )
             })}
           </div>
+          </>
+          )}
 
           <WorldCinemaStrip />
           <NowShowing onNavigate={onNavigate} onSearch={() => inputRef.current?.focus()} />
