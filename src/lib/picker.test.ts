@@ -79,3 +79,15 @@ describe('the wheel', () => {
     expect(sliceAtAngle([0.5, 0.25, 0.25], 359)).toBe(2)
   })
 })
+
+describe('score breakdown', () => {
+  it('splits every score into want + taste + started points that add up', () => {
+    const club = updateEntry(makeClub(), 'ben', 'New Fantasy', { progress: 1 }, NOW)
+    for (const s of rankTitles(club, { memberIds: ['asha', 'ben'] })) {
+      expect(s.points.want + s.points.taste + s.points.started).toBeCloseTo(s.score, 1)
+    }
+    const fantasy = rankTitles(club, { memberIds: ['asha', 'ben'] }).find((s) => s.title.id === 'New Fantasy')!
+    expect(fantasy.points.started).toBeGreaterThan(0) // Ben started it
+    expect(fantasy.points.taste).toBeGreaterThan(0) // Asha loves Fantasy
+  })
+})

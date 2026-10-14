@@ -80,3 +80,11 @@
 | # | What happened | Fix | Status |
 |---|---|---|---|
 | 1 | Need an owner-only page to control clubs and clear the database | Admin page (menu → Admin): all clubs (rename, members, delete), all people (delete), clear content / clear everything. Enforced by the database (supabase/003_admin.sql) | ✅ (run 003_admin.sql) |
+
+## Round 10 — 2026-10-14
+
+| # | What happened | Fix | Status |
+|---|---|---|---|
+| 1 | "Who's here?" is unclear | "Who's watching tonight?" with a one-line explanation | ✅ |
+| 2 | No idea where the wheel's pick comes from | "How the wheel picks" rules + a points breakdown (Wants · Taste · Started) on Top picks and the winner | ✅ |
+| 3 | The spin result should be seen by the whole club | Spins are saved and shown live to everyone ("Tonight's pick" + a pop-up for friends) | ✅ (run 004_tonight_pick.sql) |

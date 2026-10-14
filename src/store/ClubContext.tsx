@@ -66,6 +66,10 @@ interface ClubStore {
   isAdmin: boolean
   /** Reload my club list (after an admin renames or deletes clubs) */
   refreshClubs: () => Promise<void>
+  /** The club's latest wheel result — everyone in the club sees it */
+  lastSpin: cloud.Spin | null
+  /** Share a wheel result with the club */
+  recordSpin: (titleId: string, titleName: string) => void
   /** Log in (or create an account): step 1 emails a code, step 2 checks it */
   sendLoginCode: (email: string) => Promise<void>
   verifyLoginCode: (email: string, code: string) => Promise<void>
@@ -108,6 +112,9 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [joinedCount, setJoinedCount] = useState(0)
   const [account, setAccount] = useState<cloud.Account>({ email: null, isGuest: false })
   const [isAdmin, setIsAdmin] = useState(false)
+  const [lastSpin, setLastSpin] = useState<cloud.Spin | null>(null)
+  /** The newest spin we've already shown — so only NEW spins by friends pop up */
+  const seenSpin = useRef<number | null>(null)
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   /** Adds still being saved, by title id — so an instant Undo waits for the add to land first. */
   const savingAdds = useRef(new Map<string, Promise<void>>())
@@ -193,11 +200,20 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const reloadClub = useCallback(async () => {
     if (!activeId) return
     try {
-      setData(await cloud.fetchClub(activeId))
+      const [club, spin] = await Promise.all([cloud.fetchClub(activeId), cloud.fetchLatestSpin(activeId)])
+      setData(club)
+      setLastSpin(spin)
+      // A friend just spun the wheel? Tell everyone, whatever page they're on.
+      if (spin && seenSpin.current !== null && spin.id > seenSpin.current && spin.spunBy !== userId) {
+        const who = club.members.find((m) => m.id === spin.spunBy)?.name ?? 'Someone'
+        toast({ title: `${who} spun the wheel`, text: `Tonight’s pick: ${spin.titleName}` })
+      }
+      if (spin) seenSpin.current = Math.max(seenSpin.current ?? 0, spin.id)
+      else seenSpin.current ??= 0
     } catch (err) {
       fail(err)
     }
-  }, [activeId, fail])
+  }, [activeId, fail, toast, userId])
 
   useEffect(() => {
     if (!activeId) {
@@ -205,6 +221,9 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       return
     }
     write(ACTIVE_KEY, activeId)
+    // New club: its latest spin is old news, not something to announce
+    seenSpin.current = null
+    setLastSpin(null)
     void reloadClub()
     // Several changes often arrive together — wait a moment and reload once.
     const stop = cloud.watchClub(activeId, () => {
@@ -265,6 +284,14 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       localTitleCount,
       account,
       isAdmin,
+      lastSpin,
+      recordSpin: (titleId, titleName) => {
+        if (!activeId) return
+        setLastSpin({ id: Number.MAX_SAFE_INTEGER, titleId, titleName, spunBy: userId, spunAt: new Date().toISOString() })
+        cloud.saveSpin(activeId, titleId, titleName).catch(() =>
+          toast({ title: 'Couldn’t share the result', text: 'Your friends won’t see this spin. (Has 004_tonight_pick.sql been run?)' }),
+        )
+      },
       refreshClubs: async () => {
         if (userId) await loadClubs(userId, activeId ?? undefined)
       },
@@ -398,7 +425,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         )
       },
     }),
-    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, isAdmin, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
+    [status, error, data, me, amHost, clubs, activeClub, pendingInvite, invitePreview, joinedCount, localTitleCount, account, isAdmin, lastSpin, userId, profile, activeId, loadClubs, loadAccount, enterClubs, reloadClub, optimistic, toast],
   )
 
   return <ClubContext.Provider value={store}>{children}</ClubContext.Provider>

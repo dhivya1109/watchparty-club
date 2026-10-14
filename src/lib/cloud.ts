@@ -359,6 +359,33 @@ export async function importLocalShelf(clubId: string, userId: string, local: Cl
 // ---------- Live updates ----------
 
 /** Calls `onChange` whenever anything in this club changes — on anyone's phone. Returns a stop function. */
+// ---------- Tonight's pick: the wheel's result, shared with the club (supabase/004_tonight_pick.sql) ----------
+
+export interface Spin {
+  id: number
+  titleId: string
+  titleName: string
+  spunBy: string | null
+  spunAt: string
+}
+
+/** The club's most recent spin — or null (none yet, or 004_tonight_pick.sql not run). */
+export async function fetchLatestSpin(clubId: string): Promise<Spin | null> {
+  const { data, error } = await db()
+    .from('club_spins')
+    .select('id, title_id, title_name, spun_by, spun_at')
+    .eq('club_id', clubId)
+    .order('spun_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return null
+  return { id: data.id, titleId: data.title_id, titleName: data.title_name, spunBy: data.spun_by, spunAt: data.spun_at }
+}
+
+export async function saveSpin(clubId: string, titleId: string, titleName: string): Promise<void> {
+  ok(await db().from('club_spins').insert({ club_id: clubId, title_id: titleId, title_name: titleName }))
+}
+
 export function watchClub(clubId: string, onChange: () => void): () => void {
   const channel = db()
     .channel(`club-${clubId}`)
@@ -366,6 +393,7 @@ export function watchClub(clubId: string, onChange: () => void): () => void {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'club_members', filter: `club_id=eq.${clubId}` }, onChange)
     // Entries: the security rules already limit these to people you share a club with
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, onChange)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'club_spins', filter: `club_id=eq.${clubId}` }, onChange)
     .subscribe()
   return () => {
     void db().removeChannel(channel)

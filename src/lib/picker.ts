@@ -20,6 +20,8 @@ export interface PickOptions {
 export interface Suggestion {
   title: ClubTitle
   score: number
+  /** Where the score comes from — shown as the breakdown on Top picks and the winner */
+  points: { want: number; taste: number; started: number }
   reasons: string[]
 }
 
@@ -69,7 +71,13 @@ export function rankTitles(data: ClubData, options: PickOptions): Suggestion[] {
     }
     genreMatch /= present.length
 
-    const score = 3 * (wanting.length / present.length) + 2 * genreMatch + started.length / present.length
+    const round = (n: number) => Math.round(n * 100) / 100
+    const points = {
+      want: round(3 * (wanting.length / present.length)),
+      taste: round(2 * genreMatch),
+      started: round(started.length / present.length),
+    }
+    const score = points.want + points.taste + points.started
 
     const reasons: string[] = []
     if (wanting.length === present.length && present.length > 1) reasons.push('Everyone wants it')
@@ -78,7 +86,7 @@ export function rankTitles(data: ClubData, options: PickOptions): Suggestion[] {
     if (fans.length > 0) reasons.push(`Matches ${names(fans)}’s taste`)
     if (genreMatch < -0.3) reasons.push('Not the usual genres for this group')
 
-    suggestions.push({ title, score: Math.round(score * 100) / 100, reasons })
+    suggestions.push({ title, score: round(score), points, reasons })
   }
 
   return suggestions.sort((a, b) => b.score - a.score || a.title.title.localeCompare(b.title.title))

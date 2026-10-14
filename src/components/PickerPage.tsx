@@ -14,7 +14,9 @@ const SPIN_MS = 3000
 const BULBS = 24
 
 export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
-  const { data } = useClub()
+  const { data, me, lastSpin, recordSpin } = useClub()
+  // "Tonight's pick" shows spins from the last 24 hours
+  const [openedAt] = useState(() => Date.now())
   // We store who is *absent*, so everyone (including newly added friends) is "here" by default.
   const [absent, setAbsent] = useState<string[]>([])
   const [type, setType] = useState<MediaType | 'all'>('all')
@@ -53,9 +55,20 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
         <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">What are we watching tonight?</h2>
       </div>
 
+      {/* The club's latest spin — the same for everyone in the club */}
+      {lastSpin && openedAt - new Date(lastSpin.spunAt).getTime() < 24 * 60 * 60 * 1000 && (
+        <TonightsPick
+          titleName={lastSpin.titleName}
+          image={data.titles[lastSpin.titleId]?.image}
+          type={data.titles[lastSpin.titleId]?.type}
+          who={lastSpin.spunBy === me.id ? 'You' : (data.members.find((m) => m.id === lastSpin.spunBy)?.name ?? 'Someone')}
+          when={lastSpin.spunAt}
+        />
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div className="flex flex-col gap-5">
-          <Panel title="Who’s here?">
+          <Panel title="Who’s watching tonight?" note="Untick anyone who isn’t joining. The wheel only uses their lists and tastes.">
             <div className="flex flex-wrap gap-2">
               {data.members.map((m) => {
                 const here = !absent.includes(m.id)
@@ -100,6 +113,8 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
             </Select>
           </Panel>
 
+          <HowItPicks />
+
           {/* Wide screens: top picks under the filters. Phones: below the wheel (see further down). */}
           <div className="hidden lg:block">
             <TopPicks present={present.length} suggestions={suggestions} />
@@ -108,7 +123,12 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
 
         {present.length > 0 && suggestions.length > 0 ? (
           // A new key resets the wheel whenever the options change.
-          <Wheel key={`${absent.join()}|${type}|${genre}`} suggestions={suggestions.slice(0, WHEEL_SIZE)} />
+          <Wheel
+            key={`${absent.join()}|${type}|${genre}`}
+            suggestions={suggestions.slice(0, WHEEL_SIZE)}
+            clubName={data.name ?? 'your club'}
+            onWinner={(s) => recordSpin(s.title.id, s.title.title)}
+          />
         ) : (
           // Never just disappear: say why there's nothing to spin, and how to fix it.
           <Panel className="flex flex-col items-center gap-3 py-10 text-center">
@@ -116,7 +136,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
             <h3 className="text-xl font-extrabold">Nothing to spin yet</h3>
             <p className="max-w-xs text-sm text-soft">
               {present.length === 0
-                ? 'Tap at least one person under “Who’s here?”.'
+                ? 'Tick at least one person under “Who’s watching tonight?”.'
                 : type !== 'all' || genre
                   ? 'Nothing fits this type or genre that everyone here hasn’t seen.'
                   : 'Everyone here has already watched everything on the club shelf!'}
@@ -150,7 +170,7 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
 /** 🏆 The three best-scoring titles for the people here, with the reasons. */
 function TopPicks({ present, suggestions }: { present: number; suggestions: Suggestion[] }) {
   return (
-    <Panel title="Top picks" note="Scored by who wants it, their favourite genres, and what’s already started">
+    <Panel title="Top picks" note="The highest scores for the people watching tonight — see “How the wheel picks”">
       {present === 0 ? (
         <p className="text-muted">Pick at least one person.</p>
       ) : suggestions.length === 0 ? (
@@ -172,6 +192,7 @@ function TopPicks({ present, suggestions }: { present: number; suggestions: Sugg
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-muted">{s.reasons.join(' · ') || 'In the club list'}</p>
+                <PointsLine s={s} className="mt-1" />
               </div>
             </li>
           ))}
@@ -181,7 +202,7 @@ function TopPicks({ present, suggestions }: { present: number; suggestions: Sugg
   )
 }
 
-function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
+function Wheel({ suggestions, clubName, onWinner }: { suggestions: Suggestion[]; clubName: string; onWinner: (s: Suggestion) => void }) {
   const [rotation, setRotation] = useState(0)
   const [spinning, setSpinning] = useState(false)
   const [winner, setWinner] = useState<Suggestion | null>(null)
@@ -199,6 +220,7 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
     if (!pending.current) return
     clearTimeout(pending.current.timer)
     setWinner(pending.current.winner)
+    onWinner(pending.current.winner)
     setSpinning(false)
     pending.current = null
   }
@@ -311,6 +333,8 @@ function Wheel({ suggestions }: { suggestions: Suggestion[] }) {
               <TypeBadge type={winner.title.type} className="mt-2" />
             </div>
           </div>
+          <PointsLine s={winner} className="mt-3" />
+          <p className="mt-1 text-xs text-muted">Shared with everyone in {clubName}.</p>
         </div>
       )}
 
@@ -348,4 +372,75 @@ function slicePath(start: number, end: number): string {
   const b = point(end)
   const largeArc = end - start > 180 ? 1 : 0
   return `M ${CENTER} ${CENTER} L ${a.x} ${a.y} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${b.x} ${b.y} Z`
+}
+
+/** "Wants +2.25 · Taste +0.6 · Started +0.5 = 3.35 pts" */
+function PointsLine({ s, className = '' }: { s: Suggestion; className?: string }) {
+  const sign = (n: number) => (n > 0 ? `+${n}` : `${n}`)
+  return (
+    <p className={`flex flex-wrap gap-x-2 text-[11px] tabular-nums text-soft ${className}`}>
+      <span>Wants {sign(s.points.want)}</span>
+      <span>· Taste {sign(s.points.taste)}</span>
+      <span>· Started {sign(s.points.started)}</span>
+      <span className="font-semibold text-cream">= {s.score} pts</span>
+    </p>
+  )
+}
+
+/** The rules, in plain words — folded away until you tap it. */
+function HowItPicks() {
+  return (
+    <details className="group rounded-2xl border border-line bg-surface/80 p-5">
+      <summary className="flex cursor-pointer list-none items-center justify-between font-display text-lg font-bold">
+        How the wheel picks
+        <span className="text-sm font-normal text-muted transition group-open:rotate-180">▾</span>
+      </summary>
+      <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm text-soft">
+        <li>
+          <b className="text-cream">It only uses your club shelf</b> — of the type and genre you chose.
+        </li>
+        <li>
+          <b className="text-cream">It skips what’s been seen:</b> anything someone watching tonight has Completed or Dropped.
+        </li>
+        <li>
+          <b className="text-cream">Every title gets points</b> from the people watching tonight:
+          <ul className="mt-1 list-disc pl-4">
+            <li>
+              <b className="text-cream">Wants</b> — up to 3: how many have it as 📌 Want to or ▶️ In progress.
+            </li>
+            <li>
+              <b className="text-cream">Taste</b> — from −2 to +2: how much they liked these genres before (their star ratings).
+            </li>
+            <li>
+              <b className="text-cream">Started</b> — up to 1: how many already started it.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <b className="text-cream">Top picks</b> are the highest scores. The <b className="text-cream">wheel</b> takes the top 6 — more points
+          means a bigger slice, so a better chance. But any slice can win.
+        </li>
+        <li>
+          <b className="text-cream">Everyone in the club sees the result</b> at the top of this page.
+        </li>
+      </ol>
+    </details>
+  )
+}
+
+/** The club's latest spin, as a banner everyone sees. */
+function TonightsPick({ titleName, image, type, who, when }: { titleName: string; image?: string; type?: MediaType; who: string; when: string }) {
+  const time = new Date(when).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  return (
+    <section className="mb-6 flex items-center gap-4 rounded-2xl border border-gold/50 bg-gold/10 p-3 sm:p-4">
+      {type && <Poster src={image} type={type} className="aspect-[2/3] w-14 shrink-0 rounded-lg" />}
+      <div className="min-w-0">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Tonight’s pick</p>
+        <p className="truncate font-display text-xl font-bold">{titleName}</p>
+        <p className="text-xs text-soft">
+          {who} spun the wheel at {time}
+        </p>
+      </div>
+    </section>
+  )
 }
