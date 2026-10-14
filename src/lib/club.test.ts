@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SearchResult } from '../types'
-import { addTitle, emptyClub, getEntry, removeEntry, removeTitle, updateEntry } from './club'
+import { addTitle, emptyClub, getEntry, removeEntry, removeTitle, updateEntry, watcherNames } from './club'
 
 const frieren: SearchResult = {
   id: 'anime:154587',
@@ -80,5 +80,20 @@ describe('status and progress rules', () => {
     expect(update({ rating: 14 }).rating).toBe(10)
     expect(update({ rating: 0 }).rating).toBe(1)
     expect(update({ rating: null }).rating).toBeNull()
+  })
+})
+
+describe('who a spin is for', () => {
+  const members = [
+    { id: 'me', name: 'Dhivya', color: '#000', role: 'host' as const },
+    { id: 'p', name: 'Priya', color: '#000', role: 'member' as const },
+    { id: 'a', name: 'Akshaya', color: '#000', role: 'member' as const },
+  ]
+
+  it('lists the people watching, with "you" first', () => {
+    expect(watcherNames(['p', 'me', 'a'], members, 'me')).toBe('you, Priya & Akshaya')
+    expect(watcherNames(['p', 'a'], members, 'me')).toBe('Priya & Akshaya')
+    expect(watcherNames(['p'], members, 'me')).toBe('Priya')
+    expect(watcherNames([], members, 'me')).toBe('')
   })
 })

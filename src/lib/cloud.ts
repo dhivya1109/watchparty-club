@@ -359,31 +359,33 @@ export async function importLocalShelf(clubId: string, userId: string, local: Cl
 // ---------- Live updates ----------
 
 /** Calls `onChange` whenever anything in this club changes — on anyone's phone. Returns a stop function. */
-// ---------- Tonight's pick: the wheel's result, shared with the club (supabase/004_tonight_pick.sql) ----------
+// ---------- Tonight's pick: the wheel's result, sent to the people watching (supabase/004_tonight_pick.sql) ----------
 
 export interface Spin {
   id: number
   titleId: string
   titleName: string
+  /** The people ticked under "Who's watching tonight?" */
+  watchers: string[]
   spunBy: string | null
   spunAt: string
 }
 
-/** The club's most recent spin — or null (none yet, or 004_tonight_pick.sql not run). */
+/** The latest spin I'm part of (I spun it, or I was watching) — or null. The database hides the rest. */
 export async function fetchLatestSpin(clubId: string): Promise<Spin | null> {
   const { data, error } = await db()
     .from('club_spins')
-    .select('id, title_id, title_name, spun_by, spun_at')
+    .select('id, title_id, title_name, watchers, spun_by, spun_at')
     .eq('club_id', clubId)
     .order('spun_at', { ascending: false })
     .limit(1)
     .maybeSingle()
   if (error || !data) return null
-  return { id: data.id, titleId: data.title_id, titleName: data.title_name, spunBy: data.spun_by, spunAt: data.spun_at }
+  return { id: data.id, titleId: data.title_id, titleName: data.title_name, watchers: data.watchers ?? [], spunBy: data.spun_by, spunAt: data.spun_at }
 }
 
-export async function saveSpin(clubId: string, titleId: string, titleName: string): Promise<void> {
-  ok(await db().from('club_spins').insert({ club_id: clubId, title_id: titleId, title_name: titleName }))
+export async function saveSpin(clubId: string, titleId: string, titleName: string, watchers: string[]): Promise<void> {
+  ok(await db().from('club_spins').insert({ club_id: clubId, title_id: titleId, title_name: titleName, watchers }))
 }
 
 export function watchClub(clubId: string, onChange: () => void): () => void {

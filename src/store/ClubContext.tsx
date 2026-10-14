@@ -10,6 +10,7 @@ import {
   type EntryChange,
   type Member,
   type MemberChange,
+  watcherNames,
 } from '../lib/club'
 import * as cloud from '../lib/cloud'
 import { isAdmin as checkAdmin } from '../lib/admin'
@@ -66,10 +67,10 @@ interface ClubStore {
   isAdmin: boolean
   /** Reload my club list (after an admin renames or deletes clubs) */
   refreshClubs: () => Promise<void>
-  /** The club's latest wheel result — everyone in the club sees it */
+  /** The latest wheel result I'm part of (I spun it, or I'm one of the people watching) */
   lastSpin: cloud.Spin | null
-  /** Share a wheel result with the club */
-  recordSpin: (titleId: string, titleName: string) => void
+  /** Send a wheel result to the people watching tonight */
+  recordSpin: (titleId: string, titleName: string, watchers: string[]) => void
   /** Log in (or create an account): step 1 emails a code, step 2 checks it */
   sendLoginCode: (email: string) => Promise<void>
   verifyLoginCode: (email: string, code: string) => Promise<void>
@@ -203,10 +204,10 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       const [club, spin] = await Promise.all([cloud.fetchClub(activeId), cloud.fetchLatestSpin(activeId)])
       setData(club)
       setLastSpin(spin)
-      // A friend just spun the wheel? Tell everyone, whatever page they're on.
+      // A friend spun the wheel for a group I'm in? Tell me, whatever page I'm on.
       if (spin && seenSpin.current !== null && spin.id > seenSpin.current && spin.spunBy !== userId) {
         const who = club.members.find((m) => m.id === spin.spunBy)?.name ?? 'Someone'
-        toast({ title: `${who} spun the wheel`, text: `Tonight’s pick: ${spin.titleName}` })
+        toast({ title: `${who} spun the wheel for ${watcherNames(spin.watchers, club.members, userId)}`, text: `Tonight’s pick: ${spin.titleName}` })
       }
       if (spin) seenSpin.current = Math.max(seenSpin.current ?? 0, spin.id)
       else seenSpin.current ??= 0
@@ -285,11 +286,11 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       account,
       isAdmin,
       lastSpin,
-      recordSpin: (titleId, titleName) => {
+      recordSpin: (titleId, titleName, watchers) => {
         if (!activeId) return
-        setLastSpin({ id: Number.MAX_SAFE_INTEGER, titleId, titleName, spunBy: userId, spunAt: new Date().toISOString() })
-        cloud.saveSpin(activeId, titleId, titleName).catch(() =>
-          toast({ title: 'Couldn’t share the result', text: 'Your friends won’t see this spin. (Has 004_tonight_pick.sql been run?)' }),
+        setLastSpin({ id: Number.MAX_SAFE_INTEGER, titleId, titleName, watchers, spunBy: userId, spunAt: new Date().toISOString() })
+        cloud.saveSpin(activeId, titleId, titleName, watchers).catch(() =>
+          toast({ title: 'Couldn’t send the result', text: 'The others won’t see this spin. (Has 004_tonight_pick.sql been run?)' }),
         )
       },
       refreshClubs: async () => {

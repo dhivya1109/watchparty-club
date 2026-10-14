@@ -237,3 +237,13 @@ export function previewChange(entry: Entry | undefined, change: EntryChange, len
 function newEntry(memberId: string, titleId: string, now: string): Entry {
   return { memberId, titleId, status: 'want', progress: 0, rating: null, review: null, updatedAt: now }
 }
+
+/** "you, Priya & Akshaya" — the people watching, with "you" first if I'm one of them. */
+export function watcherNames(watchers: string[], members: Member[], myId: string | null): string {
+  const names = watchers
+    .slice()
+    .sort((a, b) => (a === myId ? -1 : b === myId ? 1 : 0))
+    .map((id) => (id === myId ? 'you' : (members.find((m) => m.id === id)?.name ?? 'a former member')))
+  if (names.length <= 1) return names[0] ?? ''
+  return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`
+}

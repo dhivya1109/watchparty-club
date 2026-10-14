@@ -2,6 +2,7 @@ import { TypeIcon } from './icons'
 import { FerrisWheel } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { rankTitles, sliceAtAngle, wheelSlices, type Suggestion } from '../lib/picker'
+import { watcherNames } from '../lib/club'
 import { useClub } from '../store/ClubContext'
 import { MEDIA_TYPES, type MediaType } from '../types'
 import { Avatar } from './Avatar'
@@ -62,13 +63,14 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
           image={data.titles[lastSpin.titleId]?.image}
           type={data.titles[lastSpin.titleId]?.type}
           who={lastSpin.spunBy === me.id ? 'You' : (data.members.find((m) => m.id === lastSpin.spunBy)?.name ?? 'Someone')}
+          forWhom={watcherNames(lastSpin.watchers, data.members, me.id) || 'you'}
           when={lastSpin.spunAt}
         />
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div className="flex flex-col gap-5">
-          <Panel title="Who’s watching tonight?" note="Untick anyone who isn’t joining. The wheel only uses their lists and tastes.">
+          <Panel title="Who’s watching tonight?" note="Tick the people watching with you. The wheel uses their lists and tastes — and they get the result when you spin.">
             <div className="flex flex-wrap gap-2">
               {data.members.map((m) => {
                 const here = !absent.includes(m.id)
@@ -126,8 +128,12 @@ export function PickerPage({ onGoSearch }: { onGoSearch: () => void }) {
           <Wheel
             key={`${absent.join()}|${type}|${genre}`}
             suggestions={suggestions.slice(0, WHEEL_SIZE)}
-            clubName={data.name ?? 'your club'}
-            onWinner={(s) => recordSpin(s.title.id, s.title.title)}
+            sentTo={
+              present.some((m) => m.id !== me.id)
+                ? `Sent to ${watcherNames(present.filter((m) => m.id !== me.id).map((m) => m.id), data.members, me.id)}.`
+                : 'Only you are watching — nobody else is notified.'
+            }
+            onWinner={(s) => recordSpin(s.title.id, s.title.title, present.map((m) => m.id))}
           />
         ) : (
           // Never just disappear: say why there's nothing to spin, and how to fix it.
@@ -202,7 +208,7 @@ function TopPicks({ present, suggestions }: { present: number; suggestions: Sugg
   )
 }
 
-function Wheel({ suggestions, clubName, onWinner }: { suggestions: Suggestion[]; clubName: string; onWinner: (s: Suggestion) => void }) {
+function Wheel({ suggestions, sentTo, onWinner }: { suggestions: Suggestion[]; sentTo: string; onWinner: (s: Suggestion) => void }) {
   const [rotation, setRotation] = useState(0)
   const [spinning, setSpinning] = useState(false)
   const [winner, setWinner] = useState<Suggestion | null>(null)
@@ -334,7 +340,7 @@ function Wheel({ suggestions, clubName, onWinner }: { suggestions: Suggestion[];
             </div>
           </div>
           <PointsLine s={winner} className="mt-3" />
-          <p className="mt-1 text-xs text-muted">Shared with everyone in {clubName}.</p>
+          <p className="mt-1 text-xs text-muted">{sentTo}</p>
         </div>
       )}
 
@@ -421,21 +427,36 @@ function HowItPicks() {
           means a bigger slice, so a better chance. But any slice can win.
         </li>
         <li>
-          <b className="text-cream">Everyone in the club sees the result</b> at the top of this page.
+          <b className="text-cream">The people you ticked get the result</b> — a pop-up, and “Tonight’s pick” at the top of this
+          page — so you all have the same thing to watch. Others in the club don’t see it.
         </li>
       </ol>
     </details>
   )
 }
 
-/** The club's latest spin, as a banner everyone sees. */
-function TonightsPick({ titleName, image, type, who, when }: { titleName: string; image?: string; type?: MediaType; who: string; when: string }) {
+/** The latest spin I'm part of, as a banner: what we're watching, for whom, and who spun. */
+function TonightsPick({
+  titleName,
+  image,
+  type,
+  who,
+  forWhom,
+  when,
+}: {
+  titleName: string
+  image?: string
+  type?: MediaType
+  who: string
+  forWhom: string
+  when: string
+}) {
   const time = new Date(when).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
   return (
     <section className="mb-6 flex items-center gap-4 rounded-2xl border border-gold/50 bg-gold/10 p-3 sm:p-4">
       {type && <Poster src={image} type={type} className="aspect-[2/3] w-14 shrink-0 rounded-lg" />}
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Tonight’s pick</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Tonight’s pick for {forWhom}</p>
         <p className="truncate font-display text-xl font-bold">{titleName}</p>
         <p className="text-xs text-soft">
           {who} spun the wheel at {time}
