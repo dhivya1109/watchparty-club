@@ -1,86 +1,20 @@
 import { FerrisWheel, PenLine, Plus, Search, Star, Ticket, Users, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Clappy, Poppy, Reel, Stubby } from './Characters'
 
 export type HomeTarget = 'club' | 'tonight' | 'stats'
 
-/**
- * 🎬 The home screen: an IMAX-style screen that says what the app is,
- * with the mascots sitting in front of it.
- */
-export function CinemaHero({ onStart, onNavigate }: { onStart: () => void; onNavigate: (page: HomeTarget) => void }) {
+/** The top of the home screen: a short, personal greeting — then straight to the search bar. */
+export function HomeGreeting({ name }: { name: string }) {
+  const [hour] = useState(() => new Date().getHours())
+  const part = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const first = name.trim().split(/\s+/)[0]
   return (
-    <section className="animate-pop relative mt-6 overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-surface to-night px-4 pb-0 pt-8 sm:px-10 sm:pt-10">
-
-      {/* The curved IMAX screen */}
-      <div className="relative mx-auto max-w-4xl [perspective:900px]">
-        <div
-          className="relative overflow-hidden border-2 border-gold/40 bg-gradient-to-br from-raised via-surface to-raised px-5 py-8 text-center sm:px-12 sm:py-12"
-          style={{ borderRadius: '50% / 9%', transform: 'rotateX(6deg)' }}
-        >
-          <p className="relative text-xs font-semibold uppercase tracking-[0.12em] text-muted">Now showing</p>
-          <h2 className="relative mx-auto mt-3 max-w-2xl text-[clamp(2rem,9vw,3.75rem)] font-extrabold leading-[1.02] tracking-tight">
-            Your friends’ own <span className="text-marquee">cinema</span>
-          </h2>
-          <p className="relative mx-auto mt-4 max-w-lg text-sm text-soft sm:text-base">
-            One shared shelf for the movies, series, anime and books your group loves. Track them like tickets, review
-            them, and let the wheel pick tonight’s show.
-          </p>
-          <div className="relative mt-6 flex flex-wrap justify-center gap-3">
-            <button
-              onClick={onStart}
-              className="rounded-full bg-gold px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base text-on-gold transition hover:brightness-110 active:scale-95"
-            >
-              {/* Shorter words on the smallest phones, so the button stays on one line */}
-              <span className="flex items-center gap-2">
-                <Search size={18} aria-hidden="true" />
-                <span className="min-[380px]:hidden">Find something</span>
-                <span className="max-[379px]:hidden">Find something to watch</span>
-              </span>
-            </button>
-            <button
-              onClick={() => onNavigate('tonight')}
-              className="rounded-full border border-line bg-night/40 px-5 py-2.5 font-display text-sm font-bold sm:px-6 sm:text-base backdrop-blur transition hover:border-gold hover:text-accent"
-            >
-              <span className="flex items-center gap-2">
-                <FerrisWheel size={18} aria-hidden="true" /> Spin the wheel
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* The audience: our mascots in the front row */}
-      <div className="relative mx-auto mt-6 grid max-w-2xl grid-cols-4 items-end gap-2 sm:mt-8 sm:gap-6">
-        <div className="relative h-24 sm:h-36 lg:h-44">
-          {/* Poppy's speech bubble */}
-          <div
-            className="absolute -top-10 left-1/2 z-10 w-max -translate-x-1/4 rounded-2xl rounded-bl-sm border border-line bg-surface px-3 py-1.5 text-xs font-semibold shadow-lg sm:-top-12 sm:text-sm"
-            style={{ animation: 'bubble 6s ease-in-out infinite', transformOrigin: 'bottom left' }}
-          >
-            What’s on tonight?
-          </div>
-          <Poppy />
-        </div>
-        <div className="h-24 sm:h-36 lg:h-44">
-          <Stubby />
-        </div>
-        <div className="h-24 sm:h-36 lg:h-44">
-          <Reel />
-        </div>
-        <div className="h-24 sm:h-36 lg:h-44">
-          <Clappy />
-        </div>
-      </div>
-
-      {/* Cinema seats */}
-      <div className="relative mx-auto mt-2 flex max-w-3xl justify-center gap-1.5 overflow-hidden pb-0 sm:gap-2" aria-hidden="true">
-        {Array.from({ length: 14 }, (_, i) => (
-          <div key={i} className="h-7 w-8 shrink-0 rounded-t-xl bg-raised shadow-inner sm:h-9 sm:w-11">
-            <div className="mx-auto mt-1.5 h-2 w-3/4 rounded-full bg-line/70" />
-          </div>
-        ))}
-      </div>
+    <section className="pt-8">
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        {part}
+        {first ? `, ${first}` : ''}
+      </h1>
+      <p className="mt-1 text-soft">What are we watching tonight?</p>
     </section>
   )
 }

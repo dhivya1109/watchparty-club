@@ -5,7 +5,7 @@ import { SEARCHERS } from '../api/search'
 import { flyToClub } from '../effects/flyToClub'
 import { AddedTray } from './AddToClub'
 import { Suggestions } from './Suggestions'
-import { CinemaHero, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
+import { HomeGreeting, HowItWorks, NowShowing, WorldCinemaStrip, type HomeTarget } from './home/Home'
 import { useDebounce } from '../hooks/useDebounce'
 import { FOCUS_SEARCH_EVENT } from '../lib/events'
 import { genreOptions, matchesGenre } from '../lib/genres'
@@ -39,6 +39,7 @@ const IDEAS: { type: MediaType; query: string }[] = [
 ]
 
 export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => void }) {
+  const { me } = useClub()
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -136,7 +137,7 @@ export function SearchPage({ onNavigate }: { onNavigate: (page: HomeTarget) => v
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-6">
-      {!searchMode && <CinemaHero onNavigate={onNavigate} onStart={() => inputRef.current?.focus()} />}
+      {!searchMode && <HomeGreeting name={me.name} />}
 
       <div ref={searchBarRef} className={`flex items-center gap-2 ${searchMode ? 'pt-5' : 'pt-8'}`}>
         {searchMode && (
