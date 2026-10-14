@@ -4,11 +4,10 @@ import { useClub } from '../../store/ClubContext'
 import { LENGTH_UNIT } from '../../types'
 import { PosterTile, TitleSheet } from '../ClubPage'
 import { Poster, ScrollRow } from '../ui'
-import { Poppy } from './Characters'
 
 /**
  * 🏠 The top of the home screen, made from YOUR club: a greeting over a dimmed collage of the
- * club's own posters, the popcorn mascot, and a live line about your list and your club.
+ * club's own posters, and a live line about your list and your club.
  */
 export function HomeHeader() {
   const { data, me, activeClub } = useClub()
@@ -46,9 +45,6 @@ export function HomeHeader() {
           </h1>
           <p className="mt-1 text-soft">What are we watching tonight?</p>
           {facts.length > 0 && <p className="mt-3 text-sm text-muted">{facts.join(' · ')}</p>}
-        </div>
-        <div className="h-24 w-20 shrink-0 sm:h-28 sm:w-24">
-          <Poppy />
         </div>
       </div>
     </section>
